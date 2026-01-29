@@ -3,8 +3,11 @@ package tokenizer
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"minimal/minimal-core/domain"
 )
+
+const MaxSymbolLength = 16
 
 type Tokenizer struct {
 	CurrentToken domain.Token
@@ -79,12 +82,21 @@ func (t *Tokenizer) AddCheck(check func(rune) bool) domain.TokenType {
 
 func (t *Tokenizer) Consume() {
 	t.skipWhiteSpace()
+
+	_, err := t.reader.Peek(1)
+    
+	if err == io.EOF {
+        t.setToEof(0) // TODO
+        return
+    }
+
 	ok := t.checkSymbols()
 
 	if ok {
 		return
 	}
 
+	t.reader.ReadRune()
 	t.setToUnknown(0, 0) // TODO
 }
 
@@ -103,38 +115,39 @@ func (t *Tokenizer) skipWhiteSpace() {
 }
 
 func (t *Tokenizer) checkSymbols() bool {
-	node := t.symbols
+    node := t.symbols
     var lastMatch domain.TokenType
-	foundMatch := false
+    foundMatch := false
+    matchLen := 0
     
-    for {
-        b, err := t.reader.Peek(1)
-        if err != nil {
-            break
-        }
-        
-        nextNode := node.children[b[0]]
+    peeked, _ := t.reader.Peek(MaxSymbolLength) 
+
+    for i := range peeked {
+        nextNode := node.children[peeked[i]]
+
         if nextNode == nil {
             break
         }
         
         node = nextNode
-        t.reader.Discard(1)
-
+		
         if node.leaf {
             lastMatch = node.token
-			foundMatch = true
-		}
+            foundMatch = true
+            matchLen = i + 1
+        }
     }
 
-	if foundMatch {
-		t.CurrentToken.Type = lastMatch
-		t.CurrentToken.Value = ""
+    if foundMatch {
+        t.reader.Discard(matchLen)
+        t.CurrentToken.Type = lastMatch
 		t.CurrentToken.Span.Start = 0 // TODO
 		t.CurrentToken.Span.Length = 0 // TODO
-	}
 
-    return foundMatch
+        return true
+    }
+
+    return false
 }
 
 func (t *Tokenizer) setToEof(start uint) {
