@@ -1,6 +1,6 @@
 package domain
 
 type Span struct {
-	Start  int
-	Length int
+	Start  uint
+	Length uint
 }
