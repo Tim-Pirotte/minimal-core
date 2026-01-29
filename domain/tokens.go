@@ -2,7 +2,10 @@ package domain
 
 type TokenType uint
 
-const EOF TokenType = 0
+const (
+	UNKNOWN TokenType = iota
+	EOF
+)
 
 type Token struct {
 	Type  TokenType

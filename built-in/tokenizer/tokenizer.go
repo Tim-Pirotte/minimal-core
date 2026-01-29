@@ -21,7 +21,7 @@ type Tokenizer struct {
 type trieNode struct {
 	leaf bool
 	token domain.TokenType
-	children map[rune]*trieNode
+	children [256]*trieNode
 }
 
 type checkRule struct {
@@ -34,10 +34,10 @@ func NewTokenizer(reader bufio.Reader) Tokenizer {
 		domain.Token{}, 
 		reader,
 		0,
-		&trieNode{children: map[rune]*trieNode{}},
-		&trieNode{children: map[rune]*trieNode{}},
+		&trieNode{children: [256]*trieNode{}},
+		&trieNode{children: [256]*trieNode{}},
 		[]checkRule{},
-		0,
+		domain.EOF,
 	}
 }
 
@@ -79,13 +79,13 @@ func (t *Tokenizer) AddCheck(check func(rune) bool) domain.TokenType {
 
 func (t *Tokenizer) Consume() {
 	t.skipWhiteSpace()
-}
+	ok := t.checkSymbols()
 
-func (t *Tokenizer) setToEof(start uint) {
-	t.CurrentToken.Type = domain.EOF
-	t.CurrentToken.Value = ""
-	t.CurrentToken.Span.Start = start
-	t.CurrentToken.Span.Length = 0
+	if ok {
+		return
+	}
+
+	t.setToUnknown(0, 0) // TODO
 }
 
 func (t *Tokenizer) skipWhiteSpace() {
@@ -100,6 +100,55 @@ func (t *Tokenizer) skipWhiteSpace() {
 
 		currentByte, err = t.reader.Peek(1)
 	}
+}
+
+func (t *Tokenizer) checkSymbols() bool {
+	node := t.symbols
+    var lastMatch domain.TokenType
+	foundMatch := false
+    
+    for {
+        b, err := t.reader.Peek(1)
+        if err != nil {
+            break
+        }
+        
+        nextNode := node.children[b[0]]
+        if nextNode == nil {
+            break
+        }
+        
+        node = nextNode
+        t.reader.Discard(1)
+
+        if node.leaf {
+            lastMatch = node.token
+			foundMatch = true
+		}
+    }
+
+	if foundMatch {
+		t.CurrentToken.Type = lastMatch
+		t.CurrentToken.Value = ""
+		t.CurrentToken.Span.Start = 0 // TODO
+		t.CurrentToken.Span.Length = 0 // TODO
+	}
+
+    return foundMatch
+}
+
+func (t *Tokenizer) setToEof(start uint) {
+	t.CurrentToken.Type = domain.EOF
+	t.CurrentToken.Value = ""
+	t.CurrentToken.Span.Start = start
+	t.CurrentToken.Span.Length = 0
+}
+
+func (t *Tokenizer) setToUnknown(start uint, length uint) {
+	t.CurrentToken.Type = domain.UNKNOWN
+	t.CurrentToken.Value = ""
+	t.CurrentToken.Span.Start = start
+	t.CurrentToken.Span.Length = length
 }
 
 const asciiMax = 127
