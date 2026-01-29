@@ -7,7 +7,7 @@ import (
 	"minimal/minimal-core/domain"
 )
 
-const MaxSymbolLength = 16
+const MaxSymbolLengthBytes = 16
 
 type Tokenizer struct {
 	CurrentToken domain.Token
@@ -120,7 +120,11 @@ func (t *Tokenizer) checkSymbols() bool {
     foundMatch := false
     matchLen := 0
     
-    peeked, _ := t.reader.Peek(MaxSymbolLength) 
+    peeked, err := t.reader.Peek(MaxSymbolLengthBytes) 
+
+	if err == bufio.ErrBufferFull || err == bufio.ErrNegativeCount {
+		panic(fmt.Sprint("Something went wrong while peeking: ", err))
+	}
 
     for i := range peeked {
         nextNode := node.children[peeked[i]]
@@ -130,7 +134,7 @@ func (t *Tokenizer) checkSymbols() bool {
         }
         
         node = nextNode
-		
+
         if node.leaf {
             lastMatch = node.token
             foundMatch = true
@@ -142,7 +146,7 @@ func (t *Tokenizer) checkSymbols() bool {
         t.reader.Discard(matchLen)
         t.CurrentToken.Type = lastMatch
 		t.CurrentToken.Span.Start = 0 // TODO
-		t.CurrentToken.Span.Length = 0 // TODO
+		t.CurrentToken.Span.Length = uint(matchLen)
 
         return true
     }
