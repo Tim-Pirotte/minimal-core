@@ -5,6 +5,12 @@ import (
 	"minimal/minimal-core/domain"
 )
 
+type trieNode struct {
+	leaf bool
+	token domain.TokenType
+	children [256]*trieNode
+}
+
 func updateTrie(root *trieNode, text string, tokenType domain.TokenType) error {
 	node := root
 

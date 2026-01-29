@@ -21,12 +21,6 @@ type Tokenizer struct {
 	lastTokenType domain.TokenType
 }
 
-type trieNode struct {
-	leaf bool
-	token domain.TokenType
-	children [256]*trieNode
-}
-
 type checkRule struct {
 	check func(rune) bool
 	tokenType domain.TokenType
@@ -44,24 +38,11 @@ func NewTokenizer(reader bufio.Reader) Tokenizer {
 	}
 }
 
-func (t *Tokenizer) newTokenType() domain.TokenType {
-	t.lastTokenType++
-	return t.lastTokenType
-}
-
-func (t *Tokenizer) AddKeyword(keyword string) domain.TokenType {
-	tokenType := t.newTokenType()
-	err := updateTrie(t.keywords, keyword, tokenType)
-
-	if err != nil {
+func (t *Tokenizer) AddSymbol(symbol string) domain.TokenType {
+	if len(symbol) > MaxSymbolLengthBytes {
 		// TODO log error
-		fmt.Println(err.Error())
 	}
 
-	return tokenType
-}
-
-func (t *Tokenizer) AddSymbol(symbol string) domain.TokenType {
 	tokenType := t.newTokenType()
 	err := updateTrie(t.symbols, symbol, tokenType)
 
@@ -80,24 +61,37 @@ func (t *Tokenizer) AddCheck(check func(rune) bool) domain.TokenType {
 	return tokenType
 }
 
+func (t *Tokenizer) newTokenType() domain.TokenType {
+	t.lastTokenType++
+	return t.lastTokenType
+}
+
 func (t *Tokenizer) Consume() {
 	t.skipWhiteSpace()
-
-	_, err := t.reader.Peek(1)
     
-	if err == io.EOF {
+	if _, err := t.reader.Peek(1); err == io.EOF {
         t.setToEof(0) // TODO
         return
     }
 
-	ok := t.checkSymbols()
+	bestTokenType := domain.UNKNOWN
+	bestLength := uint(0)
 
-	if ok {
-		return
+	if token, length, ok := t.checkSymbols(); ok {
+		bestTokenType = token
+		bestLength = length
 	}
 
-	t.reader.ReadRune()
-	t.setToUnknown(0, 0) // TODO
+	if bestLength == 0 {
+		t.reader.ReadRune()
+		t.setToUnknown(t.position, 1)
+	} else {
+		t.reader.Discard(int(bestLength))
+		t.CurrentToken.Type = bestTokenType
+		t.CurrentToken.Span.Start = t.position
+		t.CurrentToken.Span.Length = bestLength
+		t.position += bestLength
+	}
 }
 
 func (t *Tokenizer) skipWhiteSpace() {
@@ -105,6 +99,7 @@ func (t *Tokenizer) skipWhiteSpace() {
 
 	for err == nil && (currentByte[0] == ' ' || currentByte[0] == '\t') {
 		_, discardErr := t.reader.Discard(1)
+		t.position++
 
 		if discardErr != nil {
 			panic(fmt.Sprint("Could not properly discard:", discardErr))
@@ -114,11 +109,11 @@ func (t *Tokenizer) skipWhiteSpace() {
 	}
 }
 
-func (t *Tokenizer) checkSymbols() bool {
+func (t *Tokenizer) checkSymbols() (domain.TokenType, uint, bool) {
     node := t.symbols
     var lastMatch domain.TokenType
     foundMatch := false
-    matchLen := 0
+    matchLength := uint(0)
     
     peeked, err := t.reader.Peek(MaxSymbolLengthBytes) 
 
@@ -138,20 +133,11 @@ func (t *Tokenizer) checkSymbols() bool {
         if node.leaf {
             lastMatch = node.token
             foundMatch = true
-            matchLen = i + 1
+            matchLength = uint(i) + 1
         }
     }
 
-    if foundMatch {
-        t.reader.Discard(matchLen)
-        t.CurrentToken.Type = lastMatch
-		t.CurrentToken.Span.Start = 0 // TODO
-		t.CurrentToken.Span.Length = uint(matchLen)
-
-        return true
-    }
-
-    return false
+    return lastMatch, uint(matchLength), foundMatch
 }
 
 func (t *Tokenizer) setToEof(start uint) {
