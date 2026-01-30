@@ -55,13 +55,15 @@ func (t *TokenizerConfig) tokenize() []domain.Token {
 		}
 
 		if foundMatch {
-			tokens = append(
-				tokens, 
-				domain.Token{
-					Type: tokenTypeToPush, 
-					Value: tokenContent, 
-					Span: domain.Span{Start: t.position, Length: largestLength}},
-			)
+			if tokenTypeToPush != domain.IGNORE {
+				tokens = append(
+					tokens, 
+					domain.Token{
+						Type: tokenTypeToPush, 
+						Value: tokenContent, 
+						Span: domain.Span{Start: t.position, Length: largestLength}},
+				)
+			}
 		} else {
 			byteToSkip, err := t.reader.ReadByte()
 

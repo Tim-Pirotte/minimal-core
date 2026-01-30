@@ -4,7 +4,8 @@ type TokenType uint
 
 const (
 	UNKNOWN TokenType = iota
-	EOF               // Add new tokens before this one
+	IGNORE
+	EOF // Add new tokens before this one
 )
 
 type Token struct {
