@@ -1,14 +1,12 @@
 package tokenizer
 
 import (
-	"bufio"
-	"io"
 	"minimal/minimal-core/domain"
 )
 
 type TokenizerConfig struct {
-	reader   *bufio.Reader
-	position uint
+	source       []byte
+	position     uint
 	matchers     []Matcher
 	lastTokenType domain.TokenType
 }
@@ -17,8 +15,8 @@ type Matcher interface {
 	Match(t *TokenizerConfig) (valid bool, length uint, tokenTypeToPushIfLargest domain.TokenType, tokenContent string)
 }
 
-func NewTokenizerConfig(reader *bufio.Reader) TokenizerConfig {
-	return TokenizerConfig{reader, 0, []Matcher{}, domain.EOF}
+func NewTokenizerConfig(source []byte) TokenizerConfig {
+	return TokenizerConfig{source, 0, []Matcher{}, domain.EOF}
 }
 
 func (t *TokenizerConfig) AddMatcher(matcher Matcher) {
@@ -30,14 +28,22 @@ func (t *TokenizerConfig) NewTokenType() domain.TokenType {
 	return t.lastTokenType
 }
 
+// Retrieves a byte at position n relative to the current position from the source.
+// Ok wil be set to false if it is out of bounds
+func (t *TokenizerConfig) Get(n int) (byte, bool) {
+	index := int(t.position) + n
+
+	if 0 <= index && index < len(t.source) {
+		return t.source[index], true
+	} else {
+		return 0, false
+	}
+}
+
 func (t *TokenizerConfig) tokenize() []domain.Token {
 	tokens := make([]domain.Token, 0)
 
-	for _, err := t.reader.Peek(1); err != io.EOF; {
-		if err != nil {
-			// TODO log error
-		}
-
+	for t.position < uint(len(t.source)) {
 		foundMatch := false
 		largestLength := uint(0)
 		var tokenTypeToPush domain.TokenType
@@ -63,20 +69,25 @@ func (t *TokenizerConfig) tokenize() []domain.Token {
 						Value: tokenContent, 
 						Span: domain.Span{Start: t.position, Length: largestLength}},
 				)
+
+				t.position += largestLength
 			}
 		} else {
-			byteToSkip, err := t.reader.ReadByte()
-
-			if err != nil {
-				// TODO log error
-			}
-
 			tokens = append(
 				tokens, 
-				domain.Token{Type: domain.UNKNOWN, Value: string(byteToSkip), Span: domain.Span{Start: t.position, Length: 1}},
+				domain.Token{
+					Type: domain.UNKNOWN, 
+					Value: string(t.source[t.position]),
+					Span: domain.Span{Start: t.position, Length: 1},
+				},
 			)
+
+			t.position++
 		}
 	}
 
-	return tokens
+	return append(
+		tokens, 
+		domain.Token{Type: domain.EOF, Value: "", Span: domain.Span{Start: t.position, Length: 0}},
+	)
 }
