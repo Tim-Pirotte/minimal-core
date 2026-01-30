@@ -157,3 +157,22 @@ func TestLexZeroWidthJoinerSymbols(t *testing.T) {
 		t.Error("Expected\n", expected, "but got\n", actual)
 	}
 }
+
+func TestLexSpace(t *testing.T) {
+	expected := []domain.Token{
+		{Type: domain.UNKNOWN, Value: "a", Span: domain.Span{Start: 12, Length: 1}},
+		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
+	}
+
+	tokenizerConfig := NewTokenizerConfig([]byte(" \t \t        a\t            "))
+
+	wm := NewWhiteSpaceMatcher()
+
+	tokenizerConfig.AddMatcher(&wm)
+
+	actual := tokenizerConfig.tokenize()
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected", expected, "but got", actual)
+	}
+}

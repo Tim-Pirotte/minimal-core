@@ -1,18 +1,29 @@
 package tokenizer
 
-// import "fmt"
+import "minimal/minimal-core/domain"
 
-// func (t *TokenizerConfig) skipWhiteSpace() {
-// 	currentByte, err := t.reader.Peek(1)
+type WhiteSpaceMatcher struct{}
 
-// 	for err == nil && (currentByte[0] == ' ' || currentByte[0] == '\t') {
-// 		_, discardErr := t.reader.Discard(1)
-// 		t.position++
+func NewWhiteSpaceMatcher() WhiteSpaceMatcher {
+	return WhiteSpaceMatcher{}
+}
 
-// 		if discardErr != nil {
-// 			panic(fmt.Sprint("Could not properly discard:", discardErr))
-// 		}
+func (*WhiteSpaceMatcher) Match(t *TokenizerConfig) (bool, uint, domain.TokenType, string) {
+	pos := 0
+	
+	for {
+		ch, ok := t.Get(pos)
+		
+		if !ok || !isWhiteSpace(ch) {
+			break
+		}
 
-// 		currentByte, err = t.reader.Peek(1)
-// 	}
-// }
+		pos++
+	}
+
+	return true, uint(pos), domain.IGNORE, ""
+}
+
+func isWhiteSpace(b byte) bool {
+	return b == ' ' || b == '\t'
+}

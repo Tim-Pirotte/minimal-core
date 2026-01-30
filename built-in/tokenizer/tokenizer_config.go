@@ -69,9 +69,9 @@ func (t *TokenizerConfig) tokenize() []domain.Token {
 						Value: tokenContent, 
 						Span: domain.Span{Start: t.position, Length: largestLength}},
 				)
-
-				t.position += largestLength
 			}
+
+			t.position += largestLength
 		} else {
 			tokens = append(
 				tokens, 
