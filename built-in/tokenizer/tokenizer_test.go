@@ -58,154 +58,102 @@ func TestLexSymbols(t *testing.T) {
 	}
 }
 
-// func TestLexSymbols(t *testing.T) {
-// 	expected := []domain.TokenType{
-// 		domain.UNKNOWN, 
-// 		2, 
-// 		domain.UNKNOWN, 
-// 		3, 
-// 		domain.UNKNOWN, 
-// 		domain.EOF,
-// 	}
+func TestLexMultiCharSymbols(t *testing.T) {
+	config := NewTokenizerConfig([]byte("1+-+-2-+-+3"))
+	symbolMatcher := NewSymbolMatcher()
 
-// 	r := bufio.NewReader(strings.NewReader("5 + 4 - 3"))
+	weirdPlus := symbolMatcher.AddSymbol(&config, "+-+-")
+	weirdMinus := symbolMatcher.AddSymbol(&config, "-+-+")
+
+	config.AddMatcher(&symbolMatcher)
+
+	expected := []domain.Token{
+		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
+		{Type: weirdPlus, Value: "", Span: domain.Span{Start: 1, Length: 4}},
+		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 5, Length: 1}},
+		{Type: weirdMinus, Value: "", Span: domain.Span{Start: 6, Length: 4}},
+		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 10, Length: 1}},
+		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 11, Length: 0}},
+	}
+
+	actual := config.tokenize()
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected\n", expected, "but got\n", actual)
+	}
+}
+
+func TestLexUnicodeSymbols(t *testing.T) {
+	config := NewTokenizerConfig([]byte("1☘2❤3"))
+	symbolMatcher := NewSymbolMatcher()
+
+	plus := symbolMatcher.AddSymbol(&config, "☘")
+	minus := symbolMatcher.AddSymbol(&config, "❤")
+
+	config.AddMatcher(&symbolMatcher)
+
+	expected := []domain.Token{
+		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
+		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 3}},
+		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 4, Length: 1}},
+		{Type: minus, Value: "", Span: domain.Span{Start: 5, Length: 3}},
+		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 8, Length: 1}},
+		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 9, Length: 0}},
+	}
+
+	actual := config.tokenize()
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected\n", expected, "but got\n", actual)
+	}
+}
+
+func TestLexVariationSelector(t *testing.T) {
+	config := NewTokenizerConfig([]byte("1❄️2🔥3"))
+	symbolMatcher := NewSymbolMatcher()
 	
-// 	tokenizer := NewTokenizer(*r)
+	plus := symbolMatcher.AddSymbol(&config, "❄️")
+	minus := symbolMatcher.AddSymbol(&config, "🔥")
 
-// 	tokenizer.AddSymbol("+")
-// 	tokenizer.AddSymbol("-")
+	config.AddMatcher(&symbolMatcher)
 
-// 	maxIter := 20
-// 	currentIter := 0
-// 	actual := make([]domain.TokenType, 0)
+	expected := []domain.Token{
+		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
+		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 6}},
+		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 7, Length: 1}},
+		{Type: minus, Value: "", Span: domain.Span{Start: 8, Length: 4}},
+		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 12, Length: 1}},
+		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 13, Length: 0}},
+	}
 
-// 	for tokenizer.CurrentToken.Type != domain.EOF && currentIter <= maxIter {
-// 		tokenizer.Consume()
-// 		actual = append(actual, tokenizer.CurrentToken.Type)
-// 		currentIter++
-// 	}
+	actual := config.tokenize()
 
-// 	if currentIter == maxIter {
-// 		t.Error("Infinite loop")
-// 	} else {
-// 		for i, e := range expected {
-// 			if actual[i] != e {
-// 				t.Error("Expected", e, "at index", i, "but got", actual[i])
-// 			}
-// 		}
-// 	}
-// }
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected\n", expected, "but got\n", actual)
+	}
+}
 
-// func TestLexMultiCharSymbols(t *testing.T) {
-// 	expected := []domain.TokenType{
-// 		domain.UNKNOWN, 
-// 		2, 
-// 		domain.UNKNOWN, 
-// 		3, 
-// 		domain.UNKNOWN, 
-// 		domain.EOF,
-// 	}
-
-// 	r := bufio.NewReader(strings.NewReader("+ +-+-+- 4 -+-+-+ -"))
+func TestLexZeroWidthJoinerSymbols(t *testing.T) {
+	config := NewTokenizerConfig([]byte("1🐻‍❄️2🐈‍⬛3"))
+	symbolMatcher := NewSymbolMatcher()
 	
-// 	tokenizer := NewTokenizer(*r)
+	plus := symbolMatcher.AddSymbol(&config, "🐻‍❄️")
+	minus := symbolMatcher.AddSymbol(&config, "🐈‍⬛")
 
-// 	tokenizer.AddSymbol("+-+-+-")
-// 	tokenizer.AddSymbol("-+-+-+")
+	config.AddMatcher(&symbolMatcher)
 
-// 	maxIter := 20
-// 	currentIter := 0
-// 	actual := make([]domain.TokenType, 0)
+	expected := []domain.Token{
+		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
+		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 13}},
+		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 14, Length: 1}},
+		{Type: minus, Value: "", Span: domain.Span{Start: 15, Length: 10}},
+		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 25, Length: 1}},
+		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
+	}
 
-// 	for tokenizer.CurrentToken.Type != domain.EOF && currentIter <= maxIter {
-// 		tokenizer.Consume()
-// 		actual = append(actual, tokenizer.CurrentToken.Type)
-// 		currentIter++
-// 	}
+	actual := config.tokenize()
 
-// 	if currentIter == maxIter {
-// 		t.Error("Infinite loop")
-// 	} else {
-// 		for i, e := range expected {
-// 			if actual[i] != e {
-// 				t.Error("Expected", e, "at index", i, "but got", actual[i])
-// 			}
-// 		}
-// 	}
-// }
-
-// func TestLexUnicodeSymbols(t *testing.T) {
-// 	expected := []domain.TokenType{
-// 		domain.UNKNOWN, 
-// 		2, 
-// 		domain.UNKNOWN, 
-// 		3, 
-// 		domain.UNKNOWN, 
-// 		domain.EOF,
-// 	}
-
-// 	r := bufio.NewReader(strings.NewReader("5 ❄️ 4 🔥 3"))
-	
-// 	tokenizer := NewTokenizer(*r)
-
-// 	tokenizer.AddSymbol("❄️")
-// 	tokenizer.AddSymbol("🔥")
-
-// 	maxIter := 20
-// 	currentIter := 0
-// 	actual := make([]domain.TokenType, 0)
-
-// 	for tokenizer.CurrentToken.Type != domain.EOF && currentIter <= maxIter {
-// 		tokenizer.Consume()
-// 		actual = append(actual, tokenizer.CurrentToken.Type)
-// 		currentIter++
-// 	}
-
-// 	if currentIter == maxIter {
-// 		t.Error("Infinite loop")
-// 	} else {
-// 		for i, e := range expected {
-// 			if actual[i] != e {
-// 				t.Error("Expected", e, "at index", i, "but got", actual[i])
-// 			}
-// 		}
-// 	}
-// }
-
-// func TestLexZeroWidthJoinerSymbols(t *testing.T) {
-// 	expected := []domain.TokenType{
-// 		domain.UNKNOWN, 
-// 		2, 
-// 		domain.UNKNOWN, 
-// 		3, 
-// 		domain.UNKNOWN, 
-// 		domain.EOF,
-// 	}
-
-// 	r := bufio.NewReader(strings.NewReader("5 🐻‍❄️ 4 🐈‍⬛ 3"))
-	
-// 	tokenizer := NewTokenizer(*r)
-
-// 	tokenizer.AddSymbol("🐻‍❄️")
-// 	tokenizer.AddSymbol("🐈‍⬛")
-
-// 	maxIter := 20
-// 	currentIter := 0
-// 	actual := make([]domain.TokenType, 0)
-
-// 	for tokenizer.CurrentToken.Type != domain.EOF && currentIter <= maxIter {
-// 		tokenizer.Consume()
-// 		actual = append(actual, tokenizer.CurrentToken.Type)
-// 		currentIter++
-// 	}
-
-// 	if currentIter == maxIter {
-// 		t.Error("Infinite loop")
-// 	} else {
-// 		for i, e := range expected {
-// 			if actual[i] != e {
-// 				t.Error("Expected", e, "at index", i, "but got", actual[i])
-// 			}
-// 		}
-// 	}
-// }
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected\n", expected, "but got\n", actual)
+	}
+}
