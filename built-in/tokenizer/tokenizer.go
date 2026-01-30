@@ -9,9 +9,9 @@ type Tokenizer struct {
 	position     int
 }
 
-func NewTokenizer(config TokenizerConfig) Tokenizer {
+func NewTokenizer(config TokenizerConfig, source []byte) Tokenizer {
 	return Tokenizer{
-		config.tokenize(),
+		config.tokenize(source),
 		0,
 	}
 }

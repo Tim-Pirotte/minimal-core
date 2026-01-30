@@ -8,11 +8,11 @@ func NewWhiteSpaceMatcher() WhiteSpaceMatcher {
 	return WhiteSpaceMatcher{}
 }
 
-func (*WhiteSpaceMatcher) Match(t *TokenizerConfig) (bool, uint, domain.TokenType, string) {
+func (*WhiteSpaceMatcher) Match(s *Source) (bool, uint, domain.TokenType, string) {
 	pos := 0
 	
 	for {
-		ch, ok := t.Get(pos)
+		ch, ok := s.Get(pos)
 		
 		if !ok || !isWhiteSpace(ch) {
 			break

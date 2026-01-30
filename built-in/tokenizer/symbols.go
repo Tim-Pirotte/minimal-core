@@ -25,7 +25,7 @@ func (s *SymbolMatcher) AddSymbol(t *TokenizerConfig, symbol string) domain.Toke
 	return tokenType
 }
 
-func (s *SymbolMatcher) Match(t *TokenizerConfig) (bool, uint, domain.TokenType, string) {
+func (s *SymbolMatcher) Match(so *Source) (bool, uint, domain.TokenType, string) {
 	var tt domain.TokenType
 	l := 0
 	ok := false
@@ -34,7 +34,7 @@ func (s *SymbolMatcher) Match(t *TokenizerConfig) (bool, uint, domain.TokenType,
 
 	var pos int
 	for pos = 0; node != nil; pos++ {
-		i, _ := t.Get(pos)
+		i, _ := so.Get(pos)
 		node = node.children[i]
 
 		if node != nil && node.leaf {

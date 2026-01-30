@@ -9,9 +9,9 @@ import (
 func TestLexEmpty(t *testing.T) {
 	expected := []domain.Token{{Type: domain.EOF, Value: "", Span: domain.Span{Start: 0, Length: 0}}}
 
-	tokenizerConfig := NewTokenizerConfig([]byte(""))
+	tokenizerConfig := NewTokenizerConfig()
 
-	actual := tokenizerConfig.tokenize()
+	actual := tokenizerConfig.tokenize([]byte(""))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)
@@ -24,9 +24,9 @@ func TestLexUnknown(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 1, Length: 0}},
 	}
 
-	tokenizerConfig := NewTokenizerConfig([]byte("a"))
+	tokenizerConfig := NewTokenizerConfig()
 
-	actual := tokenizerConfig.tokenize()
+	actual := tokenizerConfig.tokenize([]byte("a"))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)
@@ -34,7 +34,7 @@ func TestLexUnknown(t *testing.T) {
 }
 
 func TestLexSymbols(t *testing.T) {
-	config := NewTokenizerConfig([]byte("1+2-3"))
+	config := NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 
 	plus := symbolMatcher.AddSymbol(&config, "+")
@@ -51,7 +51,7 @@ func TestLexSymbols(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 5, Length: 0}},
 	}
 
-	actual := config.tokenize()
+	actual := config.tokenize([]byte("1+2-3"))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected\n", expected, "but got\n", actual)
@@ -59,7 +59,7 @@ func TestLexSymbols(t *testing.T) {
 }
 
 func TestLexMultiCharSymbols(t *testing.T) {
-	config := NewTokenizerConfig([]byte("1+-+-2-+-+3"))
+	config := NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 
 	weirdPlus := symbolMatcher.AddSymbol(&config, "+-+-")
@@ -76,7 +76,7 @@ func TestLexMultiCharSymbols(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 11, Length: 0}},
 	}
 
-	actual := config.tokenize()
+	actual := config.tokenize([]byte("1+-+-2-+-+3"))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected\n", expected, "but got\n", actual)
@@ -84,7 +84,7 @@ func TestLexMultiCharSymbols(t *testing.T) {
 }
 
 func TestLexUnicodeSymbols(t *testing.T) {
-	config := NewTokenizerConfig([]byte("1☘2❤3"))
+	config := NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 
 	plus := symbolMatcher.AddSymbol(&config, "☘")
@@ -101,7 +101,7 @@ func TestLexUnicodeSymbols(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 9, Length: 0}},
 	}
 
-	actual := config.tokenize()
+	actual := config.tokenize([]byte("1☘2❤3"))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected\n", expected, "but got\n", actual)
@@ -109,7 +109,7 @@ func TestLexUnicodeSymbols(t *testing.T) {
 }
 
 func TestLexVariationSelector(t *testing.T) {
-	config := NewTokenizerConfig([]byte("1❄️2🔥3"))
+	config := NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 	
 	plus := symbolMatcher.AddSymbol(&config, "❄️")
@@ -126,7 +126,7 @@ func TestLexVariationSelector(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 13, Length: 0}},
 	}
 
-	actual := config.tokenize()
+	actual := config.tokenize([]byte("1❄️2🔥3"))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected\n", expected, "but got\n", actual)
@@ -134,7 +134,7 @@ func TestLexVariationSelector(t *testing.T) {
 }
 
 func TestLexZeroWidthJoinerSymbols(t *testing.T) {
-	config := NewTokenizerConfig([]byte("1🐻‍❄️2🐈‍⬛3"))
+	config := NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 	
 	plus := symbolMatcher.AddSymbol(&config, "🐻‍❄️")
@@ -151,7 +151,7 @@ func TestLexZeroWidthJoinerSymbols(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
 	}
 
-	actual := config.tokenize()
+	actual := config.tokenize([]byte("1🐻‍❄️2🐈‍⬛3"))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected\n", expected, "but got\n", actual)
@@ -164,13 +164,13 @@ func TestLexSpace(t *testing.T) {
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
 	}
 
-	tokenizerConfig := NewTokenizerConfig([]byte(" \t \t        a\t            "))
+	tokenizerConfig := NewTokenizerConfig()
 
 	wm := NewWhiteSpaceMatcher()
 
 	tokenizerConfig.AddMatcher(&wm)
 
-	actual := tokenizerConfig.tokenize()
+	actual := tokenizerConfig.tokenize([]byte(" \t \t        a\t            "))
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)

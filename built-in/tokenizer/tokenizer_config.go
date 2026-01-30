@@ -5,18 +5,16 @@ import (
 )
 
 type TokenizerConfig struct {
-	source       []byte
-	position     uint
 	matchers     []Matcher
 	lastTokenType domain.TokenType
 }
 
 type Matcher interface {
-	Match(t *TokenizerConfig) (valid bool, length uint, tokenTypeToPushIfLargest domain.TokenType, tokenContent string)
+	Match(s *Source) (valid bool, length uint, tokenTypeToPushIfLargest domain.TokenType, tokenContent string)
 }
 
-func NewTokenizerConfig(source []byte) TokenizerConfig {
-	return TokenizerConfig{source, 0, []Matcher{}, domain.EOF}
+func NewTokenizerConfig() TokenizerConfig {
+	return TokenizerConfig{[]Matcher{}, domain.EOF}
 }
 
 func (t *TokenizerConfig) AddMatcher(matcher Matcher) {
@@ -28,29 +26,35 @@ func (t *TokenizerConfig) NewTokenType() domain.TokenType {
 	return t.lastTokenType
 }
 
+type Source struct {
+	source []byte
+	position uint
+}
+
 // Retrieves a byte at position n relative to the current position from the source.
 // Ok wil be set to false if it is out of bounds
-func (t *TokenizerConfig) Get(n int) (byte, bool) {
-	index := int(t.position) + n
+func (s *Source) Get(n int) (byte, bool) {
+	index := int(s.position) + n
 
-	if 0 <= index && index < len(t.source) {
-		return t.source[index], true
+	if 0 <= index && index < len(s.source) {
+		return s.source[index], true
 	} else {
 		return 0, false
 	}
 }
 
-func (t *TokenizerConfig) tokenize() []domain.Token {
+func (t *TokenizerConfig) tokenize(source []byte) []domain.Token {
+	s := Source{source, 0}
 	tokens := make([]domain.Token, 0)
 
-	for t.position < uint(len(t.source)) {
+	for s.position < uint(len(s.source)) {
 		foundMatch := false
 		largestLength := uint(0)
 		var tokenTypeToPush domain.TokenType
 		var tokenContent string
 
 		for _, matcher := range t.matchers {
-			valid, length, tt, content := matcher.Match(t)
+			valid, length, tt, content := matcher.Match(&s)
 
 			if valid && length > largestLength {
 				foundMatch = true
@@ -67,27 +71,27 @@ func (t *TokenizerConfig) tokenize() []domain.Token {
 					domain.Token{
 						Type: tokenTypeToPush, 
 						Value: tokenContent, 
-						Span: domain.Span{Start: t.position, Length: largestLength}},
+						Span: domain.Span{Start: s.position, Length: largestLength}},
 				)
 			}
 
-			t.position += largestLength
+			s.position += largestLength
 		} else {
 			tokens = append(
 				tokens, 
 				domain.Token{
 					Type: domain.UNKNOWN, 
-					Value: string(t.source[t.position]),
-					Span: domain.Span{Start: t.position, Length: 1},
+					Value: string(s.source[s.position]),
+					Span: domain.Span{Start: s.position, Length: 1},
 				},
 			)
 
-			t.position++
+			s.position++
 		}
 	}
 
 	return append(
 		tokens, 
-		domain.Token{Type: domain.EOF, Value: "", Span: domain.Span{Start: t.position, Length: 0}},
+		domain.Token{Type: domain.EOF, Value: "", Span: domain.Span{Start: s.position, Length: 0}},
 	)
 }
