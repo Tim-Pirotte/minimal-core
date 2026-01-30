@@ -33,6 +33,31 @@ func TestLexUnknown(t *testing.T) {
 	}
 }
 
+func TestLexSymbols(t *testing.T) {
+	config := NewTokenizerConfig([]byte("1+2-3"))
+	symbolMatcher := NewSymbolMatcher()
+
+	plus := symbolMatcher.AddSymbol(&config, "+")
+	minus := symbolMatcher.AddSymbol(&config, "-")
+
+	config.AddMatcher(&symbolMatcher)
+
+	expected := []domain.Token{
+		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
+		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 1}},
+		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 2, Length: 1}},
+		{Type: minus, Value: "", Span: domain.Span{Start: 3, Length: 1}},
+		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 4, Length: 1}},
+		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 5, Length: 0}},
+	}
+
+	actual := config.tokenize()
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected\n", expected, "but got\n", actual)
+	}
+}
+
 // func TestLexSymbols(t *testing.T) {
 // 	expected := []domain.TokenType{
 // 		domain.UNKNOWN, 
