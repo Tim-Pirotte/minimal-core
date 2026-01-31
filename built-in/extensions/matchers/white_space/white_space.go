@@ -1,6 +1,9 @@
-package tokenizer
+package whitespace
 
-import "minimal/minimal-core/domain"
+import (
+	"minimal/minimal-core/built-in/tokenizer"
+	"minimal/minimal-core/domain"
+)
 
 type WhiteSpaceMatcher struct{}
 
@@ -8,7 +11,7 @@ func NewWhiteSpaceMatcher() WhiteSpaceMatcher {
 	return WhiteSpaceMatcher{}
 }
 
-func (*WhiteSpaceMatcher) Match(s *Source) (bool, uint, domain.TokenType, string) {
+func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (bool, uint, domain.TokenType, string) {
 	pos := 0
 	
 	for {

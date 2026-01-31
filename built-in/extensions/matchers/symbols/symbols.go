@@ -1,7 +1,8 @@
-package tokenizer
+package symbols
 
 import (
 	"fmt"
+	"minimal/minimal-core/built-in/tokenizer"
 	"minimal/minimal-core/domain"
 )
 
@@ -13,7 +14,7 @@ func NewSymbolMatcher() SymbolMatcher {
 	return SymbolMatcher{&trieNode{children: [256]*trieNode{}}}
 }
 
-func (s *SymbolMatcher) AddSymbol(t *TokenizerConfig, symbol string) domain.TokenType {
+func (s *SymbolMatcher) AddSymbol(t *tokenizer.TokenizerConfig, symbol string) domain.TokenType {
 	tokenType := t.NewTokenType()
 	err := updateTrie(s.symbols, symbol, tokenType)
 
@@ -25,7 +26,7 @@ func (s *SymbolMatcher) AddSymbol(t *TokenizerConfig, symbol string) domain.Toke
 	return tokenType
 }
 
-func (s *SymbolMatcher) Match(so *Source) (bool, uint, domain.TokenType, string) {
+func (s *SymbolMatcher) Match(so *tokenizer.Source) (bool, uint, domain.TokenType, string) {
 	var tt domain.TokenType
 	l := 0
 	ok := false
