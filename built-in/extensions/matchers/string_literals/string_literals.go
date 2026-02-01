@@ -7,17 +7,44 @@ import (
 )
 
 type StringLiteralMatcher struct {
-	tokenType domain.TokenType
+	stringTt             domain.TokenType
+	interpolatedOpenTt   domain.TokenType
+	interpolatedMiddleTt domain.TokenType
+	interpolatedCloseTt  domain.TokenType
+
+	braceCounter         uint
 }
 
-func NewStringLiteralMatcher(tt domain.TokenType) StringLiteralMatcher {
-	return StringLiteralMatcher{tt}
+func NewStringLiteralMatcher(stringTt, interpolatedOpenTt, interpolatedMiddleTt, interpolatedCloseTt domain.TokenType) StringLiteralMatcher {
+	return StringLiteralMatcher{stringTt, interpolatedOpenTt, interpolatedMiddleTt, interpolatedCloseTt, 0}
 }
 
 func (s *StringLiteralMatcher) Match(so *tokenizer.Source) (uint, domain.TokenType, string) {
 	firstChar, _ := so.Get(0)
 
-	if !(firstChar == '"') {
+	var startsWithQuotation bool
+
+	switch firstChar {
+	case '{':
+		if s.braceCounter > 0 {
+			s.braceCounter++
+		}
+
+		return 0, domain.IGNORE, ""
+	case '}':
+		if s.braceCounter > 0 {
+			s.braceCounter--
+			startsWithQuotation = false
+
+			if s.braceCounter != 0 {
+				return 0, domain.IGNORE, ""
+			}
+		} else {
+			return 0, domain.IGNORE, ""
+		}
+	case '"':
+		startsWithQuotation = true
+	default:
 		return 0, domain.IGNORE, ""
 	}
 
@@ -28,13 +55,30 @@ func (s *StringLiteralMatcher) Match(so *tokenizer.Source) (uint, domain.TokenTy
 		currentChar, ok := so.Get(pos)
 
 		if !ok {
-			// TODO log error
-			panic("No closing character \"")
+			if s.braceCounter > 0 {
+				// TODO log error
+				panic("No closing character }")
+			} else {
+				// TODO log error
+				panic("No closing character \"")
+			}
 		}
 
-		if currentChar == '"' {
-			pos++
-			break;
+		switch currentChar {
+		case '"':
+			if startsWithQuotation {
+				return uint(pos) + 1, s.stringTt, sb.String()
+			} else {
+				return uint(pos) + 1, s.interpolatedCloseTt, sb.String()
+			}
+		case '{':
+			s.braceCounter++
+
+			if startsWithQuotation {
+				return uint(pos) + 1, s.interpolatedOpenTt, sb.String()
+			} else {
+				return uint(pos) + 1, s.interpolatedMiddleTt, sb.String()
+			}
 		}
 
 		if currentChar == '\\' {
@@ -55,6 +99,4 @@ func (s *StringLiteralMatcher) Match(so *tokenizer.Source) (uint, domain.TokenTy
 			pos++
 		}
 	}
-
-	return uint(pos), s.tokenType, sb.String()
 }

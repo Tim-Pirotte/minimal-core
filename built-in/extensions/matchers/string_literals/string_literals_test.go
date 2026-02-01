@@ -11,7 +11,7 @@ import (
 func TestLexStringLiteral(t *testing.T) {
 	config := tokenizer.NewTokenizerConfig()
 	stringLiteralType := config.NewTokenType()
-	stringLiteralMatcher := NewStringLiteralMatcher(stringLiteralType)
+	stringLiteralMatcher := NewStringLiteralMatcher(stringLiteralType, 9999, 9999, 9999)
 
 	config.AddMatcher(&stringLiteralMatcher)
 
@@ -43,7 +43,7 @@ func TestLexStringLiteral(t *testing.T) {
 func TestLexUnclosed(t *testing.T) {
 	config := tokenizer.NewTokenizerConfig()
 	stringLiteralType := config.NewTokenType()
-	stringLiteralMatcher := NewStringLiteralMatcher(stringLiteralType)
+	stringLiteralMatcher := NewStringLiteralMatcher(stringLiteralType, 9999, 9999, 9999)
 
 	config.AddMatcher(&stringLiteralMatcher)
 
