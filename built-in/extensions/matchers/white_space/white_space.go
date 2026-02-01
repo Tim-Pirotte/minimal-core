@@ -11,7 +11,7 @@ func NewWhiteSpaceMatcher() WhiteSpaceMatcher {
 	return WhiteSpaceMatcher{}
 }
 
-func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (bool, uint, domain.TokenType, string) {
+func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (uint, domain.TokenType, string) {
 	pos := 0
 	
 	for {
@@ -24,7 +24,7 @@ func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (bool, uint, domain.TokenTy
 		pos++
 	}
 
-	return true, uint(pos), domain.IGNORE, ""
+	return uint(pos), domain.IGNORE, ""
 }
 
 func isWhiteSpace(b byte) bool {

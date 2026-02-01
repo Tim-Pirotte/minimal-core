@@ -10,7 +10,7 @@ type TokenizerConfig struct {
 }
 
 type Matcher interface {
-	Match(s *Source) (valid bool, length uint, tokenTypeToPushIfLargest domain.TokenType, tokenContent string)
+	Match(s *Source) (length uint, tokenTypeToPushIfLargest domain.TokenType, tokenContent string)
 }
 
 func NewTokenizerConfig() TokenizerConfig {
@@ -54,9 +54,9 @@ func (t *TokenizerConfig) tokenize(source []byte) []domain.Token {
 		var tokenContent string
 
 		for _, matcher := range t.matchers {
-			valid, length, tt, content := matcher.Match(&s)
+			length, tt, content := matcher.Match(&s)
 
-			if valid && length > largestLength {
+			if length > largestLength {
 				foundMatch = true
 				largestLength = length
 				tokenTypeToPush = tt

@@ -26,11 +26,9 @@ func (s *SymbolMatcher) AddSymbol(t *tokenizer.TokenizerConfig, symbol string) d
 	return tokenType
 }
 
-func (s *SymbolMatcher) Match(so *tokenizer.Source) (bool, uint, domain.TokenType, string) {
+func (s *SymbolMatcher) Match(so *tokenizer.Source) (uint, domain.TokenType, string) {
 	var tt domain.TokenType
-	l := 0
-	ok := false
-	
+	l := 0	
 	node := s.symbols
 
 	var pos int
@@ -40,10 +38,9 @@ func (s *SymbolMatcher) Match(so *tokenizer.Source) (bool, uint, domain.TokenTyp
 
 		if node != nil && node.leaf {
 			tt = node.token
-			ok = true
 			l = pos + 1
 		}
 	}
 
-	return ok, uint(l), tt, ""
+	return uint(l), tt, ""
 }

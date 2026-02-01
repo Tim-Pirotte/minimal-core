@@ -87,16 +87,16 @@ func TestLexUnicodeSymbols(t *testing.T) {
 	config := tokenizer.NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 
-	plus := symbolMatcher.AddSymbol(&config, "☘")
-	minus := symbolMatcher.AddSymbol(&config, "❤")
+	club := symbolMatcher.AddSymbol(&config, "☘")
+	heart := symbolMatcher.AddSymbol(&config, "❤")
 
 	config.AddMatcher(&symbolMatcher)
 
 	expected := []domain.Token{
 		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
-		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 3}},
+		{Type: club, Value: "", Span: domain.Span{Start: 1, Length: 3}},
 		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 4, Length: 1}},
-		{Type: minus, Value: "", Span: domain.Span{Start: 5, Length: 3}},
+		{Type: heart, Value: "", Span: domain.Span{Start: 5, Length: 3}},
 		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 8, Length: 1}},
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 9, Length: 0}},
 	}
@@ -125,16 +125,16 @@ func TestLexVariationSelector(t *testing.T) {
 	config := tokenizer.NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 
-	plus := symbolMatcher.AddSymbol(&config, "❄️")
-	minus := symbolMatcher.AddSymbol(&config, "🔥")
+	ice := symbolMatcher.AddSymbol(&config, "❄️")
+	fire := symbolMatcher.AddSymbol(&config, "🔥")
 
 	config.AddMatcher(&symbolMatcher)
 
 	expected := []domain.Token{
 		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
-		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 6}},
+		{Type: ice, Value: "", Span: domain.Span{Start: 1, Length: 6}},
 		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 7, Length: 1}},
-		{Type: minus, Value: "", Span: domain.Span{Start: 8, Length: 4}},
+		{Type: fire, Value: "", Span: domain.Span{Start: 8, Length: 4}},
 		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 12, Length: 1}},
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 13, Length: 0}},
 	}
@@ -163,16 +163,16 @@ func TestLexZeroWidthJoinerSymbols(t *testing.T) {
 	config := tokenizer.NewTokenizerConfig()
 	symbolMatcher := NewSymbolMatcher()
 
-	plus := symbolMatcher.AddSymbol(&config, "🐻‍❄️")
-	minus := symbolMatcher.AddSymbol(&config, "🐈‍⬛")
+	polarBear := symbolMatcher.AddSymbol(&config, "🐻‍❄️")
+	blackCat := symbolMatcher.AddSymbol(&config, "🐈‍⬛")
 
 	config.AddMatcher(&symbolMatcher)
 
 	expected := []domain.Token{
 		{Type: domain.UNKNOWN, Value: "1", Span: domain.Span{Start: 0, Length: 1}},
-		{Type: plus, Value: "", Span: domain.Span{Start: 1, Length: 13}},
+		{Type: polarBear, Value: "", Span: domain.Span{Start: 1, Length: 13}},
 		{Type: domain.UNKNOWN, Value: "2", Span: domain.Span{Start: 14, Length: 1}},
-		{Type: minus, Value: "", Span: domain.Span{Start: 15, Length: 10}},
+		{Type: blackCat, Value: "", Span: domain.Span{Start: 15, Length: 10}},
 		{Type: domain.UNKNOWN, Value: "3", Span: domain.Span{Start: 25, Length: 1}},
 		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
 	}
