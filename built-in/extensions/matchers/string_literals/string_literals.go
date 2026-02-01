@@ -97,6 +97,7 @@ func (s *StringLiteralMatcher) lexInterpolatedString(so *tokenizer.Source) (uint
 		s.braceCounter--
 	case '"':
 		// TODO log error and also log if we are at the end of the file and the state is stil inside string
+		panic("expected a '}'")
 	default:
 		return 0, domain.IGNORE, ""
 	}
