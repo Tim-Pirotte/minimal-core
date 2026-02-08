@@ -5,7 +5,10 @@ type TokenType uint
 const (
 	UNKNOWN TokenType = iota
 	IGNORE
-	EOF // Add new tokens before this one
+	// Add new tokens before this one.
+	// The reason for this is that the value of EOF will be used as
+	// the starting value to increment for new tokens
+	EOF
 )
 
 type Token struct {
