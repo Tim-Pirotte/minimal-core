@@ -8,12 +8,14 @@ import (
 
 type Logger = zerolog.Logger 
 
+var L Logger
 var activeBuffer *ringBuffer
 
-func New(maxBytes uint) Logger {
+func Init(maxBytes uint) {
 	activeBuffer = newRingBuffer(maxBytes)
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-    return zerolog.New(activeBuffer).With().Timestamp().Logger()
+    L = zerolog.New(activeBuffer).With().Timestamp().Logger()
 }
 
 func WriteTo(w io.Writer) (int64, error) {

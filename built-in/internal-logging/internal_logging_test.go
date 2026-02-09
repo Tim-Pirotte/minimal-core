@@ -71,10 +71,10 @@ func TestEmptyBuffer(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	logger := New(500)
+	Init(500)
 
-	logger.Info().Msg("Hello, world!")
-	logger.Error().Msg("Error message")
+	L.Info().Msg("Hello, world!")
+	L.Error().Msg("Error message")
 
 	var buf bytes.Buffer
 	_, err := WriteTo(&buf)
