@@ -1,13 +1,10 @@
 package internallogging
 
 import (
-	"errors"
 	"io"
 
 	"github.com/rs/zerolog"
 )
-
-const UninitializedRingBuffer = "the ring buffer for the logger has not been initialized"
 
 type Logger = zerolog.Logger 
 
@@ -21,7 +18,7 @@ func New(maxBytes uint) Logger {
 
 func WriteTo(w io.Writer) (int64, error) {
     if activeBuffer == nil {
-        return 0, errors.New(UninitializedRingBuffer)
+        panic("the ring buffer for the logger has not been initialized")
     }
 
     return activeBuffer.writeTo(w)
