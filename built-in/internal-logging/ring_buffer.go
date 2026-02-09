@@ -1,4 +1,4 @@
-package internallogging
+package log
 
 import (
 	"io"
