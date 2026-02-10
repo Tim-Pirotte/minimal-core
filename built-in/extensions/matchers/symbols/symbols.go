@@ -33,7 +33,12 @@ func (s *SymbolMatcher) Match(so *tokenizer.Source) (uint, domain.TokenType, str
 
 	var pos int
 	for pos = 0; node != nil; pos++ {
-		i, _ := so.Get(pos)
+		i, ok := so.Get(pos)
+
+		if !ok {
+			break
+		}
+
 		node = node.children[i]
 
 		if node != nil && node.leaf {
