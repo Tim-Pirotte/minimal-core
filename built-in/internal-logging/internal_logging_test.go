@@ -1,7 +1,8 @@
-package log
+package logging
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -71,10 +72,12 @@ func TestEmptyBuffer(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	Init(500)
+	rootSource := Init(500)
 
-	L.Info().Msg("Hello, world!")
-	L.Error().Msg("Error message")
+	logger, _ := rootSource.GetLogger("")
+
+	logger.Info().Msg("Hello, world!")
+	logger.Error().Msg("Error message")
 
 	var buf bytes.Buffer
 	_, err := WriteTo(&buf)
@@ -84,6 +87,8 @@ func TestLogger(t *testing.T) {
 	}
 
 	actual := buf.String()
+
+	fmt.Println(actual)
 
 	firstExpected := "\"message\":\"Hello, world!\""
 
