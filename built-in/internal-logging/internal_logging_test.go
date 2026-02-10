@@ -88,8 +88,6 @@ func TestLogger(t *testing.T) {
 
 	actual := buf.String()
 
-	fmt.Println(actual)
-
 	firstExpected := "\"message\":\"Hello, world!\""
 
 	if !strings.Contains(actual, firstExpected) {
@@ -112,5 +110,96 @@ func TestLogger(t *testing.T) {
 
 	if !strings.Contains(actual, fourthExpected) {
 		t.Error("Expected", fourthExpected, "in", actual)
+	}
+}
+
+func TestEmptySource(t *testing.T) {
+	rootSource := Init(500)
+
+	logger, _ := rootSource.GetLogger("")
+
+	logger.Info().Msg("Hello, world!")
+
+	var buf bytes.Buffer
+	_, err := WriteTo(&buf)
+
+	if err != nil {
+		t.Fatalf("Failed to write to buffer: %v", err)
+	}
+
+	actual := buf.String()
+
+	fmt.Println(actual)
+
+	expected := "\"source\":[\"unnamed\"]"
+
+	if !strings.Contains(actual, expected) {
+		t.Error("Expected", expected, "in", actual)
+	}
+}
+
+func TestMultipleSources(t *testing.T) {
+	rootSource := Init(500)
+
+	firstLogger, firstSource := rootSource.GetLogger("firstLevel")
+	secondLogger, _ := firstSource.GetLogger("secondLevel")
+
+	firstLogger.Info().Msg("Hello, world!")
+	secondLogger.Info().Msg("Hello, world!")
+
+	var buf bytes.Buffer
+	_, err := WriteTo(&buf)
+
+	if err != nil {
+		t.Fatalf("Failed to write to buffer: %v", err)
+	}
+
+	actual := buf.String()
+
+	fmt.Println(actual)
+
+	firstExpected := "\"source\":[\"firstLevel\",\"secondLevel\"]"
+
+	if !strings.Contains(actual, firstExpected) {
+		t.Error("Expected", firstExpected, "in", actual)
+	}
+
+	secondExpected := "\"source\":[\"firstLevel\"]"
+
+	if !strings.Contains(actual, secondExpected) {
+		t.Error("Expected", secondExpected, "in", actual)
+	}
+}
+
+func TestDuplicateSources(t *testing.T) {
+	rootSource := Init(500)
+
+	firstLogger, _ := rootSource.GetLogger("duplicate")
+	secondLogger, _ := rootSource.GetLogger("duplicate")
+
+	firstLogger.Info().Msg("Hello, world!")
+	secondLogger.Info().Msg("Hello, world!")
+
+	var buf bytes.Buffer
+	_, err := WriteTo(&buf)
+
+	if err != nil {
+		t.Fatalf("Failed to write to buffer: %v", err)
+	}
+
+	actual := buf.String()
+
+	fmt.Println(actual)
+
+	firstExpected := "\"source\":[\"duplicate\"]"
+
+	if !strings.Contains(actual, firstExpected) {
+		t.Error("Expected", firstExpected, "in", actual)
+	}
+
+	secondExpected := "\"source\":[\"duplicate#1\"]"
+
+	if !strings.Contains(actual, secondExpected) {
+		t.Error("Expected", secondExpected, "in", actual)
 	}
 }

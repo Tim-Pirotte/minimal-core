@@ -52,7 +52,7 @@ func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, SourceGenerato
         s.declaredSources[name] = count + 1
         name = fmt.Sprintf("%s#%d", name, count+1)
     } else {
-        s.declaredSources[name] = 1
+        s.declaredSources[name] = 0
     }
 
     newPath := append([]string(nil), s.path...)
