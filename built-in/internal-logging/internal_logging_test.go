@@ -2,7 +2,6 @@ package logging
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -129,8 +128,6 @@ func TestEmptySource(t *testing.T) {
 
 	actual := buf.String()
 
-	fmt.Println(actual)
-
 	expected := "\"source\":[\"unnamed\"]"
 
 	if !strings.Contains(actual, expected) {
@@ -155,8 +152,6 @@ func TestMultipleSources(t *testing.T) {
 	}
 
 	actual := buf.String()
-
-	fmt.Println(actual)
 
 	firstExpected := "\"source\":[\"firstLevel\",\"secondLevel\"]"
 
@@ -188,8 +183,6 @@ func TestDuplicateSources(t *testing.T) {
 	}
 
 	actual := buf.String()
-
-	fmt.Println(actual)
 
 	firstExpected := "\"source\":[\"duplicate\"]"
 
