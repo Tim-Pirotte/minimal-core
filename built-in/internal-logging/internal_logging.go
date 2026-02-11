@@ -9,7 +9,6 @@ import (
 )
 
 var rootLogger zerolog.Logger
-var activeBuffer *ringBuffer
 var initCalled bool
 
 type SourceGenerator struct {
@@ -18,15 +17,14 @@ type SourceGenerator struct {
     authentic       bool
 }
 
-func Init(maxBytes uint) SourceGenerator {
+func Init(target io.Writer) SourceGenerator {
     if initCalled {
         panic("logging.Init has already been called")
     }
 
-	activeBuffer = newRingBuffer(maxBytes)
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-    rootLogger = zerolog.New(activeBuffer).With().Timestamp().Logger()
+    rootLogger = zerolog.New(target).With().Timestamp().Logger()
 
     // The authentic field prevents init working multiple times 
     // and external packages creating SourceGenerators themselves
@@ -59,12 +57,4 @@ func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, SourceGenerato
     newPath = append(newPath, name)
 
     return rootLogger.With().Strs("source", newPath).Logger(), SourceGenerator{newPath, make(map[string]int), true}
-}
-
-func WriteTo(w io.Writer) (int64, error) {
-    if activeBuffer == nil {
-        panic("the ring buffer for the logger has not been initialized")
-    }
-
-    return activeBuffer.writeTo(w)
 }

@@ -5,20 +5,20 @@ import (
 	"sync"
 )
 
-type ringBuffer struct {
+type RingBuffer struct {
 	mutex     sync.RWMutex
 	data   []byte
 	cursor int
 	full   bool
 }
 
-func newRingBuffer(maxBytes uint) *ringBuffer {
-	return &ringBuffer{
+func NewRingBuffer(maxBytes uint) *RingBuffer {
+	return &RingBuffer{
 		data: make([]byte, maxBytes),
 	}
 }
 
-func (r *ringBuffer) Write(toWrite []byte) (originalLength int, err error) {
+func (r *RingBuffer) Write(toWrite []byte) (originalLength int, err error) {
 	if len(r.data) == 0 {
         return len(toWrite), nil 
     }
@@ -47,7 +47,7 @@ func (r *ringBuffer) Write(toWrite []byte) (originalLength int, err error) {
 	return originalLength, nil
 }
 
-func (r *ringBuffer) writeTo(w io.Writer) (int64, error) {
+func (r *RingBuffer) WriteTo(w io.Writer) (int64, error) {
     r.mutex.RLock()
     defer r.mutex.RUnlock()
 

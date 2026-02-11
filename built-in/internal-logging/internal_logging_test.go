@@ -6,8 +6,14 @@ import (
 	"testing"
 )
 
+func resetInit() {
+	initCalled = false
+}
+
 func TestRingBuffer(t *testing.T) {
-	rb := newRingBuffer(10)
+	resetInit()
+	
+	rb := NewRingBuffer(10)
 
 	firstInput := "Hello, "
 
@@ -15,7 +21,7 @@ func TestRingBuffer(t *testing.T) {
 
 	var firstOutput bytes.Buffer
 	
-	rb.writeTo(&firstOutput)
+	rb.WriteTo(&firstOutput)
 
 	firstExpected := "Hello, "
 
@@ -29,7 +35,7 @@ func TestRingBuffer(t *testing.T) {
 
 	var secondOutput bytes.Buffer
 	
-	rb.writeTo(&secondOutput)
+	rb.WriteTo(&secondOutput)
 
 	secondExpected := "lo, world!"
 
@@ -39,7 +45,9 @@ func TestRingBuffer(t *testing.T) {
 }
 
 func TestEmptyBuffer(t *testing.T) {
-	rb := newRingBuffer(0)
+	resetInit()
+
+	rb := NewRingBuffer(0)
 
 	firstInput := "Hello, "
 
@@ -47,7 +55,7 @@ func TestEmptyBuffer(t *testing.T) {
 
 	var firstOutput bytes.Buffer
 	
-	rb.writeTo(&firstOutput)
+	rb.WriteTo(&firstOutput)
 
 	firstExpected := ""
 
@@ -61,7 +69,7 @@ func TestEmptyBuffer(t *testing.T) {
 
 	var secondOutput bytes.Buffer
 	
-	rb.writeTo(&secondOutput)
+	rb.WriteTo(&secondOutput)
 
 	secondExpected := ""
 
@@ -71,7 +79,10 @@ func TestEmptyBuffer(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	rootSource := Init(500)
+	resetInit()
+
+	ringBuffer := NewRingBuffer(500)
+	rootSource := Init(ringBuffer)
 
 	logger, _ := rootSource.GetLogger("")
 
@@ -79,7 +90,7 @@ func TestLogger(t *testing.T) {
 	logger.Error().Msg("Error message")
 
 	var buf bytes.Buffer
-	_, err := WriteTo(&buf)
+	_, err := ringBuffer.WriteTo(&buf)
 
 	if err != nil {
 		t.Fatalf("Failed to write to buffer: %v", err)
@@ -113,14 +124,17 @@ func TestLogger(t *testing.T) {
 }
 
 func TestEmptySource(t *testing.T) {
-	rootSource := Init(500)
+	resetInit()
+
+	ringBuffer := NewRingBuffer(500)
+	rootSource := Init(ringBuffer)
 
 	logger, _ := rootSource.GetLogger("")
 
 	logger.Info().Msg("Hello, world!")
 
 	var buf bytes.Buffer
-	_, err := WriteTo(&buf)
+	_, err := ringBuffer.WriteTo(&buf)
 
 	if err != nil {
 		t.Fatalf("Failed to write to buffer: %v", err)
@@ -136,7 +150,10 @@ func TestEmptySource(t *testing.T) {
 }
 
 func TestMultipleSources(t *testing.T) {
-	rootSource := Init(500)
+	resetInit()
+
+	ringBuffer := NewRingBuffer(500)
+	rootSource := Init(ringBuffer)
 
 	firstLogger, firstSource := rootSource.GetLogger("firstLevel")
 	secondLogger, _ := firstSource.GetLogger("secondLevel")
@@ -145,7 +162,7 @@ func TestMultipleSources(t *testing.T) {
 	secondLogger.Info().Msg("Hello, world!")
 
 	var buf bytes.Buffer
-	_, err := WriteTo(&buf)
+	_, err := ringBuffer.WriteTo(&buf)
 
 	if err != nil {
 		t.Fatalf("Failed to write to buffer: %v", err)
@@ -167,7 +184,10 @@ func TestMultipleSources(t *testing.T) {
 }
 
 func TestDuplicateSources(t *testing.T) {
-	rootSource := Init(500)
+	resetInit()
+
+	ringBuffer := NewRingBuffer(500)
+	rootSource := Init(ringBuffer)
 
 	firstLogger, _ := rootSource.GetLogger("duplicate")
 	secondLogger, _ := rootSource.GetLogger("duplicate")
@@ -176,7 +196,7 @@ func TestDuplicateSources(t *testing.T) {
 	secondLogger.Info().Msg("Hello, world!")
 
 	var buf bytes.Buffer
-	_, err := WriteTo(&buf)
+	_, err := ringBuffer.WriteTo(&buf)
 
 	if err != nil {
 		t.Fatalf("Failed to write to buffer: %v", err)
