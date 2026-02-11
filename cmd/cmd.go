@@ -10,8 +10,7 @@ import (
 
 func main() {
 	sourceGen := logging.Init(zerolog.ConsoleWriter{Out: os.Stdout})
-	cmdLogger, _ := sourceGen.GetLogger("commands")
-	commands := startup.NewCommands(cmdLogger)
+	commands := startup.NewCommands(sourceGen)
 
 	registerCommands(commands)
 
@@ -20,6 +19,6 @@ func main() {
 	if entrypoint == nil {
 		os.Exit(1)
 	}
-	
+
 	entrypoint()
 }

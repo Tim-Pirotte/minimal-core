@@ -3,6 +3,7 @@ package startup
 import (
 	"errors"
 	"minimal/minimal-core/built-in/config"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"os"
 	"path/filepath"
 
@@ -19,7 +20,9 @@ type Commands struct {
 	logger zerolog.Logger
 }
 
-func NewCommands(logger zerolog.Logger) *Commands {
+func NewCommands(sourceGen logging.SourceGenerator) *Commands {
+	logger, _ := sourceGen.GetLogger("commands")
+
 	return &Commands{make(map[string]func()), logger}
 }
 
