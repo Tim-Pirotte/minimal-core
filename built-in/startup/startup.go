@@ -23,36 +23,36 @@ func NewCommands(logger zerolog.Logger) Commands {
 
 func (c *Commands) AddCommand(name string, function func()) error {
 	if _, ok := c.commands[name]; ok {
-		c.log_duplicate_command(name)
+		c.log_duplicate_command(name, true)
 		return DuplicateCommand
 	}
 
 	if _, ok := c.configlessCommands[name]; ok {
-		c.log_duplicate_command(name)
+		c.log_duplicate_command(name, true)
 		return DuplicateCommand
 	}
 
 	c.commands[name] = function
 
-	c.log_command_registered(name, false)
+	c.log_command_registered(name, true)
 
 	return nil
 }
 
 func (c *Commands) AddConfiglessCommand(name string, function func()) error {
 	if _, ok := c.configlessCommands[name]; ok {
-		c.log_duplicate_configless_command(name)
+		c.log_duplicate_command(name, false)
 		return DuplicateCommand
 	}
 
 	if _, ok := c.commands[name]; ok {
-		c.log_duplicate_configless_command(name)
+		c.log_duplicate_command(name, false)
 		return DuplicateCommand
 	}
 
 	c.configlessCommands[name] = function
 	
-	c.log_command_registered(name, true)
+	c.log_command_registered(name, false)
 
 	return nil
 }
@@ -71,7 +71,7 @@ func (c *Commands) Start() {
 	configOrCommand := os.Args[1]
 
 	if startupFunc, ok := c.configlessCommands[configOrCommand]; ok {
-		c.log_run_configless_command(configOrCommand)
+		c.log_running_command(configOrCommand, false)
 		startupFunc()
 
 		return
@@ -88,7 +88,7 @@ func (c *Commands) Start() {
 	config.LoadConfig(string(file), startupConfig)
 
 	if startupFunc, ok := c.commands[startupConfig.Command]; ok {
-		c.log_running_config(startupConfig.Command, configOrCommand)
+		c.log_running_command(startupConfig.Command, true)
 
 		startupFunc()
 	} else {
@@ -96,9 +96,10 @@ func (c *Commands) Start() {
 	}
 }
 
-func (c *Commands) log_duplicate_command(name string) {
+func (c *Commands) log_duplicate_command(name string, withConfig bool) {
 	c.logger.Fatal().
 		Str("command_name", name).
+		Bool("with_config", withConfig).
 		Msg("duplicate command name")
 }
 
@@ -109,12 +110,6 @@ func (c *Commands) log_command_registered(name string, withConfig bool) {
 		Msg("command registered")
 }
 
-func (c *Commands) log_duplicate_configless_command(name string) {
-	c.logger.Fatal().
-		Str("command_name", name).
-		Msg("duplicate configless command name")
-}
-
 func (c *Commands) log_not_enough_args() {
 	c.logger.Fatal().
 		Int("min_expected_args", minimumExpectedArgs).
@@ -122,23 +117,17 @@ func (c *Commands) log_not_enough_args() {
 		Msg("not enough arguments")
 }
 
-func (c *Commands) log_run_configless_command(commandName string) {
+func (c *Commands) log_running_command(commandName string, withConfig bool) {
 	c.logger.Info().
 		Str("command_name", commandName).
-		Msg("running configless command")
+		Bool("with_config", withConfig).
+		Msg("running command")
 }
 
 func (c *Commands) log_config_not_found(configName string) {
 	c.logger.Fatal().
 		Str("config_name", configName).
 		Msg("config not found on file system")
-}
-
-func (c *Commands) log_running_config(commandName, configName string) {
-	c.logger.Info().
-		Str("command_name", commandName).
-		Str("config_name", configName).
-		Msg("running config")
 }
 
 func (c *Commands) log_command_not_exists(commandName, configName string) {
