@@ -14,7 +14,7 @@ func main() {
 
 	registerCommands(commands)
 
-	entrypoint := commands.GetEntrypoint()
+	entrypoint := commands.GetEntrypoint(os.Args)
 
 	if entrypoint == nil {
 		os.Exit(1)

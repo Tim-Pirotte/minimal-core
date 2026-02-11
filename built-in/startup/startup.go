@@ -2,10 +2,11 @@ package startup
 
 import (
 	"errors"
+	"io/fs"
 	"minimal/minimal-core/built-in/config"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/rs/zerolog"
 )
@@ -13,17 +14,18 @@ import (
 const minimumExpectedArgs = 2
 
 var DuplicateCommand = errors.New("command with this name already exists")
-var commandsConfigPath = filepath.Join(".", "commands")
+var commandsConfigPath = path.Join(".", "commands")
 
 type Commands struct {
 	commands map[string]func()
 	logger zerolog.Logger
+	fs fs.FS
 }
 
 func NewCommands(sourceGen logging.SourceGenerator) *Commands {
-	logger, _ := sourceGen.GetLogger("commands")
+	logger, _ := sourceGen.GetLogger("startup")
 
-	return &Commands{make(map[string]func()), logger}
+	return &Commands{make(map[string]func()), logger, os.DirFS("")}
 }
 
 func (c *Commands) AddCommand(name string, function func()) error {
@@ -44,13 +46,13 @@ type StartupConfig struct {
 
 // Returns the program entrypoint based on the first argument
 // or nil if something went wrong
-func (c *Commands) GetEntrypoint() func() {
+func (c *Commands) GetEntrypoint(args []string) func() {
 	if len(os.Args) < minimumExpectedArgs {
-		c.logNotEnoughArgs()
+		c.logNotEnoughArgs(len(args))
 		return nil
 	}
 
-	configOrCommand := os.Args[1]
+	configOrCommand := args[1]
 
 	if startupFunc, ok := c.commands[configOrCommand]; ok {
 		c.logRunningCommand(configOrCommand, false)
@@ -63,7 +65,7 @@ func (c *Commands) GetEntrypoint() func() {
 func (c *Commands) loadFromConfig(configName string) func() {
 	startupConfig := &StartupConfig{}
 
-	file, err := os.ReadFile(filepath.Join(commandsConfigPath, configName))
+	file, err := fs.ReadFile(c.fs, path.Join(commandsConfigPath, configName))
 
 	if err != nil {
 		c.logConfigNotFound(configName)
@@ -94,10 +96,10 @@ func (c *Commands) logCommandRegistered(name string) {
 		Msg("command registered")
 }
 
-func (c *Commands) logNotEnoughArgs() {
+func (c *Commands) logNotEnoughArgs(argsLength int) {
 	c.logger.Error().
 		Int("min_expected_args", minimumExpectedArgs).
-		Int("actual_args", len(os.Args)).
+		Int("actual_args", argsLength).
 		Msg("not enough arguments")
 }
 
