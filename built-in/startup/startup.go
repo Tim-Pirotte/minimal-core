@@ -39,10 +39,12 @@ type StartupConfig struct {
 	Command string `toml:"command"`
 }
 
+// Returns the program entrypoint based on the first argument
+// or nil if something went wrong
 func (c *Commands) GetEntrypoint() func() {
 	if len(os.Args) < minimumExpectedArgs {
 		c.logNotEnoughArgs()
-		panic("unreachable")
+		return nil
 	}
 
 	configOrCommand := os.Args[1]
@@ -62,7 +64,7 @@ func (c *Commands) loadFromConfig(configName string) func() {
 
 	if err != nil {
 		c.logConfigNotFound(configName)
-		panic("unreachable")
+		return nil
 	}
 
 	config.LoadConfig(string(file), startupConfig)
@@ -73,7 +75,7 @@ func (c *Commands) loadFromConfig(configName string) func() {
 	}
 	
 	c.logCommandNotExists(startupConfig.Command, configName)
-	panic("unreachable")
+	return nil
 }
 
 func (c *Commands) logDuplicateCommand(name string) {
@@ -90,7 +92,7 @@ func (c *Commands) logCommandRegistered(name string) {
 }
 
 func (c *Commands) logNotEnoughArgs() {
-	c.logger.Fatal().
+	c.logger.Error().
 		Int("min_expected_args", minimumExpectedArgs).
 		Int("actual_args", len(os.Args)).
 		Msg("not enough arguments")
@@ -104,13 +106,13 @@ func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {
 }
 
 func (c *Commands) logConfigNotFound(configName string) {
-	c.logger.Fatal().
+	c.logger.Error().
 		Str("config_name", configName).
 		Msg("config not found on file system")
 }
 
 func (c *Commands) logCommandNotExists(commandName, configName string) {
-	c.logger.Fatal().
+	c.logger.Error().
 		Str("command_name", commandName).
 		Str("config_name", configName).
 		Msg("command does not exist")

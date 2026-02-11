@@ -17,5 +17,9 @@ func main() {
 
 	entrypoint := commands.GetEntrypoint()
 
+	if entrypoint == nil {
+		os.Exit(1)
+	}
+	
 	entrypoint()
 }
