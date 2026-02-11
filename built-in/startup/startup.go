@@ -13,46 +13,22 @@ var DuplicateCommand = errors.New("command with this name already exists")
 
 type Commands struct {
 	commands map[string]func()
-	configlessCommands map[string]func()
 	logger zerolog.Logger
 }
 
 func NewCommands(logger zerolog.Logger) Commands {
-	return Commands{make(map[string]func()), make(map[string]func()), logger}
+	return Commands{make(map[string]func()), logger}
 }
 
 func (c *Commands) AddCommand(name string, function func()) error {
 	if _, ok := c.commands[name]; ok {
-		c.log_duplicate_command(name, true)
-		return DuplicateCommand
-	}
-
-	if _, ok := c.configlessCommands[name]; ok {
-		c.log_duplicate_command(name, true)
+		c.log_duplicate_command(name)
 		return DuplicateCommand
 	}
 
 	c.commands[name] = function
 
-	c.log_command_registered(name, true)
-
-	return nil
-}
-
-func (c *Commands) AddConfiglessCommand(name string, function func()) error {
-	if _, ok := c.configlessCommands[name]; ok {
-		c.log_duplicate_command(name, false)
-		return DuplicateCommand
-	}
-
-	if _, ok := c.commands[name]; ok {
-		c.log_duplicate_command(name, false)
-		return DuplicateCommand
-	}
-
-	c.configlessCommands[name] = function
-	
-	c.log_command_registered(name, false)
+	c.log_command_registered(name)
 
 	return nil
 }
@@ -70,7 +46,7 @@ func (c *Commands) Start() {
 
 	configOrCommand := os.Args[1]
 
-	if startupFunc, ok := c.configlessCommands[configOrCommand]; ok {
+	if startupFunc, ok := c.commands[configOrCommand]; ok {
 		c.log_running_command(configOrCommand, false)
 		startupFunc()
 
@@ -91,22 +67,21 @@ func (c *Commands) Start() {
 		c.log_running_command(startupConfig.Command, true)
 
 		startupFunc()
-	} else {
-		c.log_command_not_exists(startupConfig.Command, configOrCommand)
+		return
 	}
+	
+	c.log_command_not_exists(startupConfig.Command, configOrCommand)
 }
 
-func (c *Commands) log_duplicate_command(name string, withConfig bool) {
+func (c *Commands) log_duplicate_command(name string) {
 	c.logger.Fatal().
 		Str("command_name", name).
-		Bool("with_config", withConfig).
 		Msg("duplicate command name")
 }
 
-func (c *Commands) log_command_registered(name string, withConfig bool) {
+func (c *Commands) log_command_registered(name string) {
 	c.logger.Debug().
 		Str("command_name", name).
-		Bool("with_config", withConfig).
 		Msg("command registered")
 }
 
@@ -117,10 +92,10 @@ func (c *Commands) log_not_enough_args() {
 		Msg("not enough arguments")
 }
 
-func (c *Commands) log_running_command(commandName string, withConfig bool) {
+func (c *Commands) log_running_command(commandName string, fromConfig bool) {
 	c.logger.Info().
 		Str("command_name", commandName).
-		Bool("with_config", withConfig).
+		Bool("from_config", fromConfig).
 		Msg("running command")
 }
 
