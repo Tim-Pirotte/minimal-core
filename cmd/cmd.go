@@ -1,9 +1,17 @@
 package main
 
-import "minimal/minimal-core/built-in/startup"
+import (
+	logging "minimal/minimal-core/built-in/internal-logging"
+	"minimal/minimal-core/built-in/startup"
+	"os"
+)
 
 func main() {
-	commands := startup.NewCommands()
+	sourceGen := logging.Init(os.Stdout)
+	cmdLogger, _ := sourceGen.GetLogger("commands")
+	commands := startup.NewCommands(cmdLogger)
+
 	registerCommands(commands)
-	startup.Start(commands)
+
+	commands.Start()
 }
