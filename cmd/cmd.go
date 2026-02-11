@@ -4,10 +4,12 @@ import (
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/startup"
 	"os"
+
+	"github.com/rs/zerolog"
 )
 
 func main() {
-	sourceGen := logging.Init(os.Stdout)
+	sourceGen := logging.Init(zerolog.ConsoleWriter{Out: os.Stdout})
 	cmdLogger, _ := sourceGen.GetLogger("commands")
 	commands := startup.NewCommands(cmdLogger)
 
