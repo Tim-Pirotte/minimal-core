@@ -5,8 +5,8 @@ import (
 	"minimal/minimal-core/built-in/startup"
 )
 
-func registerCommands(commands startup.Commands) {
-	commands.AddConfiglessCommand("hello", helloWorld)
+func registerCommands(commands *startup.Commands) {
+	commands.AddCommand("hello", helloWorld)
 }
 
 func helloWorld() {

@@ -9,26 +9,28 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const minimumExpectedArgs = 2
+
 var DuplicateCommand = errors.New("command with this name already exists")
+var commandsConfigPath = filepath.Join(".", "commands")
 
 type Commands struct {
 	commands map[string]func()
 	logger zerolog.Logger
 }
 
-func NewCommands(logger zerolog.Logger) Commands {
-	return Commands{make(map[string]func()), logger}
+func NewCommands(logger zerolog.Logger) *Commands {
+	return &Commands{make(map[string]func()), logger}
 }
 
 func (c *Commands) AddCommand(name string, function func()) error {
 	if _, ok := c.commands[name]; ok {
-		c.log_duplicate_command(name)
+		c.logDuplicateCommand(name)
 		return DuplicateCommand
 	}
 
 	c.commands[name] = function
-
-	c.log_command_registered(name)
+	c.logCommandRegistered(name)
 
 	return nil
 }
@@ -37,75 +39,77 @@ type StartupConfig struct {
 	Command string `toml:"command"`
 }
 
-const minimumExpectedArgs = 2
-
-func (c *Commands) Start() {
+func (c *Commands) GetEntrypoint() func() {
 	if len(os.Args) < minimumExpectedArgs {
-		c.log_not_enough_args()
+		c.logNotEnoughArgs()
+		panic("unreachable")
 	}
 
 	configOrCommand := os.Args[1]
 
 	if startupFunc, ok := c.commands[configOrCommand]; ok {
-		c.log_running_command(configOrCommand, false)
-		startupFunc()
-
-		return
+		c.logRunningCommand(configOrCommand, false)
+		return startupFunc
+	} else {
+		return c.loadFromConfig(configOrCommand)
 	}
+}
 
+func (c *Commands) loadFromConfig(configName string) func() {
 	startupConfig := &StartupConfig{}
 
-	file, err := os.ReadFile(filepath.Join(".", "commands", configOrCommand))
+	file, err := os.ReadFile(filepath.Join(commandsConfigPath, configName))
 
 	if err != nil {
-		c.log_config_not_found(configOrCommand)
+		c.logConfigNotFound(configName)
+		panic("unreachable")
 	}
 
 	config.LoadConfig(string(file), startupConfig)
 
 	if startupFunc, ok := c.commands[startupConfig.Command]; ok {
-		c.log_running_command(startupConfig.Command, true)
-
-		startupFunc()
-		return
+		c.logRunningCommand(startupConfig.Command, true)
+		return startupFunc
 	}
 	
-	c.log_command_not_exists(startupConfig.Command, configOrCommand)
+	c.logCommandNotExists(startupConfig.Command, configName)
+	panic("unreachable")
 }
 
-func (c *Commands) log_duplicate_command(name string) {
-	c.logger.Fatal().
+func (c *Commands) logDuplicateCommand(name string) {
+	c.logger.Error().
 		Str("command_name", name).
-		Msg("duplicate command name")
+		Err(DuplicateCommand).
+		Msg("")
 }
 
-func (c *Commands) log_command_registered(name string) {
+func (c *Commands) logCommandRegistered(name string) {
 	c.logger.Debug().
 		Str("command_name", name).
 		Msg("command registered")
 }
 
-func (c *Commands) log_not_enough_args() {
+func (c *Commands) logNotEnoughArgs() {
 	c.logger.Fatal().
 		Int("min_expected_args", minimumExpectedArgs).
 		Int("actual_args", len(os.Args)).
 		Msg("not enough arguments")
 }
 
-func (c *Commands) log_running_command(commandName string, fromConfig bool) {
+func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {
 	c.logger.Info().
 		Str("command_name", commandName).
 		Bool("from_config", fromConfig).
 		Msg("running command")
 }
 
-func (c *Commands) log_config_not_found(configName string) {
+func (c *Commands) logConfigNotFound(configName string) {
 	c.logger.Fatal().
 		Str("config_name", configName).
 		Msg("config not found on file system")
 }
 
-func (c *Commands) log_command_not_exists(commandName, configName string) {
+func (c *Commands) logCommandNotExists(commandName, configName string) {
 	c.logger.Fatal().
 		Str("command_name", commandName).
 		Str("config_name", configName).
