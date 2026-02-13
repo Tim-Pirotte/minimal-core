@@ -1,11 +1,12 @@
-package templating
+package templates
 
 import (
 	"flag"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/afero"
 )
 
 const (
@@ -13,72 +14,84 @@ const (
 	templatesFolderName = "templates"
 
 	destinationFlagName = "destination"
+	defaultTargetPath = "."
 )
 
 func NewProject() {
 	var targetPath string
-	flag.StringVar(&targetPath, destinationFlagName, "", "")
-	flag.StringVar(&targetPath, string(destinationFlagName[0]), "", "")
-
-	var symbolicLink bool
-	flag.BoolVar(&symbolicLink, "ln", false, "")
+	flag.StringVar(&targetPath, destinationFlagName, defaultTargetPath, "")
+	flag.StringVar(&targetPath, string(destinationFlagName[0]), defaultTargetPath, "")
 
 	flag.Parse()
 
-	if targetPath == "" {
-		targetPath = "."
-	}
-
-	switch len(flag.Args()) {
-	case 0:
-		loadTemplate(targetPath, defaultTemplateName)
-	case 1:
-		loadTemplate(targetPath, flag.Arg(0))
-	default:
-		// TODO log error
-	}
-}
-
-func loadTemplate(targetPath, name string) {
 	executablePath, err := os.Executable()
 
 	if err != nil {
 		// TODO log error
+		err = nil
 	}
 
-	templatePath := filepath.Join(filepath.Dir(executablePath), templatesFolderName, name)
+	templatePath := filepath.Join(filepath.Dir(executablePath), templatesFolderName)
 
-	err = filepath.WalkDir(templatePath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+	fileSystem := afero.NewOsFs()
 
-		// TODO check if the error is of importance
-		relativePath, _ := filepath.Rel(templatePath, path)
-        destinationPath := filepath.Join(targetPath, relativePath)
+	switch flag.NArg() {
+	case 0:
+		sourcePath := filepath.Join(templatePath, defaultTemplateName)
+		err = loadTemplate(fileSystem, sourcePath, targetPath)
+	case 1:
+		sourcePath := filepath.Join(templatePath, flag.Arg(0))
+		err = loadTemplate(fileSystem, sourcePath, targetPath)
+	default:
+		// TODO log error
+	}
 
-		if d.IsDir() {
-			return os.MkdirAll(destinationPath, 0755)
-		} else {
-			sourceFile, err := os.Open(path)
+	if err != nil {
+
+	}
+}
+
+func loadTemplate(fs afero.Fs, sourcePath, targetPath string) error {
+    return afero.Walk(fs, sourcePath, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+
+        relPath, _ := filepath.Rel(sourcePath, path)
+        destPath := filepath.Join(targetPath, relPath)
+
+        if info.IsDir() {
+            return fs.MkdirAll(destPath, 0755)
+        } else {
+			srcFile, err := fs.Open(path)
 
 			if err != nil {
 				return err
 			}
 
-			defer sourceFile.Close()
+			defer srcFile.Close()
 
-			destinationFile, err := os.Create(destinationPath)
+			dstFile, err := fs.Create(destPath)
 
 			if err != nil {
 				return err
 			}
 
-			defer destinationFile.Close()
+			defer dstFile.Close()
 
-			_, err = io.Copy(destinationFile, sourceFile)
-
+			_, err = io.Copy(dstFile, srcFile)
 			return err
 		}
-	})
+    })
+}
+
+func CreateTemplate() {
+	var symbolicLink bool
+	flag.BoolVar(&symbolicLink, "ln", false, "")
+
+	flag.Parse()
+}
+
+func saveTemplate() {
+
 }
