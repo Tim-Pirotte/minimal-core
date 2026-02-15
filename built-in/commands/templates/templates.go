@@ -60,9 +60,26 @@ func loadTemplate(fs afero.Fs, sourcePath, targetPath string) error {
         relPath, _ := filepath.Rel(sourcePath, path)
         destPath := filepath.Join(targetPath, relPath)
 
-        if info.IsDir() {
-            return fs.MkdirAll(destPath, 0755)
-        } else {
+		switch {
+		case info.IsDir():
+			return fs.MkdirAll(destPath, 0755)
+		case info.Mode() & os.ModeSymlink != 0:
+			linker, ok := fs.(afero.Linker)
+			
+			if ok {
+				target, err := os.Readlink(path)
+
+				if err == nil {
+					err := linker.SymlinkIfPossible(target, destPath)
+				
+					if err == nil {
+						return nil
+					}
+				}
+			}
+
+			fallthrough
+		default:
 			srcFile, err := fs.Open(path)
 
 			if err != nil {

@@ -1,7 +1,11 @@
 package templates
 
 import (
+	"errors"
+	"os"
 	"path/filepath"
+	"runtime"
+	"syscall"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -68,6 +72,154 @@ func TestLoadTemplate(t *testing.T) {
     }
 }
 
-func TestLoadTemplateSymLink(t *testing.T) {
+func isWindowsPrivilegeError(err error) bool {
+	if runtime.GOOS != "windows" {
+		return false
+	}
+
+	return errors.Is(err, syscall.Errno(1314))
+}
+
+func TestLoadTemplateSymlink(t *testing.T) {
+	osFs := afero.NewOsFs()
+
+	workDir, err := afero.TempDir(osFs, "", "template-test")
 	
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer osFs.RemoveAll(workDir)
+
+	templateRoot := filepath.Join(workDir, "templates")
+	templateName := "go-cli"
+	sourceDir := filepath.Join(templateRoot, templateName)
+
+	if err := osFs.MkdirAll(sourceDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	originalFile := filepath.Join(sourceDir, "config.yaml")
+
+	if err := afero.WriteFile(osFs, originalFile, []byte("port: 8080"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	linker := osFs.(afero.Linker)
+
+	linkPath := filepath.Join(sourceDir, "config-link.yaml")
+
+	if err := linker.SymlinkIfPossible("config.yaml", linkPath); err != nil {
+        if isWindowsPrivilegeError(err) {
+            t.Skip("skipping: symlink privilege not held")
+        }
+
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	targetPath := filepath.Join(workDir, "output")
+
+	if err := loadTemplate(osFs, sourceDir, targetPath); err != nil {
+		t.Fatalf("loadTemplate failed: %v", err)
+	}
+
+	copiedLink := filepath.Join(targetPath, "config-link.yaml")
+
+	exists, err := afero.Exists(osFs, copiedLink)
+
+	if err != nil || !exists {
+		t.Fatalf("expected symlink %s to exist", copiedLink)
+	}
+
+	lstater := osFs.(afero.Lstater)
+
+	info, isLstat, err := lstater.LstatIfPossible(copiedLink)
+
+	if err != nil {
+		t.Fatalf("lstat failed: %v", err)
+	}
+
+	if !isLstat || info.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("expected %s to be a symlink", copiedLink)
+	}
+
+	content, err := afero.ReadFile(osFs, copiedLink)
+	if err != nil {
+		t.Fatalf("failed reading through symlink: %v", err)
+	}
+
+	if string(content) != "port: 8080" {
+		t.Errorf("unexpected content: got %s, want %s", string(content), "port: 8080")
+	}
+}
+
+func TestLoadTemplateSymlinkFallbackCopiesContents(t *testing.T) {
+	osFs := afero.NewOsFs()
+	memFs := afero.NewMemMapFs()
+
+	fs := afero.NewCopyOnWriteFs(osFs, memFs)
+
+	workDir, err := afero.TempDir(osFs, "", "template-test")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer osFs.RemoveAll(workDir)
+
+	templateRoot := filepath.Join(workDir, "templates")
+	templateName := "go-cli"
+	sourceDir := filepath.Join(templateRoot, templateName)
+
+	if err := osFs.MkdirAll(sourceDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	originalFile := filepath.Join(sourceDir, "config.yaml")
+
+	if err := afero.WriteFile(osFs, originalFile, []byte("port: 8080"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	linker := osFs.(afero.Linker)
+	linkPath := filepath.Join(sourceDir, "config-link.yaml")
+
+	err = linker.SymlinkIfPossible("config.yaml", linkPath)
+	if err != nil {
+		t.Skipf("skipping: cannot create symlink in test environment: %v", err)
+	}
+
+	targetPath := filepath.Join(workDir, "output")
+
+	if err := loadTemplate(fs, sourceDir, targetPath); err != nil {
+		t.Fatalf("loadTemplate failed: %v", err)
+	}
+
+	copiedPath := filepath.Join(targetPath, "config-link.yaml")
+
+	exists, err := afero.Exists(fs, copiedPath)
+
+	if err != nil || !exists {
+		t.Fatalf("expected %s to exist", copiedPath)
+	}
+
+	info, err := fs.Stat(copiedPath)
+
+	if err != nil {
+		t.Fatalf("stat failed: %v", err)
+	}
+
+	if info.Mode()&os.ModeSymlink != 0 {
+		t.Fatalf("expected fallback to regular file, but got symlink")
+	}
+
+	content, err := afero.ReadFile(fs, copiedPath)
+	
+	if err != nil {
+		t.Fatalf("failed to read copied file: %v", err)
+	}
+
+	if string(content) != "port: 8080" {
+		t.Fatalf("unexpected content: got %s, want %s", string(content), "port: 8080")
+	}
 }
