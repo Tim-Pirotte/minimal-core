@@ -214,12 +214,140 @@ func TestLoadTemplateSymlinkFallbackCopiesContents(t *testing.T) {
 	}
 
 	content, err := afero.ReadFile(fs, copiedPath)
-	
+
 	if err != nil {
 		t.Fatalf("failed to read copied file: %v", err)
 	}
 
 	if string(content) != "port: 8080" {
 		t.Fatalf("unexpected content: got %s, want %s", string(content), "port: 8080")
+	}
+}
+
+func TestLoadTemplateDirSymlinkPreserved(t *testing.T) {
+	osFs := afero.NewOsFs()
+
+	workDir, err := afero.TempDir(osFs, "", "template-test")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer osFs.RemoveAll(workDir)
+
+	sourceDir := filepath.Join(workDir, "templates", "go-cli")
+	
+	if err := osFs.MkdirAll(sourceDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	realDir := filepath.Join(sourceDir, "assets")
+	
+	if err := osFs.MkdirAll(realDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	err = afero.WriteFile(osFs, filepath.Join(realDir, "file.txt"), []byte("hello"), 0o644)
+	
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	linker := osFs.(afero.Linker)
+	linkPath := filepath.Join(sourceDir, "assets-link")
+
+	err = linker.SymlinkIfPossible("assets", linkPath)
+
+	if err != nil {
+		t.Skipf("skipping: cannot create directory symlink: %v", err)
+	}
+
+	targetPath := filepath.Join(workDir, "output")
+
+	if err := loadTemplate(osFs, sourceDir, targetPath); err != nil {
+		t.Fatalf("loadTemplate failed: %v", err)
+	}
+
+	copiedLink := filepath.Join(targetPath, "assets-link")
+
+	lstater := osFs.(afero.Lstater)
+	info, isLstat, err := lstater.LstatIfPossible(copiedLink)
+
+	if err != nil {
+		t.Fatalf("lstat failed: %v", err)
+	}
+
+	if !isLstat || info.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("expected directory symlink to be preserved")
+	}
+}
+
+func TestLoadTemplateDirSymlinkFallbackCopiesContents(t *testing.T) {
+	osFs := afero.NewOsFs()
+	memFs := afero.NewMemMapFs()
+
+	fs := afero.NewCopyOnWriteFs(osFs, memFs)
+
+	workDir, err := afero.TempDir(osFs, "", "template-test")
+	
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer osFs.RemoveAll(workDir)
+
+	sourceDir := filepath.Join(workDir, "templates", "go-cli")
+	if err := osFs.MkdirAll(sourceDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	realDir := filepath.Join(sourceDir, "assets")
+
+	if err := osFs.MkdirAll(realDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	err = afero.WriteFile(osFs, filepath.Join(realDir, "file.txt"), []byte("hello"), 0o644)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	linker := osFs.(afero.Linker)
+	linkPath := filepath.Join(sourceDir, "assets-link")
+
+	err = linker.SymlinkIfPossible("assets", linkPath)
+	
+	if err != nil {
+		t.Skipf("skipping: cannot create directory symlink: %v", err)
+	}
+
+	targetPath := filepath.Join(workDir, "output")
+
+	if err := loadTemplate(fs, sourceDir, targetPath); err != nil {
+		t.Fatalf("loadTemplate failed: %v", err)
+	}
+
+	copiedPath := filepath.Join(targetPath, "assets-link")
+
+	info, err := fs.Stat(copiedPath)
+
+	if err != nil {
+		t.Fatalf("stat failed: %v", err)
+	}
+
+	if info.Mode() & os.ModeSymlink != 0 {
+		t.Fatalf("expected fallback to real directory, but got symlink")
+	}
+
+	contentPath := filepath.Join(copiedPath, "file.txt")
+	content, err := afero.ReadFile(fs, contentPath)
+
+	if err != nil {
+		t.Fatalf("expected copied directory contents, but file missing: %v", err)
+	}
+
+	if string(content) != "hello" {
+		t.Fatalf("unexpected content: got %s, want hello", string(content))
 	}
 }

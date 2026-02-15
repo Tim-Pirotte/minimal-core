@@ -65,17 +65,29 @@ func loadTemplate(fs afero.Fs, sourcePath, targetPath string) error {
 			return fs.MkdirAll(destPath, 0755)
 		case info.Mode() & os.ModeSymlink != 0:
 			linker, ok := fs.(afero.Linker)
-			
-			if ok {
-				target, err := os.Readlink(path)
 
-				if err == nil {
-					err := linker.SymlinkIfPossible(target, destPath)
-				
-					if err == nil {
+			var linkTarget string
+			var readErr error
+
+			if ok {
+				linkTarget, readErr = os.Readlink(path)
+				if readErr == nil {
+					if err := linker.SymlinkIfPossible(linkTarget, destPath); err == nil {
 						return nil
 					}
 				}
+			}
+
+			resolvedPath := filepath.Join(filepath.Dir(path), linkTarget)
+
+			targetInfo, err := fs.Stat(resolvedPath)
+
+			if err != nil {
+				return err
+			}
+
+			if targetInfo.IsDir() {
+				return loadTemplate(fs, resolvedPath, destPath)
 			}
 
 			fallthrough
