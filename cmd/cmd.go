@@ -12,7 +12,7 @@ func main() {
 	sourceGen := logging.Init(zerolog.ConsoleWriter{Out: os.Stdout})
 	commands := startup.NewCommands(sourceGen)
 
-	registerCommands(commands)
+	registerCommands(sourceGen, commands)
 
 	entrypoint := commands.GetEntrypoint(os.Args)
 

@@ -22,7 +22,7 @@ type Commands struct {
 	fs fs.FS
 }
 
-func NewCommands(sourceGen logging.SourceGenerator) *Commands {
+func NewCommands(sourceGen *logging.SourceGenerator) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 
 	return &Commands{make(map[string]func()), logger, os.DirFS("")}

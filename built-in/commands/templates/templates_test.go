@@ -1,6 +1,8 @@
 package templates
 
 import (
+	"io"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"os"
 	"path/filepath"
 	"testing"
@@ -41,9 +43,10 @@ func TestLoadTemplate(t *testing.T) {
 	
 	defer os.RemoveAll(targetPath)
 
-	if err := loadTemplate(sourceDir, targetPath); err != nil {
-		t.Fatalf("loadTemplate failed: %v", err)
-	}
+	sourceGen := logging.Init(io.Discard)
+
+	projectCreator := NewProjectCreator(sourceGen)
+	projectCreator.loadTemplate(sourceDir, targetPath);
 
 	testCases := []struct {
 		name            string

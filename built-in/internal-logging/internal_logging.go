@@ -17,7 +17,7 @@ type SourceGenerator struct {
     authentic       bool
 }
 
-func Init(target io.Writer) SourceGenerator {
+func Init(target io.Writer) *SourceGenerator {
     if initCalled {
         panic("logging.Init has already been called")
     }
@@ -32,10 +32,10 @@ func Init(target io.Writer) SourceGenerator {
 
     initCalled = true
 
-    return sourceGenerator
+    return &sourceGenerator
 }
 
-func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, SourceGenerator) {
+func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, *SourceGenerator) {
     if !s.authentic {
         panic("this is not a SourceGenerator given by the logging package")
     }
@@ -56,5 +56,5 @@ func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, SourceGenerato
     newPath := append([]string(nil), s.path...)
     newPath = append(newPath, name)
 
-    return rootLogger.With().Strs("source", newPath).Logger(), SourceGenerator{newPath, make(map[string]int), true}
+    return rootLogger.With().Strs("source", newPath).Logger(), &SourceGenerator{newPath, make(map[string]int), true}
 }
