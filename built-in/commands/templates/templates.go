@@ -15,14 +15,7 @@ var DuplicateTemplateStore = errors.New("template store with this name already e
 type ProjectCreator struct {
 	logger          zerolog.Logger
 	SourceGen       *logging.SourceGenerator
-	stores          map[string]TemplateStore
-	immutableStores map[string]ImmutableTemplateStore
-}
-
-type TemplateStore interface {
-	HasTemplate(name string) bool
-	LoadTemplate(name, projectName, destination string) (ok bool)
-	StoreTemplate(name, location string) (ok bool)
+	stores          map[string]ImmutableTemplateStore
 }
 
 type ImmutableTemplateStore interface {
@@ -30,42 +23,25 @@ type ImmutableTemplateStore interface {
 	LoadTemplate(name, projectName, destination string) (ok bool)
 }
 
+type TemplateStore interface {
+	ImmutableTemplateStore
+	StoreTemplate(name, location string) (ok bool)
+}
+
 func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 	logger, gen := sourceGen.GetLogger("templates")
 	
-	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0), make(map[string]ImmutableTemplateStore, 0)}
+	return &ProjectCreator{logger, gen, make(map[string]ImmutableTemplateStore, 0)}
 }
 
-func (p *ProjectCreator) AddTemplateStore(store TemplateStore, name string) error {
-	if err := p.checkDuplicateStoreName(name); err != nil {
-		return err
+func (p *ProjectCreator) AddTemplateStore(store ImmutableTemplateStore, name string) error {
+	if _, ok := p.stores[name]; ok {
+		p.logDuplicateTemplateStore(name)
+		return DuplicateTemplateStore
 	}
 	
 	p.stores[name] = store
 	p.logTemplateRegistered(name)
-
-	return nil
-}
-
-func (p *ProjectCreator) AddImmutableTemplateStore(store ImmutableTemplateStore, name string) error {
-	if err := p.checkDuplicateStoreName(name); err != nil {
-		return err
-	}
-	
-	p.immutableStores[name] = store
-	p.logTemplateRegistered(name)
-
-	return nil
-}
-
-func (p *ProjectCreator) checkDuplicateStoreName(name string) error {
-	_, ok1 := p.stores[name]
-	_, ok2 := p.immutableStores[name]
-
-	if ok1 || ok2 {
-		p.logDuplicateTemplateStore(name)
-		return DuplicateTemplateStore
-	}
 
 	return nil
 }
@@ -93,7 +69,7 @@ func (p *ProjectCreator) NewProject() {
 		return
 	}
 
-	availableSources := make([]TemplateStore, 0)
+	availableSources := make([]ImmutableTemplateStore, 0)
 
 	for _, store := range p.stores {
 		if store.HasTemplate(templateName) {
