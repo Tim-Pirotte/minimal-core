@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	storeName = "directory"
 	defaultTemplateName = "default"
 	templatesFolderName = "templates"
 	defaultTargetPath = "."
@@ -20,9 +21,13 @@ type DirectoryStore struct {
 }
 
 func NewDirectoryStore(sourceGen *logging.SourceGenerator) *DirectoryStore {
-	logger, _ := sourceGen.GetLogger("directory")
+	logger, _ := sourceGen.GetLogger(storeName)
 	
 	return &DirectoryStore{logger}
+}
+
+func (d *DirectoryStore) Name() string {
+	return storeName
 }
 
 func (d *DirectoryStore) HasTemplate(name string) bool {

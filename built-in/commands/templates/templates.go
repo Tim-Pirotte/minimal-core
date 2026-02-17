@@ -19,6 +19,7 @@ type ProjectCreator struct {
 }
 
 type TemplateStore interface {
+	Name() string
 	HasTemplate(name string) bool
 	LoadTemplate(name, projectName, destination string) (ok bool)
 }
@@ -34,14 +35,14 @@ func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0)}
 }
 
-func (p *ProjectCreator) AddTemplateStore(store TemplateStore, name string) error {
-	if _, ok := p.stores[name]; ok {
-		p.logDuplicateTemplateStore(name)
+func (p *ProjectCreator) AddTemplateStore(store TemplateStore) error {
+	if _, ok := p.stores[store.Name()]; ok {
+		p.logDuplicateTemplateStore(store.Name())
 		return DuplicateTemplateStore
 	}
 	
-	p.stores[name] = store
-	p.logTemplateRegistered(name)
+	p.stores[store.Name()] = store
+	p.logTemplateRegistered(store.Name())
 
 	return nil
 }
@@ -82,10 +83,11 @@ func (p *ProjectCreator) NewProject() bool {
 
 	switch len(availableSources) {
 	case 0:
-		// TODO log error
+		p.logger.Error().Str("template_name", templateName).Msg("no sources to load template")
+		return false
 	case 1:
 		if ok := availableSources[0].LoadTemplate(templateName, projectName, destination); !ok {
-			// TODO log error
+			p.logger.Error().Str("template_name", templateName).Str("source", availableSources[0].Name()).Msg("failure during template load")
 		}
 	default:
 		// TODO ask user which store to load from
