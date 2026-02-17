@@ -9,7 +9,7 @@ import (
 
 func setupTestCommands(mockFiles fstest.MapFS) *Commands {
 	return &Commands{
-		commands: make(map[string]func()),
+		commands: make(map[string]func() bool),
 		logger:   zerolog.Nop(),
 		fs:       mockFiles,
 	}
@@ -17,7 +17,7 @@ func setupTestCommands(mockFiles fstest.MapFS) *Commands {
 
 func TestAddCommand(t *testing.T) {
 	c := setupTestCommands(nil)
-	err := c.AddCommand("build", func() {})
+	err := c.AddCommand("build", func() bool {return true})
 
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
@@ -30,8 +30,8 @@ func TestAddCommand(t *testing.T) {
 
 func TestAddDuplicateCommand(t *testing.T) {
 	c := setupTestCommands(nil)
-	_ = c.AddCommand("build", func() {})
-	err := c.AddCommand("build", func() {})
+	_ = c.AddCommand("build", func() bool {return true})
+	err := c.AddCommand("build", func() bool {return true})
 
 	if err != DuplicateCommand {
 		t.Errorf("expected DuplicateCommand error, got %v", err)
@@ -41,7 +41,7 @@ func TestAddDuplicateCommand(t *testing.T) {
 func TestGetEntrypointFromCommand(t *testing.T) {
 	c := setupTestCommands(nil)
 	called := false
-	c.AddCommand("build", func() { called = true })
+	c.AddCommand("build", func() bool { called = true; return true })
 
 	fn := c.GetEntrypoint([]string{"app", "build"})
 
@@ -75,7 +75,7 @@ func TestGetEntrypointFromConfig(t *testing.T) {
 
 	c := setupTestCommands(mockFS)
 	called := false
-	c.AddCommand("compile", func() { called = true })
+	c.AddCommand("compile", func() bool { called = true; return true })
 
 	fn := c.GetEntrypoint([]string{"app", "my-setup.toml"})
 

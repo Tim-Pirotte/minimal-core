@@ -20,5 +20,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	entrypoint()
+	ok := entrypoint()
+
+	if !ok {
+		os.Exit(1)
+	}
 }

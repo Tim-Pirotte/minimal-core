@@ -17,7 +17,7 @@ var DuplicateCommand = errors.New("command with this name already exists")
 var commandsConfigPath = path.Join(".", "commands")
 
 type Commands struct {
-	commands map[string]func()
+	commands map[string]func() (ok bool)
 	logger zerolog.Logger
 	fs fs.FS
 }
@@ -25,10 +25,10 @@ type Commands struct {
 func NewCommands(sourceGen *logging.SourceGenerator) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 
-	return &Commands{make(map[string]func()), logger, os.DirFS("")}
+	return &Commands{make(map[string]func() (ok bool)), logger, os.DirFS("")}
 }
 
-func (c *Commands) AddCommand(name string, function func()) error {
+func (c *Commands) AddCommand(name string, function func() (ok bool)) error {
 	if _, ok := c.commands[name]; ok {
 		c.logDuplicateCommand(name)
 		return DuplicateCommand
@@ -46,7 +46,7 @@ type StartupConfig struct {
 
 // Returns the program entrypoint based on the first argument
 // or nil if something went wrong
-func (c *Commands) GetEntrypoint(args []string) func() {
+func (c *Commands) GetEntrypoint(args []string) func() (ok bool) {
 	if len(os.Args) < minimumExpectedArgs {
 		c.logNotEnoughArgs(len(args))
 		return nil
@@ -62,7 +62,7 @@ func (c *Commands) GetEntrypoint(args []string) func() {
 	}
 }
 
-func (c *Commands) loadFromConfig(configName string) func() {
+func (c *Commands) loadFromConfig(configName string) func() (ok bool) {
 	startupConfig := &StartupConfig{}
 
 	file, err := fs.ReadFile(c.fs, path.Join(commandsConfigPath, configName))

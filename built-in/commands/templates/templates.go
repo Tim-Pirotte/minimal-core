@@ -15,26 +15,26 @@ var DuplicateTemplateStore = errors.New("template store with this name already e
 type ProjectCreator struct {
 	logger          zerolog.Logger
 	SourceGen       *logging.SourceGenerator
-	stores          map[string]ImmutableTemplateStore
+	stores          map[string]TemplateStore
 }
 
-type ImmutableTemplateStore interface {
+type TemplateStore interface {
 	HasTemplate(name string) bool
 	LoadTemplate(name, projectName, destination string) (ok bool)
 }
 
-type TemplateStore interface {
-	ImmutableTemplateStore
+type MutableTemplateStore interface {
+	TemplateStore
 	StoreTemplate(name, location string) (ok bool)
 }
 
 func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 	logger, gen := sourceGen.GetLogger("templates")
 	
-	return &ProjectCreator{logger, gen, make(map[string]ImmutableTemplateStore, 0)}
+	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0)}
 }
 
-func (p *ProjectCreator) AddTemplateStore(store ImmutableTemplateStore, name string) error {
+func (p *ProjectCreator) AddTemplateStore(store TemplateStore, name string) error {
 	if _, ok := p.stores[name]; ok {
 		p.logDuplicateTemplateStore(name)
 		return DuplicateTemplateStore
@@ -46,7 +46,7 @@ func (p *ProjectCreator) AddTemplateStore(store ImmutableTemplateStore, name str
 	return nil
 }
 
-func (p *ProjectCreator) NewProject() {
+func (p *ProjectCreator) NewProject() bool {
 	var destination string
 	flag.StringVar(&destination, destinationFlagName, "", "")
 	flag.StringVar(&destination, string(destinationFlagName[0]), "", "")
@@ -66,10 +66,10 @@ func (p *ProjectCreator) NewProject() {
 			Int("actual_args", flag.NArg()).
 			Msg("incorrect amount of arguments")
 
-		return
+		return false
 	}
 
-	availableSources := make([]ImmutableTemplateStore, 0)
+	availableSources := make([]TemplateStore, 0)
 
 	for _, store := range p.stores {
 		if store.HasTemplate(templateName) {
@@ -87,6 +87,8 @@ func (p *ProjectCreator) NewProject() {
 	default:
 		// TODO ask user which store to load from
 	}
+
+	return true
 }
 
 func CreateTemplate() {
