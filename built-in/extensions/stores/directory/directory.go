@@ -19,14 +19,22 @@ type DirectoryStore struct {
 	logger zerolog.Logger
 }
 
-func NewDirectoryStore(sourceGen *logging.SourceGenerator) DirectoryStore {
+func NewDirectoryStore(sourceGen *logging.SourceGenerator) *DirectoryStore {
 	logger, _ := sourceGen.GetLogger("directory")
 	
-	return DirectoryStore{logger}
+	return &DirectoryStore{logger}
 }
 
 func (d *DirectoryStore) HasTemplate(name string) bool {
-	panic("unimplemented")
+	if name == "" {
+		name = defaultTemplateName
+	}
+
+	sourcePath := d.getSourcePath(name)
+
+	_, err := os.Stat(sourcePath)
+
+	return err == nil
 }
 
 func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string) (ok bool) {
@@ -38,15 +46,9 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string)
 		destinationPath = defaultTargetPath
 	}
 
-	executablePath, err := os.Executable()
+	sourcePath := d.getSourcePath(name)
 
-	if err != nil {
-		// TODO log error
-	}
-
-	sourcePath := filepath.Join(filepath.Dir(executablePath), templatesFolderName, defaultTemplateName)
-
-	err = os.CopyFS(destinationPath, os.DirFS(sourcePath))
+	err := os.CopyFS(destinationPath, os.DirFS(sourcePath))
     
 	switch err.(type) {
 	case nil:
@@ -66,6 +68,16 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string)
 	}
 
 	return true
+}
+
+func (d *DirectoryStore) getSourcePath(name string) string {
+	executablePath, err := os.Executable()
+
+	if err != nil {
+		// TODO log error
+	}
+
+	return filepath.Join(filepath.Dir(executablePath), templatesFolderName, name)
 }
 
 func (d *DirectoryStore) checkPath(path, reference string) {

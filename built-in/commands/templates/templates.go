@@ -54,11 +54,14 @@ func (p *ProjectCreator) NewProject() bool {
 	flag.Parse()
 
 	var templateName string
+	var projectName string
 
 	switch flag.NArg() {
 	case 1:
+		projectName = flag.Arg(0)
 	case 2:
 		templateName = flag.Arg(0)
+		projectName = flag.Arg(1)
 	default:
 		p.logger.Error().
 			Int("expected_args_1", 1).
@@ -81,7 +84,7 @@ func (p *ProjectCreator) NewProject() bool {
 	case 0:
 		// TODO log error
 	case 1:
-		if ok := availableSources[0].LoadTemplate(templateName, "", destination); !ok {
+		if ok := availableSources[0].LoadTemplate(templateName, projectName, destination); !ok {
 			// TODO log error
 		}
 	default:
