@@ -13,9 +13,10 @@ const destinationFlagName = "destination"
 var DuplicateTemplateStore = errors.New("template store with this name already exists")
 
 type ProjectCreator struct {
-	logger    zerolog.Logger
-	SourceGen *logging.SourceGenerator
-	stores    map[string]TemplateStore
+	logger          zerolog.Logger
+	SourceGen       *logging.SourceGenerator
+	stores          map[string]TemplateStore
+	immutableStores map[string]ImmutableTemplateStore
 }
 
 type TemplateStore interface {
@@ -24,20 +25,47 @@ type TemplateStore interface {
 	StoreTemplate(name, location string) (ok bool)
 }
 
+type ImmutableTemplateStore interface {
+	HasTemplate(name string) bool
+	LoadTemplate(name, projectName, destination string) (ok bool)
+}
+
 func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 	logger, gen := sourceGen.GetLogger("templates")
 	
-	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0)}
+	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0), make(map[string]ImmutableTemplateStore, 0)}
 }
 
 func (p *ProjectCreator) AddTemplateStore(store TemplateStore, name string) error {
-	if _, ok := p.stores[name]; ok {
-		p.logDuplicateTemplateStore(name)
-		return DuplicateTemplateStore
+	if err := p.checkDuplicateStoreName(name); err != nil {
+		return err
 	}
 	
 	p.stores[name] = store
 	p.logTemplateRegistered(name)
+
+	return nil
+}
+
+func (p *ProjectCreator) AddImmutableTemplateStore(store ImmutableTemplateStore, name string) error {
+	if err := p.checkDuplicateStoreName(name); err != nil {
+		return err
+	}
+	
+	p.immutableStores[name] = store
+	p.logTemplateRegistered(name)
+
+	return nil
+}
+
+func (p *ProjectCreator) checkDuplicateStoreName(name string) error {
+	_, ok1 := p.stores[name]
+	_, ok2 := p.immutableStores[name]
+
+	if ok1 || ok2 {
+		p.logDuplicateTemplateStore(name)
+		return DuplicateTemplateStore
+	}
 
 	return nil
 }
