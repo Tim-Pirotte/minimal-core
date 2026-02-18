@@ -16,7 +16,7 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 	commands.AddCommand("new", projectCreator.NewProject)
 }
 
-func helloWorld() bool {
+func helloWorld(_ []string) bool {
 	fmt.Println("Hello, world!")
 	return true
 }

@@ -3,9 +3,7 @@ package templates
 import (
 	"errors"
 	"flag"
-	"fmt"
 	logging "minimal/minimal-core/built-in/internal-logging"
-	"os"
 
 	"github.com/rs/zerolog"
 )
@@ -49,23 +47,19 @@ func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore) error {
 	return nil
 }
 
-func (p *ProjectCreator) NewProject() bool {
+func (p *ProjectCreator) NewProject(args []string) bool {
 	fs := flag.NewFlagSet("new", flag.ContinueOnError)
 
 	var destination string
 	fs.StringVar(&destination, destinationFlagName, "", "")
 	fs.StringVar(&destination, string(destinationFlagName[0]), "", "")
 
-	fmt.Println(os.Args, len(os.Args))
-
-	if err := fs.Parse(os.Args[2:]); err != nil {
+	if err := fs.Parse(args); err != nil {
         return false
     }
 
 	var templateName string
 	var projectName string
-
-	fmt.Println(fs.NArg())
 
 	switch fs.NArg() {
 	case 1:

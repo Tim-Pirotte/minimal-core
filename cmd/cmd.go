@@ -14,13 +14,13 @@ func main() {
 
 	registerCommands(sourceGen, commands)
 
-	entrypoint := commands.GetEntrypoint(os.Args)
+	entrypoint, args := commands.GetEntrypoint(os.Args)
 
 	if entrypoint == nil {
 		os.Exit(1)
 	}
 
-	ok := entrypoint()
+	ok := entrypoint(args)
 
 	if !ok {
 		os.Exit(1)
