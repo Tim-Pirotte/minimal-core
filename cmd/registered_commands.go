@@ -12,7 +12,7 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 	commands.AddCommand("hello", helloWorld)
 
 	projectCreator := templates.NewProjectCreator(sourceGen)
-	projectCreator.AddTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
+	projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
 	commands.AddCommand("new", projectCreator.NewProject)
 }
 

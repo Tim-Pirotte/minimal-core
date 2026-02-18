@@ -3,7 +3,9 @@ package templates
 import (
 	"errors"
 	"flag"
+	"fmt"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	"os"
 
 	"github.com/rs/zerolog"
 )
@@ -35,7 +37,7 @@ func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0)}
 }
 
-func (p *ProjectCreator) AddTemplateStore(store TemplateStore) error {
+func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore) error {
 	if _, ok := p.stores[store.Name()]; ok {
 		p.logDuplicateTemplateStore(store.Name())
 		return DuplicateTemplateStore
@@ -48,26 +50,34 @@ func (p *ProjectCreator) AddTemplateStore(store TemplateStore) error {
 }
 
 func (p *ProjectCreator) NewProject() bool {
-	var destination string
-	flag.StringVar(&destination, destinationFlagName, "", "")
-	flag.StringVar(&destination, string(destinationFlagName[0]), "", "")
+	fs := flag.NewFlagSet("new", flag.ContinueOnError)
 
-	flag.Parse()
+	var destination string
+	fs.StringVar(&destination, destinationFlagName, "", "")
+	fs.StringVar(&destination, string(destinationFlagName[0]), "", "")
+
+	fmt.Println(os.Args, len(os.Args))
+
+	if err := fs.Parse(os.Args[2:]); err != nil {
+        return false
+    }
 
 	var templateName string
 	var projectName string
 
-	switch flag.NArg() {
+	fmt.Println(fs.NArg())
+
+	switch fs.NArg() {
 	case 1:
-		projectName = flag.Arg(0)
+		projectName = fs.Arg(0)
 	case 2:
-		templateName = flag.Arg(0)
-		projectName = flag.Arg(1)
+		templateName = fs.Arg(0)
+		projectName = fs.Arg(1)
 	default:
 		p.logger.Error().
 			Int("expected_args_1", 1).
 			Int("expected_args_2", 2).
-			Int("actual_args", flag.NArg()).
+			Int("actual_args", fs.NArg()).
 			Msg("incorrect amount of arguments")
 
 		return false
@@ -96,7 +106,7 @@ func (p *ProjectCreator) NewProject() bool {
 	return true
 }
 
-func CreateTemplate() {
+func StoreTemplate() {
 	var symbolicLink bool
 	flag.BoolVar(&symbolicLink, "ln", false, "")
 

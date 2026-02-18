@@ -10,24 +10,25 @@ import (
 )
 
 const (
-	storeName = "directory"
+	defaultStoreName = "directory"
 	defaultTemplateName = "default"
 	templatesFolderName = "templates"
 	defaultTargetPath = "."
 )
 
 type DirectoryStore struct {
+	StoreName string
 	logger zerolog.Logger
 }
 
 func NewDirectoryStore(sourceGen *logging.SourceGenerator) *DirectoryStore {
-	logger, _ := sourceGen.GetLogger(storeName)
+	logger, _ := sourceGen.GetLogger(defaultStoreName)
 	
-	return &DirectoryStore{logger}
+	return &DirectoryStore{defaultStoreName, logger}
 }
 
 func (d *DirectoryStore) Name() string {
-	return storeName
+	return d.StoreName
 }
 
 func (d *DirectoryStore) HasTemplate(name string) bool {
@@ -52,8 +53,13 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string)
 	}
 
 	sourcePath := d.getSourcePath(name)
+	targetPath := filepath.Join(destinationPath, projectName)
 
-	err := os.CopyFS(destinationPath, os.DirFS(sourcePath))
+	if err := os.MkdirAll(targetPath, 0755); err != nil {
+		return false
+	}
+
+	err := os.CopyFS(targetPath, os.DirFS(sourcePath))
     
 	switch err.(type) {
 	case nil:
