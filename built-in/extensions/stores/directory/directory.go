@@ -1,6 +1,9 @@
 package directory
 
 import (
+	"flag"
+	"fmt"
+	"io"
 	"io/fs"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"os"
@@ -36,14 +39,20 @@ func (d *DirectoryStore) HasTemplate(name string) bool {
 		name = defaultTemplateName
 	}
 
-	sourcePath := d.getSourcePath(name)
+	sourcePath, ok := d.getSourcePath(name)
+
+	if !ok {
+		return false
+	}
 
 	_, err := os.Stat(sourcePath)
 
 	return err == nil
 }
 
-func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string) (ok bool) {
+func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string, args []string) (ok bool) {
+	fmt.Println(args)
+
 	if name == "" {
 		name = defaultTemplateName
 	}
@@ -52,10 +61,15 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string)
 		destinationPath = defaultTargetPath
 	}
 
-	sourcePath := d.getSourcePath(name)
+	sourcePath, ok := d.getSourcePath(name)
+
+	if !ok {
+		return false
+	}
+
 	targetPath := filepath.Join(destinationPath, projectName)
 
-	if err := os.MkdirAll(targetPath, 0755); err != nil {
+	if err := os.MkdirAll(targetPath, 0o755); err != nil {
 		return false
 	}
 
@@ -65,14 +79,14 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string)
 	case nil:
 	case *fs.PathError:
 		d.checkPath(sourcePath, "source_path")
-		d.checkPath(destinationPath, "target_path")
+		d.checkPath(targetPath, "target_path")
 
 		return false
 	default:
 		d.logger.Error().
 			Err(err).
 			Str("source_path", sourcePath).
-			Str("target_path", destinationPath).
+			Str("target_path", targetPath).
 			Msg("unforseen error loading template")
 	
 		return false
@@ -81,14 +95,15 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string)
 	return true
 }
 
-func (d *DirectoryStore) getSourcePath(name string) string {
+func (d *DirectoryStore) getSourcePath(name string) (string, bool) {
 	executablePath, err := os.Executable()
 
 	if err != nil {
-		// TODO log error
+		d.logger.Error().Str("project_name", name).Msg("cannot retrieve the executable path")
+		return "", false
 	}
 
-	return filepath.Join(filepath.Dir(executablePath), templatesFolderName, name)
+	return filepath.Join(filepath.Dir(executablePath), templatesFolderName, name), true
 }
 
 func (d *DirectoryStore) checkPath(path, reference string) {
@@ -102,6 +117,16 @@ func (d *DirectoryStore) checkPath(path, reference string) {
 	}
 }
 
-func (d *DirectoryStore) StoreTemplate(name, location string) (ok bool) {
+func (d *DirectoryStore) StoreTemplate(name, location, args []string) (ok bool) {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.SetOutput(io.Discard) // TODO log error
+	
+	var symbolicLink bool
+	fs.BoolVar(&symbolicLink, "ln", false, "")
+
+	if err := fs.Parse(args); err != nil {
+        return false
+    }
+
 	panic("unimplemented")
 }

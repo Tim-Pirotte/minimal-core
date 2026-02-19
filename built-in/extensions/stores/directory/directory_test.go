@@ -46,7 +46,7 @@ func TestLoadTemplateFromDirectory(t *testing.T) {
 	sourceGen := logging.Init(io.Discard)
 	directoryStore := NewDirectoryStore(sourceGen)
 
-	directoryStore.LoadTemplate(templateName, "cli-app", targetPath)
+	directoryStore.LoadTemplate(templateName, "cli-app", targetPath, nil)
 
 	testCases := []struct {
 		name            string
