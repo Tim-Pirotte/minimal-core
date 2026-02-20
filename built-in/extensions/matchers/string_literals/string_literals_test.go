@@ -3,7 +3,7 @@ package stringliterals
 import (
 	"fmt"
 	"minimal/minimal-core/built-in/tokenizer"
-	"minimal/minimal-core/domain"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"reflect"
 	"testing"
 )
@@ -15,15 +15,15 @@ func TestLexStringLiteral(t *testing.T) {
 
 	config.AddMatcher(&stringLiteralMatcher)
 
-	expected := []domain.Token{
-		{Type: stringLiteralType, Value: "Hello, world!", Span: domain.Span{Start: 0, Length: 15}},
-		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 15, Length: 0}},
+	expected := []tokenizer.Token{
+		{Type: stringLiteralType, Value: "Hello, world!", Span: usermessaging.Span{Start: 0, Length: 15}},
+		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 15, Length: 0}},
 	}
 
 	actual := tokenizer.NewTokenizer(config, []byte("\"Hello, world!\""))
 
 	i := 0
-	for ; actual.CurrentToken().Type != domain.EOF; i++ {
+	for ; actual.CurrentToken().Type != tokenizer.EOF; i++ {
 		if i >= len(expected) {
 			t.Fatal("Expected", len(expected), "tokens but got", i+1, "tokens")
 		}
@@ -67,17 +67,17 @@ func TestLexInterpolatedString(t *testing.T) {
 
 	config.AddMatcher(&stringLiteralMatcher)
 
-	expected := []domain.Token{
-		{Type: interpolatedOpenTt, Value: "Hello, ", Span: domain.Span{Start: 0, Length: 9}},
-		{Type: domain.UNKNOWN, Value: "a", Span: domain.Span{Start: 9, Length: 1}},
-		{Type: interpolatedCloseTt, Value: " world!", Span: domain.Span{Start: 10, Length: 9}},
-		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 19, Length: 0}},
+	expected := []tokenizer.Token{
+		{Type: interpolatedOpenTt, Value: "Hello, ", Span: usermessaging.Span{Start: 0, Length: 9}},
+		{Type: tokenizer.UNKNOWN, Value: "a", Span: usermessaging.Span{Start: 9, Length: 1}},
+		{Type: interpolatedCloseTt, Value: " world!", Span: usermessaging.Span{Start: 10, Length: 9}},
+		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 19, Length: 0}},
 	}
 
 	actual := tokenizer.NewTokenizer(config, []byte("\"Hello, {a} world!\""))
 
 	i := 0
-	for ; actual.CurrentToken().Type != domain.EOF; i++ {
+	for ; actual.CurrentToken().Type != tokenizer.EOF; i++ {
 		if i >= len(expected) {
 			t.Fatal("Expected", len(expected), "tokens but got", i+1, "tokens")
 		}
@@ -104,19 +104,19 @@ func TestLexMultipleStringParts(t *testing.T) {
 
 	config.AddMatcher(&stringLiteralMatcher)
 
-	expected := []domain.Token{
-		{Type: interpolatedOpenTt, Value: "Hello, ", Span: domain.Span{Start: 0, Length: 9}},
-		{Type: domain.UNKNOWN, Value: "a", Span: domain.Span{Start: 9, Length: 1}},
-		{Type: interpolatedMiddleTt, Value: " w", Span: domain.Span{Start: 10, Length: 4}},
-		{Type: domain.UNKNOWN, Value: "b", Span: domain.Span{Start: 14, Length: 1}},
-		{Type: interpolatedCloseTt, Value: "orld!", Span: domain.Span{Start: 15, Length: 7}},
-		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 22, Length: 0}},
+	expected := []tokenizer.Token{
+		{Type: interpolatedOpenTt, Value: "Hello, ", Span: usermessaging.Span{Start: 0, Length: 9}},
+		{Type: tokenizer.UNKNOWN, Value: "a", Span: usermessaging.Span{Start: 9, Length: 1}},
+		{Type: interpolatedMiddleTt, Value: " w", Span: usermessaging.Span{Start: 10, Length: 4}},
+		{Type: tokenizer.UNKNOWN, Value: "b", Span: usermessaging.Span{Start: 14, Length: 1}},
+		{Type: interpolatedCloseTt, Value: "orld!", Span: usermessaging.Span{Start: 15, Length: 7}},
+		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 22, Length: 0}},
 	}
 
 	actual := tokenizer.NewTokenizer(config, []byte("\"Hello, {a} w{b}orld!\""))
 
 	i := 0
-	for ; actual.CurrentToken().Type != domain.EOF; i++ {
+	for ; actual.CurrentToken().Type != tokenizer.EOF; i++ {
 		if i >= len(expected) {
 			t.Fatal("Expected", len(expected), "tokens but got", i+1, "tokens")
 		}
@@ -143,23 +143,23 @@ func TestLexMultipleInnerBraces(t *testing.T) {
 
 	config.AddMatcher(&stringLiteralMatcher)
 
-	expected := []domain.Token{
-		{Type: interpolatedOpenTt, Value: "Hello, ", Span: domain.Span{Start: 0, Length: 9}},
-		{Type: domain.UNKNOWN, Value: "{", Span: domain.Span{Start: 9, Length: 1}},
-		{Type: domain.UNKNOWN, Value: "}", Span: domain.Span{Start: 10, Length: 1}},
-		{Type: interpolatedMiddleTt, Value: " w", Span: domain.Span{Start: 11, Length: 4}},
-		{Type: domain.UNKNOWN, Value: "{", Span: domain.Span{Start: 15, Length: 1}},
-		{Type: domain.UNKNOWN, Value: "{", Span: domain.Span{Start: 16, Length: 1}},
-		{Type: domain.UNKNOWN, Value: "}", Span: domain.Span{Start: 17, Length: 1}},
-		{Type: domain.UNKNOWN, Value: "}", Span: domain.Span{Start: 18, Length: 1}},
-		{Type: interpolatedCloseTt, Value: "orld!", Span: domain.Span{Start: 19, Length: 7}},
-		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
+	expected := []tokenizer.Token{
+		{Type: interpolatedOpenTt, Value: "Hello, ", Span: usermessaging.Span{Start: 0, Length: 9}},
+		{Type: tokenizer.UNKNOWN, Value: "{", Span: usermessaging.Span{Start: 9, Length: 1}},
+		{Type: tokenizer.UNKNOWN, Value: "}", Span: usermessaging.Span{Start: 10, Length: 1}},
+		{Type: interpolatedMiddleTt, Value: " w", Span: usermessaging.Span{Start: 11, Length: 4}},
+		{Type: tokenizer.UNKNOWN, Value: "{", Span: usermessaging.Span{Start: 15, Length: 1}},
+		{Type: tokenizer.UNKNOWN, Value: "{", Span: usermessaging.Span{Start: 16, Length: 1}},
+		{Type: tokenizer.UNKNOWN, Value: "}", Span: usermessaging.Span{Start: 17, Length: 1}},
+		{Type: tokenizer.UNKNOWN, Value: "}", Span: usermessaging.Span{Start: 18, Length: 1}},
+		{Type: interpolatedCloseTt, Value: "orld!", Span: usermessaging.Span{Start: 19, Length: 7}},
+		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 26, Length: 0}},
 	}
 
 	actual := tokenizer.NewTokenizer(config, []byte("\"Hello, {{}} w{{{}}}orld!\""))
 
 	i := 0
-	for ; actual.CurrentToken().Type != domain.EOF; i++ {
+	for ; actual.CurrentToken().Type != tokenizer.EOF; i++ {
 		if i >= len(expected) {
 			t.Fatal("Expected", len(expected), "tokens but got", i+1, "tokens")
 		}

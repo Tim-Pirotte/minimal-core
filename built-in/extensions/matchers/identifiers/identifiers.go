@@ -2,23 +2,22 @@ package identifiers
 
 import (
 	"minimal/minimal-core/built-in/tokenizer"
-	"minimal/minimal-core/domain"
 	"strings"
 )
 
 type IdentifierMatcher struct {
-	tokenType domain.TokenType
+	tokenType tokenizer.TokenType
 }
 
-func NewIdentifierMatcher(tt domain.TokenType) IdentifierMatcher {
+func NewIdentifierMatcher(tt tokenizer.TokenType) IdentifierMatcher {
 	return IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) Match(s *tokenizer.Source) (uint, domain.TokenType, string) {
+func (i *IdentifierMatcher) Match(s *tokenizer.Source) (uint, tokenizer.TokenType, string) {
 	firstChar, _ := s.Get(0)
 
 	if !isAlphaOrUnicode(firstChar) {
-		return 0, domain.IGNORE, ""
+		return 0, tokenizer.IGNORE, ""
 	}
 
 	sb := strings.Builder{}

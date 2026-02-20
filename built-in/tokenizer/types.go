@@ -1,4 +1,6 @@
-package domain
+package tokenizer
+
+import usermessaging "minimal/minimal-core/built-in/user-messaging"
 
 type TokenType uint
 
@@ -14,5 +16,5 @@ const (
 type Token struct {
 	Type  TokenType
 	Value string
-	Span  Span
+	Span  usermessaging.Span
 }

@@ -2,7 +2,6 @@ package stringliterals
 
 import (
 	"minimal/minimal-core/built-in/tokenizer"
-	"minimal/minimal-core/domain"
 	"strings"
 )
 
@@ -16,19 +15,19 @@ const (
 type StringLiteralMatcher struct {
 	state                state
 
-	stringTt             domain.TokenType
-	interpolatedOpenTt   domain.TokenType
-	interpolatedMiddleTt domain.TokenType
-	interpolatedCloseTt  domain.TokenType
+	stringTt             tokenizer.TokenType
+	interpolatedOpenTt   tokenizer.TokenType
+	interpolatedMiddleTt tokenizer.TokenType
+	interpolatedCloseTt  tokenizer.TokenType
 
 	braceCounter         uint
 }
 
-func NewStringLiteralMatcher(stringTt, interpolatedOpenTt, interpolatedMiddleTt, interpolatedCloseTt domain.TokenType) StringLiteralMatcher {
+func NewStringLiteralMatcher(stringTt, interpolatedOpenTt, interpolatedMiddleTt, interpolatedCloseTt tokenizer.TokenType) StringLiteralMatcher {
 	return StringLiteralMatcher{outsideString, stringTt, interpolatedOpenTt, interpolatedMiddleTt, interpolatedCloseTt, 0}
 }
 
-func (s *StringLiteralMatcher) Match(so *tokenizer.Source) (uint, domain.TokenType, string) {
+func (s *StringLiteralMatcher) Match(so *tokenizer.Source) (uint, tokenizer.TokenType, string) {
 	switch s.state {
 	case outsideString:
 		return s.lexNewString(so)
@@ -39,11 +38,11 @@ func (s *StringLiteralMatcher) Match(so *tokenizer.Source) (uint, domain.TokenTy
 	}
 }
 
-func (s *StringLiteralMatcher) lexNewString(so *tokenizer.Source) (uint, domain.TokenType, string) {
+func (s *StringLiteralMatcher) lexNewString(so *tokenizer.Source) (uint, tokenizer.TokenType, string) {
 	firstChar, _ := so.Get(0)
 
 	if firstChar != '"' {
-		return 0, domain.IGNORE, ""
+		return 0, tokenizer.IGNORE, ""
 	}
 
 	sb := strings.Builder{}
@@ -86,24 +85,24 @@ func (s *StringLiteralMatcher) lexNewString(so *tokenizer.Source) (uint, domain.
 	}
 }
 
-func (s *StringLiteralMatcher) lexInterpolatedString(so *tokenizer.Source) (uint, domain.TokenType, string) {
+func (s *StringLiteralMatcher) lexInterpolatedString(so *tokenizer.Source) (uint, tokenizer.TokenType, string) {
 	firstChar, _ := so.Get(0)
 
 	switch firstChar {
 	case '{':
 		s.braceCounter++
-		return 0, domain.IGNORE, ""
+		return 0, tokenizer.IGNORE, ""
 	case '}':
 		s.braceCounter--
 	case '"':
 		// TODO log error and also log if we are at the end of the file and the state is stil inside string
 		panic("expected a '}'")
 	default:
-		return 0, domain.IGNORE, ""
+		return 0, tokenizer.IGNORE, ""
 	}
 
 	if s.braceCounter != 0 {
-		return 0, domain.IGNORE, ""
+		return 0, tokenizer.IGNORE, ""
 	}
 
 	sb := strings.Builder{}

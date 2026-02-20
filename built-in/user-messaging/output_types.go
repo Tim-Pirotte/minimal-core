@@ -1,4 +1,4 @@
-package domain
+package usermessaging
 
 type Severity uint8
 
@@ -22,6 +22,12 @@ type Annotation struct {
 	Span     Span
 	Message  string
 	Severity Severity
+}
+
+// TODO where should this structure go
+type Span struct {
+	Start  uint
+	Length uint
 }
 
 type Line struct {

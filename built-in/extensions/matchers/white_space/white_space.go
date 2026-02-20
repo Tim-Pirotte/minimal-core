@@ -2,7 +2,6 @@ package whitespace
 
 import (
 	"minimal/minimal-core/built-in/tokenizer"
-	"minimal/minimal-core/domain"
 )
 
 type WhiteSpaceMatcher struct{}
@@ -11,7 +10,7 @@ func NewWhiteSpaceMatcher() WhiteSpaceMatcher {
 	return WhiteSpaceMatcher{}
 }
 
-func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (uint, domain.TokenType, string) {
+func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (uint, tokenizer.TokenType, string) {
 	pos := 0
 	
 	for {
@@ -24,7 +23,7 @@ func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (uint, domain.TokenType, st
 		pos++
 	}
 
-	return uint(pos), domain.IGNORE, ""
+	return uint(pos), tokenizer.IGNORE, ""
 }
 
 func isWhiteSpace(b byte) bool {

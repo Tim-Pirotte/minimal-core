@@ -1,13 +1,13 @@
 package tokenizer
 
 import (
-	"minimal/minimal-core/domain"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"reflect"
 	"testing"
 )
 
 func TestLexEmpty(t *testing.T) {
-	expected := []domain.Token{{Type: domain.EOF, Value: "", Span: domain.Span{Start: 0, Length: 0}}}
+	expected := []Token{{Type: EOF, Value: "", Span: usermessaging.Span{Start: 0, Length: 0}}}
 
 	tokenizerConfig := NewTokenizerConfig()
 
@@ -19,9 +19,9 @@ func TestLexEmpty(t *testing.T) {
 }
 
 func TestLexUnknown(t *testing.T) {
-	expected := []domain.Token{
-		{Type: domain.UNKNOWN, Value: "a", Span: domain.Span{Start: 0, Length: 1}},
-		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 1, Length: 0}},
+	expected := []Token{
+		{Type: UNKNOWN, Value: "a", Span: usermessaging.Span{Start: 0, Length: 1}},
+		{Type: EOF, Value: "", Span: usermessaging.Span{Start: 1, Length: 0}},
 	}
 
 	tokenizerConfig := NewTokenizerConfig()

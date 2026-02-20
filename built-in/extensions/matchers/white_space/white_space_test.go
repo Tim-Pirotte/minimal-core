@@ -2,15 +2,15 @@ package whitespace
 
 import (
 	"minimal/minimal-core/built-in/tokenizer"
-	"minimal/minimal-core/domain"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"reflect"
 	"testing"
 )
 
 func TestLexSpace(t *testing.T) {
-	expected := []domain.Token{
-		{Type: domain.UNKNOWN, Value: "a", Span: domain.Span{Start: 12, Length: 1}},
-		{Type: domain.EOF, Value: "", Span: domain.Span{Start: 26, Length: 0}},
+	expected := []tokenizer.Token{
+		{Type: tokenizer.UNKNOWN, Value: "a", Span: usermessaging.Span{Start: 12, Length: 1}},
+		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 26, Length: 0}},
 	}
 
 	tokenizerConfig := tokenizer.NewTokenizerConfig()
@@ -22,7 +22,7 @@ func TestLexSpace(t *testing.T) {
 	actual := tokenizer.NewTokenizer(tokenizerConfig, []byte(" \t \t        a\t            "))
 
 	i := 0
-	for ;actual.CurrentToken().Type != domain.EOF; i++ {
+	for ;actual.CurrentToken().Type != tokenizer.EOF; i++ {
 		if i >= len(expected) {
 			t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
 		}

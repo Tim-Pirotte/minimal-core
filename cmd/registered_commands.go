@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/commands/templates"
+	"minimal/minimal-core/built-in/extensions/commands/templates"
 	"minimal/minimal-core/built-in/extensions/stores/directory"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/startup"

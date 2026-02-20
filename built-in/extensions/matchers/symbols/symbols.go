@@ -3,7 +3,6 @@ package symbols
 import (
 	"fmt"
 	"minimal/minimal-core/built-in/tokenizer"
-	"minimal/minimal-core/domain"
 )
 
 type SymbolMatcher struct {
@@ -14,7 +13,7 @@ func NewSymbolMatcher() SymbolMatcher {
 	return SymbolMatcher{&trieNode{children: [256]*trieNode{}}}
 }
 
-func (s *SymbolMatcher) AddSymbol(t *tokenizer.TokenizerConfig, symbol string) domain.TokenType {
+func (s *SymbolMatcher) AddSymbol(t *tokenizer.TokenizerConfig, symbol string) tokenizer.TokenType {
 	tokenType := t.NewTokenType()
 	err := updateTrie(s.symbols, symbol, tokenType)
 
@@ -26,8 +25,8 @@ func (s *SymbolMatcher) AddSymbol(t *tokenizer.TokenizerConfig, symbol string) d
 	return tokenType
 }
 
-func (s *SymbolMatcher) Match(so *tokenizer.Source) (uint, domain.TokenType, string) {
-	var tt domain.TokenType
+func (s *SymbolMatcher) Match(so *tokenizer.Source) (uint, tokenizer.TokenType, string) {
+	var tt tokenizer.TokenType
 	l := 0	
 	node := s.symbols
 

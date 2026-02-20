@@ -1,27 +1,27 @@
 package tokenizer
 
 import (
-	"minimal/minimal-core/domain"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 )
 
 type TokenizerConfig struct {
 	matchers     []Matcher
-	lastTokenType domain.TokenType
+	lastTokenType TokenType
 }
 
 type Matcher interface {
-	Match(s *Source) (length uint, tokenTypeToPushIfLargest domain.TokenType, tokenContent string)
+	Match(s *Source) (length uint, tokenTypeToPushIfLargest TokenType, tokenContent string)
 }
 
 func NewTokenizerConfig() TokenizerConfig {
-	return TokenizerConfig{[]Matcher{}, domain.EOF}
+	return TokenizerConfig{[]Matcher{}, EOF}
 }
 
 func (t *TokenizerConfig) AddMatcher(matcher Matcher) {
 	t.matchers = append(t.matchers, matcher)
 }
 
-func (t *TokenizerConfig) NewTokenType() domain.TokenType {
+func (t *TokenizerConfig) NewTokenType() TokenType {
 	t.lastTokenType++
 	return t.lastTokenType
 }
@@ -43,14 +43,14 @@ func (s *Source) Get(n int) (byte, bool) {
 	}
 }
 
-func (t *TokenizerConfig) tokenize(source []byte) []domain.Token {
+func (t *TokenizerConfig) tokenize(source []byte) []Token {
 	s := Source{source, 0}
-	tokens := make([]domain.Token, 0)
+	tokens := make([]Token, 0)
 
 	for s.position < uint(len(s.source)) {
 		foundMatch := false
 		largestLength := uint(0)
-		var tokenTypeToPush domain.TokenType
+		var tokenTypeToPush TokenType
 		var tokenContent string
 
 		for _, matcher := range t.matchers {
@@ -65,13 +65,13 @@ func (t *TokenizerConfig) tokenize(source []byte) []domain.Token {
 		}
 
 		if foundMatch {
-			if tokenTypeToPush != domain.IGNORE {
+			if tokenTypeToPush != IGNORE {
 				tokens = append(
 					tokens, 
-					domain.Token{
+					Token{
 						Type: tokenTypeToPush, 
 						Value: tokenContent, 
-						Span: domain.Span{Start: s.position, Length: largestLength}},
+						Span: usermessaging.Span{Start: s.position, Length: largestLength}},
 				)
 			}
 
@@ -79,10 +79,10 @@ func (t *TokenizerConfig) tokenize(source []byte) []domain.Token {
 		} else {
 			tokens = append(
 				tokens, 
-				domain.Token{
-					Type: domain.UNKNOWN, 
+				Token{
+					Type: UNKNOWN, 
 					Value: string(s.source[s.position]),
-					Span: domain.Span{Start: s.position, Length: 1},
+					Span: usermessaging.Span{Start: s.position, Length: 1},
 				},
 			)
 
@@ -92,6 +92,6 @@ func (t *TokenizerConfig) tokenize(source []byte) []domain.Token {
 
 	return append(
 		tokens, 
-		domain.Token{Type: domain.EOF, Value: "", Span: domain.Span{Start: s.position, Length: 0}},
+		Token{Type: EOF, Value: "", Span: usermessaging.Span{Start: s.position, Length: 0}},
 	)
 }

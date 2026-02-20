@@ -2,16 +2,16 @@ package symbols
 
 import (
 	"fmt"
-	"minimal/minimal-core/domain"
+	"minimal/minimal-core/built-in/tokenizer"
 )
 
 type trieNode struct {
 	leaf bool
-	token domain.TokenType
+	token tokenizer.TokenType
 	children [256]*trieNode
 }
 
-func updateTrie(root *trieNode, text string, tokenType domain.TokenType) error {
+func updateTrie(root *trieNode, text string, tokenType tokenizer.TokenType) error {
 	node := root
 
 	for i := 0; i < len(text); i++ {
