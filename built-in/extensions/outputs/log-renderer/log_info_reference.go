@@ -1,10 +1,15 @@
 package formattedtext
 
-import "bytes"
+import (
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
+)
 
 // A hint provided to the user with an optional reference for more info
 // The reference can be left out by passing an empty string
-func (l *LogRenderer) OutputHint(bb *bytes.Buffer, hint Hint) {
+func (l *LogRenderer) OutputHint(handle usermessaging.Handle, hint usermessaging.Hint) {
+	b, _ := handle.(*bytesBuffer)
+	bb := b.bytesBuffer
+	
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the hint renderer")
     }

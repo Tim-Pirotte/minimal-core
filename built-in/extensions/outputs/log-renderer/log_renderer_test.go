@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"strings"
 	"sync"
@@ -30,7 +31,8 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 		defer wg.Done()
 		for range iterations {
 			buf := bytes.NewBufferString(strA)
-			logger.FlushOutput(buf)
+			handle := &bytesBuffer{buf}
+			logger.Finish(handle)
 		}
 	}()
 
@@ -38,7 +40,8 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 		defer wg.Done()
 		for range iterations {
 			buf := bytes.NewBufferString(strB)
-			logger.FlushOutput(buf)
+			handle := &bytesBuffer{buf}
+			logger.Finish(handle)
 		}
 	}()
 
@@ -57,8 +60,8 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 			t.Errorf("Atomicity failure at line %d: mixed content detected: %s", lineCount, line)
 		}
 
-		if len(line) != stringLength {
-			t.Errorf("Atomicity failure at line %d: expected length %d, got %d", lineCount, stringLength, len(line))
+		if len(line) != stringLength + len(resetAnsi) {
+			t.Errorf("Atomicity failure at line %d: expected length %d, got %d", lineCount, stringLength + len(resetAnsi), len(line))
 		}
 	}
 
@@ -75,18 +78,29 @@ func BenchmarkLogger(b *testing.B) {
 	logger := NewLogger(io.Discard, config)
 	defer logger.Close()
 
-	ctx := CodeContext{"main.go", 10, []string{}, []Line{{Content: "fmt.Println(\"hello\")"}}, []string{}}
+	ctx := usermessaging.CodeContext{
+		Source: "main.go", 
+		StartLineNumber: 10, 
+		LinesBefore: []string{}, 
+		LinesInFocus: []usermessaging.Line{{Content: "fmt.Println(\"hello\")"}}, 
+		LinesAfter: []string{},
+	}
 
-	m := Message{Info, "BENCHMARK", "Testing logger performance"}
+	m := usermessaging.Message{
+		Severity: usermessaging.Info, 
+		Category: "BENCHMARK", 
+		Message: "Testing logger performance",
+	}
 
 	b.ResetTimer()
 
 	b.RunParallel(func(pb *testing.PB) {
         for pb.Next() {
 			bb := bytes.Buffer{}
-            logger.OutputMessage(&bb, m)
-			logger.OutputContext(&bb, ctx)
-			logger.FlushOutput(&bb)
+			handle := &bytesBuffer{&bb}
+            logger.OutputMessage(handle, m)
+			logger.OutputContext(handle, ctx)
+			logger.Finish(handle)
         }
     })
 }

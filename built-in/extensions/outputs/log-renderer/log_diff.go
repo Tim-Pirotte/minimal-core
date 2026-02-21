@@ -1,12 +1,15 @@
 package formattedtext
 
 import (
-	"bytes"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"strings"
 )
 
 // A part of the source code with proposed edits
-func (l *LogRenderer) OutputDiff(bb *bytes.Buffer, diff Diff) {
+func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff) {
+	b, _ := h.(*bytesBuffer)
+	bb := b.bytesBuffer
+
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the diff renderer")
     }

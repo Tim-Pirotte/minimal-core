@@ -2,6 +2,7 @@ package formattedtext
 
 import (
 	"fmt"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -74,23 +75,23 @@ type InfoReferenceConfig struct {
 	MoreInfoColor string `toml:"more_info_color"`
 }
 
-func (c SeverityConfig) color(s Severity) string {
+func (c SeverityConfig) color(s usermessaging.Severity) string {
 	var sAsStr string
 
 	switch s {
-	case Verbose:
+	case usermessaging.Verbose:
 		sAsStr = c.VerboseColor
-	case Debug:
+	case usermessaging.Debug:
 		sAsStr = c.DebugColor
-	case Info:
+	case usermessaging.Info:
 		sAsStr = c.InfoColor
-	case Warning:
+	case usermessaging.Warning:
 		sAsStr = c.WarningColor
-	case SevereWarning:
+	case usermessaging.SevereWarning:
 		sAsStr = c.SevereWarningColor
-	case Error:
+	case usermessaging.Error:
 		sAsStr = c.ErrorColor
-	case Critical:
+	case usermessaging.Critical:
 		sAsStr = c.CriticalColor
 	default:
 		panic(fmt.Sprintf("missing color for the enum Severity: %d", s))

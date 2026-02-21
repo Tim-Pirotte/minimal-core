@@ -2,13 +2,17 @@ package formattedtext
 
 import (
 	"bytes"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"sort"
 	"strconv"
 	"strings"
 )
 
 // A part of the source code with highlighted lines and annotations
-func (l *LogRenderer) OutputContext(bb *bytes.Buffer, ctx CodeContext) {
+func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.CodeContext) {
+    b, _ := h.(*bytesBuffer)
+    bb := b.bytesBuffer
+    
     if bb == nil {
         panic("an uninitialized bytes buffer was passed to the context renderer")
     }
@@ -73,30 +77,30 @@ func (l *LogRenderer) OutputContext(bb *bytes.Buffer, ctx CodeContext) {
         bb.WriteString("\n")
 
         sort.Slice(line.Annotations, func(i, j int) bool {
-            return line.Annotations[i].Start < line.Annotations[j].Start
+            return line.Annotations[i].Span.Start < line.Annotations[j].Span.Start
         })
 
         // Annotation lines
-        currentLineEnd := 0
+        currentLineEnd := uint(0)
 
         if len(line.Annotations) > 0 {
             l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationLineStartSymbol)
         }
 
         for _, annotation := range line.Annotations {
-            if annotation.Start < currentLineEnd {
+            if annotation.Span.Start < currentLineEnd {
                 bb.WriteString("\n")
                 l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationLineStartSymbol)
                 currentLineEnd = 0
             }
 
-            bb.WriteString(strings.Repeat(" ", annotation.Start - currentLineEnd))
+            bb.WriteString(strings.Repeat(" ", int(annotation.Span.Start - currentLineEnd)))
 
             bb.WriteString(l.config.Severity.color(annotation.Severity))
-            bb.WriteString(strings.Repeat(l.config.Context.AnnotationSymbol, annotation.Length))
+            bb.WriteString(strings.Repeat(l.config.Context.AnnotationSymbol, int(annotation.Span.Length)))
             bb.WriteString(resetAnsi)
 
-            currentLineEnd = annotation.Start + annotation.Length
+            currentLineEnd = annotation.Span.Start + annotation.Span.Length
         }
 
         bb.WriteString("\n")
@@ -109,13 +113,13 @@ func (l *LogRenderer) OutputContext(bb *bytes.Buffer, ctx CodeContext) {
         currentLineEnd = 0
 
         for _, annotation := range line.Annotations {
-            if annotation.Start < currentLineEnd {
+            if annotation.Span.Start < currentLineEnd {
                 bb.WriteString("\n")
                 l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationCommentStartSymbol)
                 currentLineEnd = 0
             }
 
-            bb.WriteString(strings.Repeat(" ", annotation.Start - currentLineEnd))
+            bb.WriteString(strings.Repeat(" ", int(annotation.Span.Start - currentLineEnd)))
             
             if l.config.Context.TextHasSeverityColor {
                 bb.WriteString(l.config.Severity.color(annotation.Severity))
@@ -127,7 +131,7 @@ func (l *LogRenderer) OutputContext(bb *bytes.Buffer, ctx CodeContext) {
                 bb.WriteString(resetAnsi)
             }
             
-            currentLineEnd = annotation.Start + annotation.Length
+            currentLineEnd = annotation.Span.Start + annotation.Span.Length
         }
 
         bb.WriteString("\n")
@@ -170,24 +174,4 @@ func (l *LogRenderer) renderLinePrefix(bb *bytes.Buffer, lineNumber uint, larges
     bb.WriteString(resetAnsi)
     
     bb.WriteString(" ")
-}
-
-type Annotation struct {
-	Start    int
-	Length   int
-	Message  string
-	Severity Severity
-}
-
-type Line struct {
-	Content     string
-	Annotations []Annotation
-}
-
-type CodeContext struct {
-    Source          string
-	StartLineNumber uint
-	LinesBefore     []string
-	LinesInFocus    []Line
-	LinesAfter      []string
 }

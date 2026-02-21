@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 )
 
 type LogRenderer struct {
@@ -29,8 +30,7 @@ func (l *LogRenderer) startConsumer() {
         	panic("an uninitialized bytes buffer was passed to the log displayer")
     	}
 
-		log.WriteString(resetAnsi)
-
+		l.writer.Write([]byte(resetAnsi))
 		_, err := l.writer.Write(log.Bytes())
 	
 		if err != nil {
@@ -41,8 +41,15 @@ func (l *LogRenderer) startConsumer() {
 	l.done <- true
 }
 
-func (l *LogRenderer) FlushOutput(bb *bytes.Buffer) {
-	l.queue <- bb
+type bytesBuffer struct {
+	bytesBuffer *bytes.Buffer
+}
+
+func (b *bytesBuffer) Handle() {}
+
+func (l *LogRenderer) Finish(h usermessaging.Handle) {
+	b, _ := h.(*bytesBuffer)
+	l.queue <- b.bytesBuffer
 }
 
 // Call this function after you are done with the logger
