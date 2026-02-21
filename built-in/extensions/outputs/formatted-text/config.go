@@ -21,7 +21,7 @@ type Config struct {
 }
 
 type GeneralConfig struct {
-	SymbolColor     string         `toml:"symbol_color"`
+	SymbolColor     string `toml:"symbol_color"`
 }
 
 type SeverityConfig struct {

@@ -41,7 +41,7 @@ func (l *LogRenderer) startConsumer() {
 	l.done <- true
 }
 
-func (l *LogRenderer) DisplayRenderedLog(bb *bytes.Buffer) {
+func (l *LogRenderer) FlushOutput(bb *bytes.Buffer) {
 	l.queue <- bb
 }
 

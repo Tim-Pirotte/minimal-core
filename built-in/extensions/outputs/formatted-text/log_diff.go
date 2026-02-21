@@ -6,7 +6,7 @@ import (
 )
 
 // A part of the source code with proposed edits
-func (l *LogRenderer) RenderLogDiff(bb *bytes.Buffer, diff Diff) {
+func (l *LogRenderer) OutputDiff(bb *bytes.Buffer, diff Diff) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the diff renderer")
     }

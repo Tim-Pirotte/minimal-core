@@ -4,7 +4,7 @@ import "bytes"
 
 // A hint provided to the user with an optional reference for more info
 // The reference can be left out by passing an empty string
-func (l *LogRenderer) RenderLogHint(bb *bytes.Buffer, hint Hint) {
+func (l *LogRenderer) OutputHint(bb *bytes.Buffer, hint Hint) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the hint renderer")
     }

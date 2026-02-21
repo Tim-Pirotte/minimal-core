@@ -8,7 +8,7 @@ import (
 )
 
 // A part of the source code with highlighted lines and annotations
-func (l *LogRenderer) RenderLogContext(bb *bytes.Buffer, ctx CodeContext) {
+func (l *LogRenderer) OutputContext(bb *bytes.Buffer, ctx CodeContext) {
     if bb == nil {
         panic("an uninitialized bytes buffer was passed to the context renderer")
     }

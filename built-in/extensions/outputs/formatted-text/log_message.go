@@ -3,7 +3,7 @@ package formattedtext
 import "bytes"
 
 // A simple message
-func (l *LogRenderer) RenderLogMessage(bb *bytes.Buffer, m Message) {
+func (l *LogRenderer) OutputMessage(bb *bytes.Buffer, m Message) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the message renderer")
     }

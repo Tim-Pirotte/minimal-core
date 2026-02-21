@@ -30,7 +30,7 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 		defer wg.Done()
 		for range iterations {
 			buf := bytes.NewBufferString(strA)
-			logger.DisplayRenderedLog(buf)
+			logger.FlushOutput(buf)
 		}
 	}()
 
@@ -38,7 +38,7 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 		defer wg.Done()
 		for range iterations {
 			buf := bytes.NewBufferString(strB)
-			logger.DisplayRenderedLog(buf)
+			logger.FlushOutput(buf)
 		}
 	}()
 
@@ -84,9 +84,9 @@ func BenchmarkLogger(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
         for pb.Next() {
 			bb := bytes.Buffer{}
-            logger.RenderLogMessage(&bb, m)
-			logger.RenderLogContext(&bb, ctx)
-			logger.DisplayRenderedLog(&bb)
+            logger.OutputMessage(&bb, m)
+			logger.OutputContext(&bb, ctx)
+			logger.FlushOutput(&bb)
         }
     })
 }
