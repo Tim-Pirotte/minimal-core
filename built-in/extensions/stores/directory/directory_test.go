@@ -15,7 +15,13 @@ func TestLoadTemplateFromDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer os.RemoveAll(templateRoot)
+	defer func() {
+		err := os.RemoveAll(templateRoot)
+
+		if err != nil {
+			t.Error("Removing temporary template files failed")
+		}
+	}()
 
 	templateName := "go-cli"
 	sourceDir := filepath.Join(templateRoot, templateName)
@@ -41,7 +47,13 @@ func TestLoadTemplateFromDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer os.RemoveAll(targetPath)
+	defer func() {
+		err := os.RemoveAll(templateRoot)
+
+		if err != nil {
+			t.Error("Removing temporary template files failed")
+		}
+	}()
 
 	sourceGen := logging.Init(io.Discard)
 	directoryStore := NewDirectoryStore(sourceGen)

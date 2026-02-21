@@ -33,7 +33,7 @@ func TestAddDuplicateCommand(t *testing.T) {
 	_ = c.AddCommand("build", func([]string) bool {return true})
 	err := c.AddCommand("build", func([]string) bool {return true})
 
-	if err != DuplicateCommand {
+	if err != ErrDuplicateCommand {
 		t.Errorf("expected DuplicateCommand error, got %v", err)
 	}
 }
@@ -41,7 +41,11 @@ func TestAddDuplicateCommand(t *testing.T) {
 func TestGetEntrypointFromCommand(t *testing.T) {
 	c := setupTestCommands(nil)
 	called := false
-	c.AddCommand("build", func([]string) bool { called = true; return true })
+	err := c.AddCommand("build", func([]string) bool { called = true; return true })
+
+	if err != nil {
+		t.Error("Adding command failed")
+	}
 
 	fn, args := c.GetEntrypoint([]string{"app", "build"})
 
@@ -75,7 +79,11 @@ func TestGetEntrypointFromConfig(t *testing.T) {
 
 	c := setupTestCommands(mockFS)
 	called := false
-	c.AddCommand("compile", func([]string) bool { called = true; return true })
+	err := c.AddCommand("compile", func([]string) bool { called = true; return true })
+
+	if err != nil {
+		t.Error("Adding command failed")
+	}
 
 	fn, args := c.GetEntrypoint([]string{"app", "my-setup.toml"})
 

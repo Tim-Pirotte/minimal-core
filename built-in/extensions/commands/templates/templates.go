@@ -15,7 +15,7 @@ const (
 	implementationArgsFlagName = "args"
 )
 
-var DuplicateTemplateStore = errors.New("template store with this name already exists")
+var ErrDuplicateTemplateStore = errors.New("template store with this name already exists")
 
 type ProjectCreator struct {
 	logger          zerolog.Logger
@@ -43,7 +43,7 @@ func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore) error {
 	if _, ok := p.stores[store.Name()]; ok {
 		p.logDuplicateTemplateStore(store.Name())
-		return DuplicateTemplateStore
+		return ErrDuplicateTemplateStore
 	}
 	
 	p.stores[store.Name()] = store
@@ -177,7 +177,7 @@ func (p *ProjectCreator) StoreTemplate(args []string) bool {
 func (p *ProjectCreator) logDuplicateTemplateStore(name string) {
 	p.logger.Error().
 		Str("template_name", name).
-		Err(DuplicateTemplateStore).
+		Err(ErrDuplicateTemplateStore).
 		Msg("")
 }
 

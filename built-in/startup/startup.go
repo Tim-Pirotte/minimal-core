@@ -13,7 +13,7 @@ import (
 
 const minimumExpectedArgs = 2
 
-var DuplicateCommand = errors.New("command with this name already exists")
+var ErrDuplicateCommand = errors.New("command with this name already exists")
 var commandsConfigPath = path.Join(".", "commands")
 
 type Commands struct {
@@ -31,7 +31,7 @@ func NewCommands(sourceGen *logging.SourceGenerator) *Commands {
 func (c *Commands) AddCommand(name string, function func(args []string) (ok bool)) error {
 	if _, ok := c.commands[name]; ok {
 		c.logDuplicateCommand(name)
-		return DuplicateCommand
+		return ErrDuplicateCommand
 	}
 
 	c.commands[name] = function
@@ -72,7 +72,11 @@ func (c *Commands) loadFromConfig(configName string) func(args []string) (ok boo
 		return nil
 	}
 
-	config.LoadConfig(string(file), startupConfig)
+	err = config.LoadConfig(string(file), startupConfig)
+
+	if err != nil {
+		// TODO log error
+	}
 
 	if startupFunc, ok := c.commands[startupConfig.Command]; ok {
 		c.logRunningCommand(startupConfig.Command, true)
@@ -80,13 +84,14 @@ func (c *Commands) loadFromConfig(configName string) func(args []string) (ok boo
 	}
 	
 	c.logCommandNotExists(startupConfig.Command, configName)
+
 	return nil
 }
 
 func (c *Commands) logDuplicateCommand(name string) {
 	c.logger.Error().
 		Str("command_name", name).
-		Err(DuplicateCommand).
+		Err(ErrDuplicateCommand).
 		Msg("")
 }
 

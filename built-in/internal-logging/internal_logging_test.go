@@ -17,11 +17,19 @@ func TestRingBuffer(t *testing.T) {
 
 	firstInput := "Hello, "
 
-	rb.Write([]byte(firstInput))
+	_, err := rb.Write([]byte(firstInput))
+
+	if err != nil {
+		t.Error("Write to ringbuffer failed")
+	}
 
 	var firstOutput bytes.Buffer
 	
-	rb.WriteTo(&firstOutput)
+	_, err = rb.WriteTo(&firstOutput)
+
+	if err != nil {
+		t.Error("Ringbuffer WriteTo failed")
+	}
 
 	firstExpected := "Hello, "
 
@@ -31,11 +39,19 @@ func TestRingBuffer(t *testing.T) {
 
 	secondInput := "world!"
 
-	rb.Write([]byte(secondInput))
+	_, err = rb.Write([]byte(secondInput))
+
+	if err != nil {
+		t.Error("Write to ringbuffer failed")
+	}
 
 	var secondOutput bytes.Buffer
 	
-	rb.WriteTo(&secondOutput)
+	_, err = rb.WriteTo(&secondOutput)
+
+	if err != nil {
+		t.Error("Ringbuffer WriteTo failed")
+	}
 
 	secondExpected := "lo, world!"
 
@@ -51,11 +67,19 @@ func TestEmptyBuffer(t *testing.T) {
 
 	firstInput := "Hello, "
 
-	rb.Write([]byte(firstInput))
+	_, err := rb.Write([]byte(firstInput))
+
+	if err != nil {
+		t.Error("Write to ringbuffer failed")
+	}
 
 	var firstOutput bytes.Buffer
 	
-	rb.WriteTo(&firstOutput)
+	_, err = rb.WriteTo(&firstOutput)
+
+	if err != nil {
+		t.Error("ringbuffer WriteTo failed")
+	}
 
 	firstExpected := ""
 
@@ -65,11 +89,19 @@ func TestEmptyBuffer(t *testing.T) {
 
 	secondInput := "world!"
 
-	rb.Write([]byte(secondInput))
+	_, err = rb.Write([]byte(secondInput))
+
+	if err != nil {
+		t.Error("Write to ringbuffer failed")
+	}
 
 	var secondOutput bytes.Buffer
 	
-	rb.WriteTo(&secondOutput)
+	_, err = rb.WriteTo(&secondOutput)
+
+	if err != nil {
+		t.Error("ringbuffer WriteTo failed")
+	}
 
 	secondExpected := ""
 

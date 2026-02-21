@@ -9,11 +9,24 @@ import (
 )
 
 func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Commands) {
-	commands.AddCommand("hello", helloWorld)
+	err := commands.AddCommand("hello", helloWorld)
+
+	if err != nil {
+		// TODO log error
+	}
 
 	projectCreator := templates.NewProjectCreator(sourceGen)
-	projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
-	commands.AddCommand("new", projectCreator.NewProject)
+	err = projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
+
+	if err != nil {
+		// TODO log error
+	}
+
+	err = commands.AddCommand("new", projectCreator.NewProject)
+
+	if err != nil {
+		// TODO log error
+	}
 }
 
 func helloWorld(_ []string) bool {
