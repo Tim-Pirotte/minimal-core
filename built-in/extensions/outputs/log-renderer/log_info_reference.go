@@ -1,4 +1,4 @@
-package formattedtext
+package logrendering
 
 import (
 	usermessaging "minimal/minimal-core/built-in/user-messaging"

@@ -1,4 +1,4 @@
-package formattedtext
+package logrendering
 
 import (
 	"bytes"
@@ -46,6 +46,10 @@ type bytesBuffer struct {
 }
 
 func (b *bytesBuffer) Handle() {}
+
+func (l *LogRenderer) CreateHandle() usermessaging.Handle {
+	return &bytesBuffer{bytes.NewBuffer(make([]byte, 0))}
+}
 
 func (l *LogRenderer) Finish(h usermessaging.Handle) {
 	b, _ := h.(*bytesBuffer)

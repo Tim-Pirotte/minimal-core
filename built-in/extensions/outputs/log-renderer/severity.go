@@ -1,4 +1,4 @@
-package formattedtext
+package logrendering
 
 import (
 	"fmt"
