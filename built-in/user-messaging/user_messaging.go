@@ -1,7 +1,11 @@
 package usermessaging
 
+const bufferSize = 10
+
 type Messenger struct {
 	outputs []Output
+	queue   chan func()
+	done    chan bool
 }
 
 type Transaction struct {
@@ -23,13 +27,32 @@ type Handle interface {
 }
 
 func NewMessenger() *Messenger {
-	return &Messenger{
+	m := &Messenger{
 		outputs: make([]Output, 0),
+		queue:   make(chan func(), bufferSize),
+		done:    make(chan bool),
 	}
+
+	go m.worker()
+
+	return m
+}
+
+func (m *Messenger) worker() {
+	for job := range m.queue {
+		job()
+	}
+
+	close(m.done)
 }
 
 func (l *Messenger) AddOutput(outputChannel Output) {
 	l.outputs = append(l.outputs, outputChannel)
+}
+
+func (m *Messenger) Close() {
+	close(m.queue)
+	<-m.done
 }
 
 func (l *Messenger) CreateLogTransaction() *Transaction {
@@ -42,32 +65,42 @@ func (l *Messenger) CreateLogTransaction() *Transaction {
 	return &transaction
 }
 
-func (l *Messenger) CommitLogTransaction(transaction *Transaction) {
-	for _, o := range l.outputs {
-		o.Finish(transaction.handles[o])
+func (m *Messenger) CommitLogTransaction(transaction *Transaction) {
+	m.queue <- func() {
+		for _, o := range m.outputs {
+			o.Finish(transaction.handles[o])
+		}
 	}
 }
 
-func (l *Messenger) LogMessage(transaction *Transaction, message Message) {
-	for _, o := range l.outputs {
-		o.OutputMessage(transaction.handles[o], message)
+func (m *Messenger) LogMessage(transaction *Transaction, message Message) {
+	m.queue <- func() {
+		for _, o := range m.outputs {
+			o.OutputMessage(transaction.handles[o], message)
+		}
 	}
 }
 
-func (l *Messenger) LogContext(transaction *Transaction, context CodeContext) {
-	for _, o := range l.outputs {
-		o.OutputContext(transaction.handles[o], context)
+func (m *Messenger) LogContext(transaction *Transaction, context CodeContext) {
+	m.queue <- func() {
+		for _, o := range m.outputs {
+			o.OutputContext(transaction.handles[o], context)
+		}
 	}
 }
 
-func (l *Messenger) LogDiff(transaction *Transaction, diff Diff) {
-	for _, o := range l.outputs {
-		o.OutputDiff(transaction.handles[o], diff)
+func (m *Messenger) LogDiff(transaction *Transaction, diff Diff) {
+	m.queue <- func() {
+		for _, o := range m.outputs {
+			o.OutputDiff(transaction.handles[o], diff)
+		}
 	}
 }
 
-func (l *Messenger) LogHint(transaction *Transaction, hint Hint) {
-	for _, o := range l.outputs {
-		o.OutputHint(transaction.handles[o], hint)
+func (m *Messenger) LogHint(transaction *Transaction, hint Hint) {
+	m.queue <- func() {
+		for _, o := range m.outputs {
+			o.OutputHint(transaction.handles[o], hint)
+		}
 	}
 }
