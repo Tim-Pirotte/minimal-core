@@ -76,7 +76,6 @@ func BenchmarkLogger(b *testing.B) {
 	config, _ := LoadConfig(configFile)
 
 	logger := NewLogger(io.Discard, config)
-	defer logger.Close()
 
 	ctx := usermessaging.CodeContext{
 		Source: "main.go", 

@@ -15,7 +15,6 @@ type Transaction struct {
 type Output interface {
 	CreateHandle() Handle
 	Finish(Handle)
-	Close()
 	OutputMessage(Handle, Message)
 	OutputContext(Handle, CodeContext)
 	OutputDiff(Handle, Diff)
