@@ -76,7 +76,7 @@ func BenchmarkLogger(b *testing.B) {
 	configFile, _ := os.ReadFile("./config.toml")
 	config, _ := LoadConfig(configFile)
 
-	logger := NewLogger(io.Discard, config)
+	logger := NewLogger(logging.GetTestLogSource(io.Discard), io.Discard, config)
 
 	ctx := usermessaging.CodeContext{
 		Source: "main.go", 
