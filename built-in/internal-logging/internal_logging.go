@@ -59,3 +59,7 @@ func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, *SourceGenerat
 
     return rootLogger.With().Strs("source", newPath).Logger(), &SourceGenerator{newPath, make(map[string]int), true}
 }
+
+func GetTestLogger(target io.Writer) zerolog.Logger {
+    return zerolog.New(target).With().Timestamp().Bool("testing", true).Logger()
+}
