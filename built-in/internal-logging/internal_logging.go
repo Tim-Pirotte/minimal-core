@@ -46,6 +46,7 @@ func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, *SourceGenerat
         name = "unnamed"
     }
 
+    // TODO improve this
     if count, ok := s.declaredSources[name]; ok {
         s.declaredSources[name] = count + 1
         name = fmt.Sprintf("%s#%d", name, count+1)

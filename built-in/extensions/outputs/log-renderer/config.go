@@ -11,7 +11,6 @@ const (
 	resetAnsi = "\033[0m"
 )
 
-// The settings will always be read out from this struct
 type Config struct {
 	General GeneralConfig `toml:"general"`
 	Severity SeverityConfig `toml:"severity"`

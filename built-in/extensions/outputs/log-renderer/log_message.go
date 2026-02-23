@@ -4,7 +4,6 @@ import (
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 )
 
-// A simple message
 func (l *LogRenderer) OutputMessage(h usermessaging.Handle, m usermessaging.Message) {
 	b, _ := h.(*bytesBuffer)
 	bb := b.bytesBuffer

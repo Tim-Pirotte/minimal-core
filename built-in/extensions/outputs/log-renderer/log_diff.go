@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// A part of the source code with proposed edits
 func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff) {
 	b, _ := h.(*bytesBuffer)
 	bb := b.bytesBuffer
@@ -93,12 +92,4 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	bb.WriteString(resetAnsi)
 
 	bb.WriteString("\n")
-}
-
-type Diff struct {
-	StartLineNumber uint
-	LinesBefore   []string
-	LinesToRemove []string
-	LinesToAdd    []string
-	LinesAfter    []string
 }

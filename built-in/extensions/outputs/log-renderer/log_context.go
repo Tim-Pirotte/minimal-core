@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// A part of the source code with highlighted lines and annotations
 func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.CodeContext) {
     b, _ := h.(*bytesBuffer)
     bb := b.bytesBuffer

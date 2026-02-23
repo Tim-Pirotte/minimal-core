@@ -4,8 +4,6 @@ import (
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 )
 
-// A hint provided to the user with an optional reference for more info
-// The reference can be left out by passing an empty string
 func (l *LogRenderer) OutputHint(handle usermessaging.Handle, hint usermessaging.Hint) {
 	b, _ := handle.(*bytesBuffer)
 	bb := b.bytesBuffer
@@ -39,9 +37,4 @@ func (l *LogRenderer) OutputHint(handle usermessaging.Handle, hint usermessaging
 		bb.WriteString(hint.MoreInfoReference)
 		bb.WriteString("\n")
 	}
-}
-
-type Hint struct {
-	Text string
-	MoreInfoReference string
 }

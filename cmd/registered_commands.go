@@ -31,7 +31,7 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 		// TODO log error
 	}
 
-	err = commands.AddCommand("message", messagingTest)
+	err = commands.AddCommand("message", func(_ []string) bool {return messagingTest(sourceGen)})
 
 	if err != nil {
 		// TODO log error
@@ -43,8 +43,8 @@ func helloWorld(_ []string) bool {
 	return true
 }
 
-func messagingTest(_ []string) bool {
-	logRenderer := logrendering.NewLogger(os.Stdout, logrendering.Config{})
+func messagingTest(sourceGen *logging.SourceGenerator) bool {
+	logRenderer := logrendering.NewLogger(sourceGen, os.Stdout, logrendering.Config{})
 	messaging := usermessaging.NewMessenger()
 	defer messaging.Close()
 	messaging.AddOutput(logRenderer)

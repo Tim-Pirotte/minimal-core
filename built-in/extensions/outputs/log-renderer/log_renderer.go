@@ -2,20 +2,23 @@ package logrendering
 
 import (
 	"bytes"
-	"fmt"
 	"io"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
+
+	"github.com/rs/zerolog"
 )
 
 type LogRenderer struct {
+	logger zerolog.Logger
 	writer io.Writer
 	config Config
 }
 
-// Use this function for a new logger but **don't forget** to close the logger.
-// This is necessary to ensure that all the messages are displayed
-func NewLogger(writer io.Writer, config Config) *LogRenderer {
-	return &LogRenderer{writer, config}
+func NewLogger(sourceGen *logging.SourceGenerator, writer io.Writer, config Config) *LogRenderer {
+	logger, _ := sourceGen.GetLogger("logRendering")
+
+	return &LogRenderer{logger, writer, config}
 }
 
 type bytesBuffer struct {
@@ -32,15 +35,10 @@ func (l *LogRenderer) Finish(h usermessaging.Handle) {
 	b, _ := h.(*bytesBuffer)
 	bb := b.bytesBuffer
 
-	if bb == nil {
-		panic("an uninitialized bytes buffer was passed to the log displayer")
-	}
-
 	l.writer.Write([]byte(resetAnsi))
 	_, err := l.writer.Write(bb.Bytes())
 
 	if err != nil {
-		// TODO error message
-		fmt.Println("Logging error:", err)
+		l.logger.Error().Err(err).Msg("unsuccessfull write")
 	}
 }

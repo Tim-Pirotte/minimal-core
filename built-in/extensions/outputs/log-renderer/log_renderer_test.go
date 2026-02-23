@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"strings"
@@ -16,7 +17,7 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 	config, _ := LoadConfig(configFile)
 
 	finalBuffer := &bytes.Buffer{}
-	logger := NewLogger(finalBuffer, config)
+	logger := NewLogger(&logging.SourceGenerator{}, finalBuffer, config)
 	
 	iterations := 1000
 	stringLength := 100
