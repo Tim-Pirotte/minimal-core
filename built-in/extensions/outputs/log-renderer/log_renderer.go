@@ -15,7 +15,7 @@ type LogRenderer struct {
 	config Config
 }
 
-func NewLogger(sourceGen *logging.SourceGenerator, writer io.Writer, config Config) *LogRenderer {
+func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer, config Config) *LogRenderer {
 	logger, _ := sourceGen.GetLogger("logRendering")
 
 	return &LogRenderer{logger, writer, config}

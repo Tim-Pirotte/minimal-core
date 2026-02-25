@@ -17,7 +17,7 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 	config, _ := LoadConfig(configFile)
 
 	finalBuffer := &bytes.Buffer{}
-	logger := NewLogger(&logging.SourceGenerator{}, finalBuffer, config)
+	logger := NewLogRenderer(&logging.SourceGenerator{}, finalBuffer, config)
 	
 	iterations := 1000
 	stringLength := 100
@@ -76,7 +76,7 @@ func BenchmarkLogger(b *testing.B) {
 	configFile, _ := os.ReadFile("./config.toml")
 	config, _ := LoadConfig(configFile)
 
-	logger := NewLogger(logging.GetTestLogSource(io.Discard), io.Discard, config)
+	logger := NewLogRenderer(logging.GetTestLogSource(io.Discard), io.Discard, config)
 
 	ctx := usermessaging.CodeContext{
 		Source: "main.go", 

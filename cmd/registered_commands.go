@@ -44,7 +44,7 @@ func helloWorld(_ []string) bool {
 }
 
 func messagingTest(sourceGen *logging.SourceGenerator) bool {
-	logRenderer := logrendering.NewLogger(sourceGen, os.Stdout, logrendering.Config{})
+	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, logrendering.Config{})
 	messaging := usermessaging.NewMessenger()
 	defer messaging.Close()
 	messaging.AddOutput(logRenderer)
