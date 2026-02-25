@@ -17,15 +17,21 @@ const RingBufferSize = 4096
 type CLI struct {
 	loggingBuffer logging.RingBuffer
 	inputReader   *bufio.Reader
+	outputWriter  *bufio.Writer
 	logger        zerolog.Logger
 }
 
-func NewCli(sourceGen *logging.SourceGenerator, messenger *usermessaging.Messenger, reader *bufio.Reader) *CLI {
+func NewCli(
+	sourceGen *logging.SourceGenerator, 
+	messenger *usermessaging.Messenger, 
+	reader *bufio.Reader, 
+	writer *bufio.Writer,
+) *CLI {
 	// TODO load config properly
 	messenger.AddOutput(logrendering.NewLogRenderer(sourceGen, os.Stdout, logrendering.Config{}))
 	logger, _ := sourceGen.GetLogger("cli")
 
-	return &CLI{*logging.NewRingBuffer(RingBufferSize), reader, logger}
+	return &CLI{*logging.NewRingBuffer(RingBufferSize), reader, writer, logger}
 }
 
 func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok bool) {
@@ -52,7 +58,7 @@ func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok boo
 	q := sb.String()
 	
 	for {
-		fmt.Print(q)
+		c.outputWriter.WriteString(q)
 		
 		text, err := c.inputReader.ReadString('\n')
 		
@@ -86,7 +92,7 @@ func (c *CLI) PromptString(question, suggestion string) (answer string, ok bool)
 		sb.WriteByte(')')
 	}
 
-	fmt.Print(sb.String())
+	c.outputWriter.WriteString(sb.String())
 
 	text, err := c.inputReader.ReadString('\n')
 
