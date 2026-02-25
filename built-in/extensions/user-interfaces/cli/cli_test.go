@@ -2,6 +2,10 @@ package cli
 
 import (
 	"bufio"
+	"io"
+	logging "minimal/minimal-core/built-in/internal-logging"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,7 +14,9 @@ import (
 
 func setupTestCLI(input string) *CLI {
 	return &CLI{
+		loggingBuffer: *logging.NewRingBuffer(256),
 		inputReader: bufio.NewReader(strings.NewReader(input)),
+		outputWriter: bufio.NewWriter(io.Discard),
 		logger:      zerolog.Nop(),
 	}
 }
@@ -69,4 +75,48 @@ func TestPromptString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandleCrash(t *testing.T) {
+    t.Run("successful_export", func(t *testing.T) {
+        tmpDir := t.TempDir()
+        
+        input := "y\n" + tmpDir + "\n"
+        c := setupTestCLI(input)
+        
+        testLog := "ERROR: something broke"
+        c.loggingBuffer.Write([]byte(testLog))
+
+        c.HandleCrash()
+
+        expectedFile := filepath.Join(tmpDir, "crash_report.log")
+        content, err := os.ReadFile(expectedFile)
+
+        if err != nil {
+            t.Fatalf("could not read exported file: %v", err)
+        }
+
+        if string(content) != testLog {
+            t.Errorf("expected %q, got %q", testLog, string(content))
+        }
+    })
+
+    t.Run("user_cancels", func(t *testing.T) {
+        input := "n\n"
+        c := setupTestCLI(input)
+        
+        c.HandleCrash()
+
+        if _, err := os.Stat("crash_report.log"); !os.IsNotExist(err) {
+            t.Error("file should not have been created")
+            os.Remove("crash_report.log")
+        }
+    })
+
+    t.Run("invalid_path_error", func(t *testing.T) {
+        input := "y\n/non/existent/path/that/should/fail\n"
+        c := setupTestCLI(input)
+        
+        c.HandleCrash()
+    })
 }
