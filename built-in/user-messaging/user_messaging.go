@@ -65,41 +65,31 @@ func (l *Messenger) CreateLogTransaction() *Transaction {
 }
 
 func (m *Messenger) CommitLogTransaction(transaction *Transaction) {
-	m.queue <- func() {
-		for _, o := range m.outputs {
-			o.Finish(transaction.handles[o])
-		}
-	}
+	m.runPerOutput(transaction, func(o Output, h Handle) { o.Finish(h) })
 }
 
 func (m *Messenger) LogMessage(transaction *Transaction, message Message) {
-	m.queue <- func() {
-		for _, o := range m.outputs {
-			o.OutputMessage(transaction.handles[o], message)
-		}
-	}
+	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputMessage(h, message) })
 }
 
 func (m *Messenger) LogContext(transaction *Transaction, context CodeContext) {
-	m.queue <- func() {
-		for _, o := range m.outputs {
-			o.OutputContext(transaction.handles[o], context)
-		}
-	}
+	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputContext(h, context) })
 }
 
 func (m *Messenger) LogDiff(transaction *Transaction, diff Diff) {
-	m.queue <- func() {
-		for _, o := range m.outputs {
-			o.OutputDiff(transaction.handles[o], diff)
-		}
-	}
+	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputDiff(h, diff) })
 }
 
 func (m *Messenger) LogHint(transaction *Transaction, hint Hint) {
+	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputHint(h, hint) })
+}
+
+func (m *Messenger) runPerOutput(transaction *Transaction, f func(Output, Handle)) {
 	m.queue <- func() {
 		for _, o := range m.outputs {
-			o.OutputHint(transaction.handles[o], hint)
+			if handle, ok := transaction.handles[o]; ok {
+				f(o, handle)
+			}
 		}
 	}
 }
