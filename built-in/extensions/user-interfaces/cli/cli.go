@@ -28,7 +28,7 @@ func NewCli(sourceGen *logging.SourceGenerator, messenger *usermessaging.Messeng
 	return &CLI{*logging.NewRingBuffer(RingBufferSize), reader, logger}
 }
 
-func (c *CLI) PromptBool(question string, defaultTrue bool) (bool, ok bool) {
+func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok bool) {
 	sb := strings.Builder{}
 	sb.WriteString(question)
 	sb.WriteByte('(')
@@ -76,7 +76,7 @@ func (c *CLI) PromptBool(question string, defaultTrue bool) (bool, ok bool) {
 	}
 }
 
-func (c *CLI) PromptString(question, suggestion string) string {
+func (c *CLI) PromptString(question, suggestion string) (answer string, ok bool) {
 	sb := strings.Builder{}
 	sb.WriteString(question)
 
@@ -92,14 +92,14 @@ func (c *CLI) PromptString(question, suggestion string) string {
 
 	if err != nil {
 		c.logger.Error().Err(err).Msg("string read")
-		// TODO do something when this error occurs
+		return "", false
 	}
 
 	input := strings.TrimSpace(text)
 
 	if input == "" {
-		return suggestion
+		return suggestion, true
 	}
 
-	return input
+	return input, true
 }
