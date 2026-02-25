@@ -1,11 +1,15 @@
 package usermessaging
 
+import "sync"
+
 const bufferSize = 10
 
 type Messenger struct {
 	outputs []Output
 	queue   chan func()
 	done    chan bool
+
+	mutex   sync.RWMutex
 }
 
 type Transaction struct {
@@ -46,6 +50,9 @@ func (m *Messenger) worker() {
 }
 
 func (l *Messenger) AddOutput(outputChannel Output) {
+	l.mutex.Lock()
+    defer l.mutex.Unlock()
+
 	l.outputs = append(l.outputs, outputChannel)
 }
 
@@ -55,6 +62,9 @@ func (m *Messenger) Close() {
 }
 
 func (l *Messenger) CreateLogTransaction() *Transaction {
+	l.mutex.RLock()
+    defer l.mutex.RUnlock()
+	
 	transaction := Transaction{make(map[Output]Handle)}
 
 	for _, o := range l.outputs {
@@ -86,6 +96,9 @@ func (m *Messenger) LogHint(transaction *Transaction, hint Hint) {
 
 func (m *Messenger) runPerOutput(transaction *Transaction, f func(Output, Handle)) {
 	m.queue <- func() {
+		m.mutex.RLock()
+    	defer m.mutex.RUnlock()
+
 		for _, o := range m.outputs {
 			if handle, ok := transaction.handles[o]; ok {
 				f(o, handle)
