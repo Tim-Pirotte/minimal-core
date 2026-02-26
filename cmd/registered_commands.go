@@ -5,6 +5,7 @@ import (
 	"minimal/minimal-core/built-in/extensions/commands/templates"
 	logrendering "minimal/minimal-core/built-in/extensions/outputs/log-renderer"
 	"minimal/minimal-core/built-in/extensions/stores/directory"
+	"minimal/minimal-core/built-in/extensions/user-interfaces/tui"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/startup"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
@@ -32,6 +33,12 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 	}
 
 	err = commands.AddCommand("message", func(_ []string) bool {return messagingTest(sourceGen)})
+
+	if err != nil {
+		// TODO log error
+	}
+
+	err = commands.AddCommand("tui", (&tui.TUI{}).StartTui)
 
 	if err != nil {
 		// TODO log error
