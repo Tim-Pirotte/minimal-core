@@ -10,43 +10,55 @@ import (
 )
 
 type TUI struct {
+	app            *tview.Application
+	actions        *tview.List
 	commandHistory []string
 	historyIndex   int
 }
 
+type Action struct {
+	Name        string
+	Description string
+	Shortcut    rune
+	Run         func()
+}
+
 func NewTUI() *TUI {
-	return &TUI{make([]string, 0), 0}
+	tui := &TUI{tview.NewApplication(), tview.NewList(), make([]string, 0), 0}
+	
+	tui.AddAction(Action{"Run", "Run the project", 'r', nil})
+	tui.AddAction(Action{"Build", "Compile the project", 'b', nil})
+	tui.AddAction(Action{"Test", "Run tests", 't', nil})
+	tui.AddAction(Action{"Quit", "Press to exit", 'q', func() {
+		tui.app.Stop()
+	}})
+
+	return tui
+}
+
+func (t *TUI) AddAction(action Action) {
+	t.actions.AddItem(action.Name, action.Description, action.Shortcut, action.Run)
 }
 
 func (t *TUI) StartTUI(args []string) bool {
-	app := tview.NewApplication()
+	dashBoard := t.setDashBoard()
+	t.app.SetRoot(dashBoard, true)
 
-	dashBoard := t.setDashBoard(app)
-	app.SetRoot(dashBoard, true)
-
-	if err := app.Run(); err != nil {
+	if err := t.app.Run(); err != nil {
 		return false
 	}
 
 	return true
 }
 
-func (t *TUI) setDashBoard(app *tview.Application) *tview.Grid {
-	actions := tview.NewList().
-		AddItem("Run", "Run the project", 'r', nil).
-		AddItem("Build", "Compile the project", 'b', nil).
-		AddItem("Test", "Run tests", 't', nil).
-		AddItem("Quit", "Press to exit", 'q', func() {
-			app.Stop()
-		})
-
-	actions.SetBorder(true).SetTitle("Actions")
+func (t *TUI) setDashBoard() *tview.Grid {
+	t.actions.SetBorder(true).SetTitle("Actions")
 
 	output := tview.NewTextView().
 			SetBorder(true).
 			SetTitle("Output")
 
-	shellOutput := tview.NewTextView().SetChangedFunc(func() { app.Draw() })
+	shellOutput := tview.NewTextView().SetChangedFunc(func() { t.app.Draw() })
 	shellInput := tview.NewInputField().SetLabel("> ")
 	shellInput.SetDoneFunc(
 		func(key tcell.Key) {
@@ -121,30 +133,30 @@ func (t *TUI) setDashBoard(app *tview.Application) *tview.Grid {
 		SetRows(0).
 		SetColumns(20, 0, 50)
 
-	dashBoard.AddItem(actions, 0, 0, 1, 1, 0, 0, true).
+	dashBoard.AddItem(t.actions, 0, 0, 1, 1, 0, 0, true).
 		AddItem(output, 0, 1, 1, 1, 0, 0, false).
 		AddItem(shell, 0, 2, 1, 1, 0, 0, false)
 
 	dashBoard.SetBorder(true).SetTitle("Minimal")
 
-	setPanelNavigation(app, []tview.Primitive{actions, output, shell})
+	t.setPanelNavigation([]tview.Primitive{t.actions, output, shell})
 
 	return dashBoard
 }
 
-func setPanelNavigation(app *tview.Application, panels []tview.Primitive) {
+func (t *TUI) setPanelNavigation(panels []tview.Primitive) {
     focusIndex := 0
 
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	t.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
         switch event.Key() {
         case tcell.KeyRight, tcell.KeyTab:
             focusIndex = (focusIndex + 1) % len(panels)
-            app.SetFocus(panels[focusIndex])
+            t.app.SetFocus(panels[focusIndex])
 
             return nil
         case tcell.KeyLeft:
             focusIndex = (focusIndex - 1 + len(panels)) % len(panels)
-            app.SetFocus(panels[focusIndex])
+            t.app.SetFocus(panels[focusIndex])
             
 			return nil
         }
