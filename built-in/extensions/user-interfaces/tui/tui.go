@@ -1,6 +1,10 @@
 package tui
 
 import (
+	"fmt"
+	"os/exec"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -37,13 +41,45 @@ func setDashBoard(app *tview.Application) *tview.Grid {
 			SetBorder(true).
 			SetTitle("Output")
 
-	shellOutput := tview.NewTextView()
+	shellOutput := tview.NewTextView().SetChangedFunc(func() { app.Draw() })
 	shellInput := tview.NewInputField().SetLabel("> ")
+	shellInput.SetDoneFunc(
+		func(key tcell.Key) {
+			if key != tcell.KeyEnter {
+				return
+			}
+
+			commandText := shellInput.GetText()
+			shellInput.SetText("")
+
+			if commandText == "" {
+				return
+			}
+
+			fmt.Fprintf(shellOutput, "> %s\n", commandText)
+
+			parts := strings.Fields(commandText)
+
+			cmd := exec.Command(parts[0], parts[1:]...)
+			cmd.Stdout = shellOutput
+        	cmd.Stderr = shellOutput
+
+			go func() {
+				err := cmd.Run()
+
+				if err != nil {
+					fmt.Fprint(shellOutput, err)
+				}
+
+				shellOutput.ScrollToEnd()
+			}()
+		},
+	)
 
 	shell := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(shellOutput, 1, 1, false).
-		AddItem(shellInput, 3, 0, true)
+		AddItem(shellOutput, 0, 1, false).
+		AddItem(shellInput, 1, 0, true)
 	
 	shell.SetBorder(true).SetTitle("Shell")
 
@@ -57,7 +93,7 @@ func setDashBoard(app *tview.Application) *tview.Grid {
 
 	dashBoard.SetBorder(true).SetTitle("Minimal")
 
-	setPanelNavigation(app, []tview.Primitive{actions, output, shellInput})
+	setPanelNavigation(app, []tview.Primitive{actions, output, shell})
 
 	return dashBoard
 }
