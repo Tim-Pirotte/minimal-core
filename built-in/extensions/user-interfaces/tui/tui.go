@@ -80,6 +80,16 @@ func (t *TUI) StartTUI(args []string) bool {
 func (t *TUI) setDashBoard() *tview.Grid {
 	t.actions.SetBorder(true).SetTitle("Actions")
 
+	t.actions.SetFocusFunc(func() {
+		t.actions.SetSelectedBackgroundColor(tcell.ColorBlue)
+		t.actions.SetSelectedTextColor(tcell.ColorWhite)
+	})
+
+	t.actions.SetBlurFunc(func() {
+		t.actions.SetSelectedBackgroundColor(tcell.ColorDefault)
+    	t.actions.SetSelectedTextColor(tcell.ColorWhite)
+	})
+
 	output := tview.NewTextView().
 			SetBorder(true).
 			SetTitle("Output")
@@ -87,7 +97,7 @@ func (t *TUI) setDashBoard() *tview.Grid {
 	t.shellOutput.SetChangedFunc(func() { t.app.Draw() })
 	t.shellOutput.SetScrollable(true)
 
-	shellInput := tview.NewInputField().SetLabel("> ")
+	shellInput := tview.NewInputField().SetLabel(":> ")
 	shellInput.SetDoneFunc(
 		func(key tcell.Key) {
 			if key != tcell.KeyEnter {
@@ -104,7 +114,7 @@ func (t *TUI) setDashBoard() *tview.Grid {
 			t.commandHistory = append(t.commandHistory, commandText)
 			t.historyIndex = len(t.commandHistory)
 
-			fmt.Fprintf(t.shellOutput, "\n> %s\n", commandText)
+			fmt.Fprintf(t.shellOutput, "\n|> %s\n", commandText)
 
 			parts := strings.Fields(commandText)
 
@@ -135,10 +145,12 @@ func (t *TUI) setDashBoard() *tview.Grid {
 
 	shellInput.SetFocusFunc(func() {
 		shellInput.SetLabelColor(tcell.ColorRed)
+		shellInput.SetLabel("|> ")
 	})
 
 	shellInput.SetBlurFunc(func() {
 		shellInput.SetLabelColor(tcell.ColorWhite)
+		shellInput.SetLabel(":> ")
 	})
 
 	shell := tview.NewFlex().
