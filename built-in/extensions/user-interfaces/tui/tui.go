@@ -90,12 +90,12 @@ func (t *TUI) setDashBoard() *tview.Grid {
     	t.actions.SetSelectedTextColor(tcell.ColorWhite)
 	})
 
-	output := tview.NewTextView().
-			SetBorder(true).
-			SetTitle("Output")
+	output := tview.NewTextView()
+	output.SetBorder(true).SetTitle("Output")
 
 	t.shellOutput.SetChangedFunc(func() { t.app.Draw() })
 	t.shellOutput.SetScrollable(true)
+	t.shellOutput.SetDynamicColors(true)
 
 	shellInput := tview.NewInputField().SetLabel(":> ")
 	shellInput.SetDoneFunc(
@@ -125,15 +125,16 @@ func (t *TUI) setDashBoard() *tview.Grid {
 				}
 			}
 
+			ansiWriter := tview.ANSIWriter(t.shellOutput)
 			cmd := exec.Command(parts[0], parts[1:]...)
-			cmd.Stdout = t.shellOutput
-        	cmd.Stderr = t.shellOutput
+			cmd.Stdout = ansiWriter
+        	cmd.Stderr = ansiWriter
 
 			go func() {
 				err := cmd.Run()
 
 				if err != nil {
-					fmt.Fprint(t.shellOutput, err)
+					fmt.Fprint(ansiWriter, err)
 				}
 
 				t.shellOutput.ScrollToEnd()
