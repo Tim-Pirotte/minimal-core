@@ -85,6 +85,8 @@ func (t *TUI) setDashBoard() *tview.Grid {
 			SetTitle("Output")
 
 	t.shellOutput.SetChangedFunc(func() { t.app.Draw() })
+	t.shellOutput.SetScrollable(true)
+
 	shellInput := tview.NewInputField().SetLabel("> ")
 	shellInput.SetDoneFunc(
 		func(key tcell.Key) {
@@ -102,7 +104,7 @@ func (t *TUI) setDashBoard() *tview.Grid {
 			t.commandHistory = append(t.commandHistory, commandText)
 			t.historyIndex = len(t.commandHistory)
 
-			fmt.Fprintf(t.shellOutput, "> %s\n", commandText)
+			fmt.Fprintf(t.shellOutput, "\n> %s\n", commandText)
 
 			parts := strings.Fields(commandText)
 
@@ -129,14 +131,24 @@ func (t *TUI) setDashBoard() *tview.Grid {
 		},
 	)
 
+	shellInput.SetLabelColor(tcell.ColorWhite)
+
+	shellInput.SetFocusFunc(func() {
+		shellInput.SetLabelColor(tcell.ColorRed)
+	})
+
+	shellInput.SetBlurFunc(func() {
+		shellInput.SetLabelColor(tcell.ColorWhite)
+	})
+
 	shell := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(t.shellOutput, 0, 1, false).
-		AddItem(shellInput, 1, 0, true)
+		AddItem(shellInput, 1, 0, false)
 	
 	shell.SetBorder(true).SetTitle("Shell")
 
-	shell.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	shellInput.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
         case tcell.KeyUp:
             if t.historyIndex > 0 {
@@ -164,7 +176,7 @@ func (t *TUI) setDashBoard() *tview.Grid {
 
 	dashBoard := tview.NewGrid().
 		SetRows(0).
-		SetColumns(20, 0, 50)
+		SetColumns(30, 0, 40)
 
 	dashBoard.AddItem(t.actions, 0, 0, 1, 1, 0, 0, true).
 		AddItem(output, 0, 1, 1, 1, 0, 0, false).
@@ -172,7 +184,7 @@ func (t *TUI) setDashBoard() *tview.Grid {
 
 	dashBoard.SetBorder(true).SetTitle("Minimal")
 
-	t.setPanelNavigation([]tview.Primitive{t.actions, output, shell})
+	t.setPanelNavigation([]tview.Primitive{t.actions, output, shellInput, t.shellOutput})
 
 	return dashBoard
 }
