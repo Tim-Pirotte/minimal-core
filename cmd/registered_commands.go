@@ -38,7 +38,7 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 		// TODO log error
 	}
 
-	err = commands.AddCommand("tui", (&tui.TUI{}).StartTui)
+	err = commands.AddCommand("tui", (&tui.TUI{}).StartTUI)
 
 	if err != nil {
 		// TODO log error

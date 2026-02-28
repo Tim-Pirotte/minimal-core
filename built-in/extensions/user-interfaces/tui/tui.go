@@ -10,13 +10,18 @@ import (
 )
 
 type TUI struct {
-
+	commandHistory []string
+	historyIndex   int
 }
 
-func (t *TUI) StartTui(args []string) bool {
+func NewTUI() *TUI {
+	return &TUI{make([]string, 0), 0}
+}
+
+func (t *TUI) StartTUI(args []string) bool {
 	app := tview.NewApplication()
 
-	dashBoard := setDashBoard(app)
+	dashBoard := t.setDashBoard(app)
 	app.SetRoot(dashBoard, true)
 
 	if err := app.Run(); err != nil {
@@ -26,7 +31,7 @@ func (t *TUI) StartTui(args []string) bool {
 	return true
 }
 
-func setDashBoard(app *tview.Application) *tview.Grid {
+func (t *TUI) setDashBoard(app *tview.Application) *tview.Grid {
 	actions := tview.NewList().
 		AddItem("Run", "Run the project", 'r', nil).
 		AddItem("Build", "Compile the project", 'b', nil).
@@ -56,6 +61,9 @@ func setDashBoard(app *tview.Application) *tview.Grid {
 				return
 			}
 
+			t.commandHistory = append(t.commandHistory, commandText)
+			t.historyIndex = len(t.commandHistory)
+
 			fmt.Fprintf(shellOutput, "> %s\n", commandText)
 
 			parts := strings.Fields(commandText)
@@ -82,6 +90,32 @@ func setDashBoard(app *tview.Application) *tview.Grid {
 		AddItem(shellInput, 1, 0, true)
 	
 	shell.SetBorder(true).SetTitle("Shell")
+
+	shell.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+        case tcell.KeyUp:
+            if t.historyIndex > 0 {
+				t.historyIndex--
+				shellInput.SetText(t.commandHistory[t.historyIndex])
+			}
+
+            return nil
+        case tcell.KeyDown:
+			if t.historyIndex < len(t.commandHistory) {
+				t.historyIndex++
+			}
+
+			if t.historyIndex < len(t.commandHistory) {
+				shellInput.SetText(t.commandHistory[t.historyIndex])
+			} else {
+				shellInput.SetText("")
+			}
+            
+			return nil
+        }
+
+		return event
+	})
 
 	dashBoard := tview.NewGrid().
 		SetRows(0).
