@@ -12,6 +12,17 @@ type TUI struct {
 func (t *TUI) StartTui(args []string) bool {
 	app := tview.NewApplication()
 
+	dashBoard := setDashBoard(app)
+	app.SetRoot(dashBoard, true)
+
+	if err := app.Run(); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func setDashBoard(app *tview.Application) *tview.Grid {
 	actions := tview.NewList().
 		AddItem("Run", "Run the project", 'r', nil).
 		AddItem("Build", "Compile the project", 'b', nil).
@@ -22,34 +33,41 @@ func (t *TUI) StartTui(args []string) bool {
 
 	actions.SetBorder(true).SetTitle("Actions")
 
-	currentApp := tview.NewTextView().
-			SetTextAlign(tview.AlignCenter).
-			SetText("Current App")
+	output := tview.NewTextView().
+			SetBorder(true).
+			SetTitle("Output")
 
-	shell := tview.NewTextView().
-			SetTextAlign(tview.AlignCenter).
-			SetText("Shell")
+	shellOutput := tview.NewTextView()
+	shellInput := tview.NewInputField().SetLabel("> ")
 
-	grid := tview.NewGrid().
+	shell := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(shellOutput, 1, 1, false).
+		AddItem(shellInput, 3, 0, true)
+	
+	shell.SetBorder(true).SetTitle("Shell")
+
+	dashBoard := tview.NewGrid().
 		SetRows(0).
-		SetColumns(20, 0, 20).
-		SetBorders(true)
+		SetColumns(20, 0, 50)
 
-	grid.AddItem(actions, 0, 0, 1, 1, 0, 0, false).
-		AddItem(currentApp, 0, 1, 1, 1, 0, 0, false).
+	dashBoard.AddItem(actions, 0, 0, 1, 1, 0, 0, true).
+		AddItem(output, 0, 1, 1, 1, 0, 0, false).
 		AddItem(shell, 0, 2, 1, 1, 0, 0, false)
 
-	grid.SetBorder(true).SetTitle("Minimal")
+	dashBoard.SetBorder(true).SetTitle("Minimal")
 
-	app.SetRoot(grid, true)
-	app.SetFocus(actions)
+	setPanelNavigation(app, []tview.Primitive{actions, output, shellInput})
 
-	panels := []tview.Primitive{actions, currentApp, shell}
+	return dashBoard
+}
+
+func setPanelNavigation(app *tview.Application, panels []tview.Primitive) {
     focusIndex := 0
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
         switch event.Key() {
-        case tcell.KeyRight:
+        case tcell.KeyRight, tcell.KeyTab:
             focusIndex = (focusIndex + 1) % len(panels)
             app.SetFocus(panels[focusIndex])
 
@@ -63,10 +81,4 @@ func (t *TUI) StartTui(args []string) bool {
 
         return event
     })
-
-	if err := app.Run(); err != nil {
-		return false
-	}
-
-	return true
 }
