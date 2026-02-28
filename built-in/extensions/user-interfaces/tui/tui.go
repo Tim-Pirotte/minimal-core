@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -9,9 +10,13 @@ import (
 	"github.com/rivo/tview"
 )
 
+var ErrDuplicateShellCommand = errors.New("shell command with this name already exists")
+
 type TUI struct {
 	app            *tview.Application
 	actions        *tview.List
+	shellOutput    *tview.TextView
+	shellCommands  map[string]func(args []string)
 	commandHistory []string
 	historyIndex   int
 }
@@ -24,7 +29,14 @@ type Action struct {
 }
 
 func NewTUI() *TUI {
-	tui := &TUI{tview.NewApplication(), tview.NewList(), make([]string, 0), 0}
+	tui := &TUI{
+		tview.NewApplication(), 
+		tview.NewList(), 
+		tview.NewTextView(),
+		make(map[string]func(args []string)), 
+		make([]string, 0), 
+		0,
+	}
 	
 	tui.AddAction(Action{"Run", "Run the project", 'r', nil})
 	tui.AddAction(Action{"Build", "Compile the project", 'b', nil})
@@ -33,11 +45,25 @@ func NewTUI() *TUI {
 		tui.app.Stop()
 	}})
 
+	tui.AddShellCommand("clear", func(args []string) {
+		tui.shellOutput.Clear()
+	})
+
 	return tui
 }
 
 func (t *TUI) AddAction(action Action) {
 	t.actions.AddItem(action.Name, action.Description, action.Shortcut, action.Run)
+}
+
+func (t *TUI) AddShellCommand(name string, run func(args []string)) error {
+	if _, ok := t.shellCommands[name]; ok {
+		return ErrDuplicateShellCommand
+	}
+	
+	t.shellCommands[name] = run
+	
+	return nil
 }
 
 func (t *TUI) StartTUI(args []string) bool {
@@ -58,7 +84,7 @@ func (t *TUI) setDashBoard() *tview.Grid {
 			SetBorder(true).
 			SetTitle("Output")
 
-	shellOutput := tview.NewTextView().SetChangedFunc(func() { t.app.Draw() })
+	t.shellOutput.SetChangedFunc(func() { t.app.Draw() })
 	shellInput := tview.NewInputField().SetLabel("> ")
 	shellInput.SetDoneFunc(
 		func(key tcell.Key) {
@@ -76,29 +102,36 @@ func (t *TUI) setDashBoard() *tview.Grid {
 			t.commandHistory = append(t.commandHistory, commandText)
 			t.historyIndex = len(t.commandHistory)
 
-			fmt.Fprintf(shellOutput, "> %s\n", commandText)
+			fmt.Fprintf(t.shellOutput, "> %s\n", commandText)
 
 			parts := strings.Fields(commandText)
 
+			if len(parts) > 0 {
+				if run, ok := t.shellCommands[parts[0]]; ok {
+					run(parts)
+					return
+				}
+			}
+
 			cmd := exec.Command(parts[0], parts[1:]...)
-			cmd.Stdout = shellOutput
-        	cmd.Stderr = shellOutput
+			cmd.Stdout = t.shellOutput
+        	cmd.Stderr = t.shellOutput
 
 			go func() {
 				err := cmd.Run()
 
 				if err != nil {
-					fmt.Fprint(shellOutput, err)
+					fmt.Fprint(t.shellOutput, err)
 				}
 
-				shellOutput.ScrollToEnd()
+				t.shellOutput.ScrollToEnd()
 			}()
 		},
 	)
 
 	shell := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(shellOutput, 0, 1, false).
+		AddItem(t.shellOutput, 0, 1, false).
 		AddItem(shellInput, 1, 0, true)
 	
 	shell.SetBorder(true).SetTitle("Shell")
