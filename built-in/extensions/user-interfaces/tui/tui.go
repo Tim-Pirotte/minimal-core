@@ -13,7 +13,6 @@ type TUI struct {
 func NewTUI() *TUI {
 	app := tview.NewApplication()
 	dashboard := tview.NewGrid().SetRows(0).SetColumns(30, 0, 40)
-	app.SetRoot(dashboard, true)
 	navigation := NewNavigation(app)
 
 	tui := &TUI{
@@ -21,6 +20,8 @@ func NewTUI() *TUI {
 		NewActions(app, navigation, dashboard), 
 		NewShell(app, navigation, dashboard),
 	}
+
+	app.SetRoot(dashboard, true)
 
 	return tui
 }
