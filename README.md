@@ -19,7 +19,7 @@ The base Minimal compiler on which the Minimal language extensions are added.
   - **ui:** UI layer via which can be communicated with the user
     - **user-interfaces:** UI implementations
       - **cli:** UI via CLI
-      - **tui:** UI via TUI
+      - **tui:** UI via TUI *(Not meant to be used!)*
   - **tokenizer:** Layer to convert text into a series of tokens
     - **matchers:** Extensions that match on textual input
       - **identifiers:** Match text that doesn't start with a digit
@@ -29,4 +29,4 @@ The base Minimal compiler on which the Minimal language extensions are added.
       - **symbols:** A trie to match exact strings
       - **white-space:** Ignore white space
   
-*Note: The docs of the language itself can be found at: TODO*
+*The docs of the language itself can be found at: TODO*

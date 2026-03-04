@@ -7,18 +7,18 @@ import (
 
 type Actions struct {
 	actions *tview.List
-	output  *tview.TextView
+	output  *Output
 }
 
 type Action interface {
 	GetName() string
 	GetDescription() string
 	GetShortCut() rune
-	Run()
+	Run(output *Output)
 }
 
 func NewActions(app *tview.Application, navigation *Navigation, dashboard *tview.Grid) *Actions {
-	actions := &Actions{tview.NewList(), tview.NewTextView()}
+	actions := &Actions{tview.NewList(), NewOutput()}
 
 	navigation.AddPanel(actions.actions)
 	navigation.AddPanel(actions.output)
@@ -32,7 +32,12 @@ func NewActions(app *tview.Application, navigation *Navigation, dashboard *tview
 }
 
 func (a *Actions) AddAction(action Action) {
-	a.actions.AddItem(action.GetName(), action.GetDescription(), action.GetShortCut(), action.Run)
+	a.actions.AddItem(
+		action.GetName(),
+		action.GetDescription(), 
+		action.GetShortCut(), 
+		func() { action.Run(a.output) },
+	)
 }
 
 func (a *Actions) addToDashboard(dashboard *tview.Grid) {
@@ -49,7 +54,7 @@ func (a *Actions) addBuiltInActions(app *tview.Application) {
 	a.AddAction(&SimpleAction{"Run", "Run the project", 'r', nil})
 	a.AddAction(&SimpleAction{"Build", "Compile the project", 'b', nil})
 	a.AddAction(&SimpleAction{"Test", "Run tests", 't', nil})
-	a.AddAction(&SimpleAction{"Quit", "Press to exit", 'q', func() {
+	a.AddAction(&SimpleAction{"Quit", "Press to exit", 'q', func(output *Output) {
 		app.Stop()
 	}})
 }
