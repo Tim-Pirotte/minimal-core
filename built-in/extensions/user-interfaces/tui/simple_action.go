@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -33,15 +32,5 @@ func (s *SimpleAction) Run(output *Output) {
 }
 
 func displayNotImplemented(output *Output) {
-	output.RenderFunc = func(screen tcell.Screen, x, y, w, h int) {
-		tview.Print(
-			screen, 
-			"This action doesn't have an implementation", 
-			x,
-			y,
-			w, 
-			tview.AlignCenter, 
-			tcell.ColorWhite,
-		)
-	}
+	output.Draw(tview.NewTextView().SetText("This action doesn't have an implementation"))
 }

@@ -1,26 +1,18 @@
 package tui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type Output struct {
-	*tview.Box
-	RenderFunc func(screen tcell.Screen, x, y, w, h int)
+	window *tview.Flex
 }
 
 func NewOutput() *Output {
-	return &Output{tview.NewBox(), nil}
+	return &Output{tview.NewFlex()}
 }
 
-func (o *Output) Draw(screen tcell.Screen) {
-	o.Box.DrawForSubclass(screen, o)
-	x, y, w, h := o.GetInnerRect()
-
-	if o.RenderFunc == nil {
-		return
-	}
-
-	o.RenderFunc(screen, x, y, w, h)
+func (o *Output) Draw(primitive tview.Primitive) {
+	o.window.Clear()
+	o.window.AddItem(primitive, 0, 1, true)
 }

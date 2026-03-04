@@ -21,7 +21,7 @@ func NewActions(app *tview.Application, navigation *Navigation, dashboard *tview
 	actions := &Actions{tview.NewList(), NewOutput()}
 
 	navigation.AddPanel(actions.actions)
-	navigation.AddPanel(actions.output)
+	navigation.AddPanel(actions.output.window)
 
 	actions.addToDashboard(dashboard)
 	actions.addStyling()
@@ -42,12 +42,12 @@ func (a *Actions) AddAction(action Action) {
 
 func (a *Actions) addToDashboard(dashboard *tview.Grid) {
 	dashboard.AddItem(a.actions, 0, 0, 1, 1, 0, 0, true)
-	dashboard.AddItem(a.output, 0, 1, 1, 1, 0, 0, false)
+	dashboard.AddItem(a.output.window, 0, 1, 1, 1, 0, 0, false)
 }
 
 func (a *Actions) addStyling() {
 	a.actions.SetBorder(true).SetTitle("Actions")
-	a.output.SetBorder(true).SetTitle("Output")
+	a.output.window.SetBorder(true).SetTitle("Output")
 }
 
 func (a *Actions) addBuiltInActions(app *tview.Application) {
