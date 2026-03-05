@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/extensions/commands/templates"
-	logrendering "minimal/minimal-core/built-in/extensions/outputs/log-renderer"
-	"minimal/minimal-core/built-in/extensions/stores/directory"
-	"minimal/minimal-core/built-in/extensions/user-interfaces/tui"
+	"minimal/minimal-core/built-in/commands/templates"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/startup"
+	"minimal/minimal-core/built-in/stores/directory"
+	"minimal/minimal-core/built-in/user-interfaces/tui"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 )
