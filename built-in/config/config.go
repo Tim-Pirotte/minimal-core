@@ -3,7 +3,7 @@ package config
 import "github.com/BurntSushi/toml"
 
 type Config interface {
-	Get(key, source string) (any, error)
+	Get(loadInto any, source string) error
 }
 
 func LoadConfig(configFile string, config any) error {
