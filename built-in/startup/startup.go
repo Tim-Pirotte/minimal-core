@@ -5,13 +5,18 @@ import (
 	"io/fs"
 	"minimal/minimal-core/built-in/config"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"path"
 
+	"github.com/BurntSushi/toml"
 	"github.com/rs/zerolog"
 )
 
-const minimumExpectedArgs = 2
+const (
+	minimumExpectedArgs = 2
+	baseConfigName = "base.toml"
+)
 
 var ErrDuplicateCommand = errors.New("command with this name already exists")
 var commandsConfigPath = path.Join(".", "commands")
@@ -19,13 +24,19 @@ var commandsConfigPath = path.Join(".", "commands")
 type Commands struct {
 	commands map[string]func(args []string) (ok bool)
 	logger zerolog.Logger
+	messenger *usermessaging.Messenger
 	fs fs.FS
 }
 
-func NewCommands(sourceGen *logging.SourceGenerator) *Commands {
+func NewCommands(sourceGen *logging.SourceGenerator, messenger *usermessaging.Messenger) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 
-	return &Commands{make(map[string]func(args []string) (ok bool)), logger, os.DirFS("")}
+	return &Commands{
+		make(map[string]func(args []string) (ok bool)), 
+		logger,
+		messenger,
+		os.DirFS("."),
+	}
 }
 
 func (c *Commands) AddCommand(name string, function func(args []string) (ok bool)) error {
@@ -65,7 +76,7 @@ func (c *Commands) GetEntrypoint(args []string) (fn func(args []string) (ok bool
 func (c *Commands) loadFromConfig(configName string) func(args []string) (ok bool) {
 	startupConfig := &StartupConfig{}
 
-	file, err := fs.ReadFile(c.fs, path.Join(commandsConfigPath, configName))
+	file, err := fs.ReadFile(c.fs, path.Join(commandsConfigPath, configName, baseConfigName))
 
 	if err != nil {
 		c.logConfigNotFound(configName)
@@ -75,7 +86,24 @@ func (c *Commands) loadFromConfig(configName string) func(args []string) (ok boo
 	err = config.LoadConfig(string(file), startupConfig)
 
 	if err != nil {
-		// TODO log error
+		c.logger.Error().Err(err).Msg("error loading config")
+
+		if parserErr, ok := err.(toml.ParseError); ok {
+			t := c.messenger.CreateLogTransaction()
+
+			c.messenger.LogMessage(
+				t, 
+				usermessaging.Message{
+					Severity: usermessaging.Critical, 
+					Category: "ConfigError", 
+					Message: parserErr.Error(),
+				},
+			)
+
+			c.messenger.CommitLogTransaction(t)
+		}
+
+		return nil
 	}
 
 	if startupFunc, ok := c.commands[startupConfig.Command]; ok {

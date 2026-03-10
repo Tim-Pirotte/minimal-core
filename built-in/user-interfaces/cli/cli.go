@@ -3,8 +3,8 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	logrendering "minimal/minimal-core/built-in/extensions/outputs/log-renderer"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"path/filepath"

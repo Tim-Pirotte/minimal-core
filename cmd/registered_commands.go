@@ -13,35 +13,37 @@ import (
 )
 
 func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Commands) {
+	logger, _ := sourceGen.GetLogger("commandRegistry")
+	
 	err := commands.AddCommand("hello", helloWorld)
 
 	if err != nil {
-		// TODO log error
+		logger.Fatal().Msg("Failed to register the hello command")
 	}
 
 	projectCreator := templates.NewProjectCreator(sourceGen)
 	err = projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
 
 	if err != nil {
-		// TODO log error
+		logger.Fatal().Msg("Failed to register the directory template store")
 	}
 
 	err = commands.AddCommand("new", projectCreator.NewProject)
 
 	if err != nil {
-		// TODO log error
+		logger.Fatal().Msg("Failed to register the new command")
 	}
 
-	err = commands.AddCommand("message", func(_ []string) bool {return messagingTest(sourceGen)})
+	err = commands.AddCommand("message", func(_ []string) bool { return messagingTest(sourceGen) })
 
 	if err != nil {
-		// TODO log error
+		logger.Fatal().Msg("Failed to register the message command")
 	}
 
 	err = commands.AddCommand("tui", tui.NewTUI().StartTUI)
 
 	if err != nil {
-		// TODO log error
+		logger.Fatal().Msg("Failed to register the tui command")
 	}
 }
 
@@ -52,7 +54,7 @@ func helloWorld(_ []string) bool {
 
 func messagingTest(sourceGen *logging.SourceGenerator) bool {
 	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, logrendering.Config{})
-	messaging := usermessaging.NewMessenger()
+	messaging := usermessaging.NewMessenger(sourceGen)
 	defer messaging.Close()
 	messaging.AddOutput(logRenderer)
 

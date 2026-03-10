@@ -1,6 +1,8 @@
 package usermessaging
 
 import (
+	"io"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"sync"
 	"testing"
 )
@@ -40,7 +42,8 @@ func (m *MockOutput) OutputDiff(h Handle, d Diff)             {}
 func (m *MockOutput) OutputHint(h Handle, hi Hint)            {}
 
 func TestMessenger(t *testing.T) {
-	m := NewMessenger()
+	sourceGen := logging.GetTestLogSource(io.Discard)
+	m := NewMessenger(sourceGen)
 	mock := &MockOutput{}
 	m.AddOutput(mock)
 
@@ -73,7 +76,8 @@ func TestMessenger(t *testing.T) {
 }
 
 func TestMessengerRaceConditions(t *testing.T) {
-	m := NewMessenger()
+	sourceGen := logging.GetTestLogSource(io.Discard)
+	m := NewMessenger(sourceGen)
 	mock := &MockOutput{}
 	m.AddOutput(mock)
 

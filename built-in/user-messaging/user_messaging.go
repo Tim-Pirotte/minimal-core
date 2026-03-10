@@ -1,10 +1,18 @@
 package usermessaging
 
-import "sync"
+import (
+	"fmt"
+	logging "minimal/minimal-core/built-in/internal-logging"
+	"reflect"
+	"sync"
+
+	"github.com/rs/zerolog"
+)
 
 const bufferSize = 10
 
 type Messenger struct {
+	logger zerolog.Logger
 	outputs []Output
 	queue   chan func()
 	done    chan bool
@@ -29,8 +37,11 @@ type Handle interface {
 	Handle()
 }
 
-func NewMessenger() *Messenger {
+func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
+	logger, _ := sourceGen.GetLogger("messenger")
+	
 	m := &Messenger{
+		logger:  logger,
 		outputs: make([]Output, 0),
 		queue:   make(chan func(), bufferSize),
 		done:    make(chan bool),
@@ -54,6 +65,7 @@ func (l *Messenger) AddOutput(outputChannel Output) {
     defer l.mutex.Unlock()
 
 	l.outputs = append(l.outputs, outputChannel)
+	l.logger.Debug().Str("output", fmt.Sprintf("%v", reflect.TypeOf(outputChannel))).Msg("output registered")
 }
 
 func (m *Messenger) Close() {
@@ -65,7 +77,7 @@ func (l *Messenger) CreateLogTransaction() *Transaction {
 	l.mutex.RLock()
     defer l.mutex.RUnlock()
 	
-	transaction := Transaction{make(map[Output]Handle)}
+	transaction := Transaction{make(map[Output]Handle, 0)}
 
 	for _, o := range l.outputs {
 		transaction.handles[o] = o.CreateHandle()
