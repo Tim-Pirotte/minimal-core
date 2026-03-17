@@ -4,10 +4,10 @@ go 1.26.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
-	github.com/rs/zerolog v1.34.0
-	github.com/rivo/tview v0.42.0
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/pelletier/go-toml/v2 v2.2.4
+	github.com/rivo/tview v0.42.0
+	github.com/rs/zerolog v1.34.0
 )
 
 require (
@@ -15,6 +15,7 @@ require (
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

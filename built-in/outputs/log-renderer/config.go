@@ -3,8 +3,6 @@ package logrendering
 import (
 	"fmt"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
-
-	"github.com/pelletier/go-toml/v2"
 )
 
 const (
@@ -97,14 +95,4 @@ func (c SeverityConfig) color(s usermessaging.Severity) string {
 	}
 
 	return sAsStr
-}
-
-func LoadConfig(configFile []byte) (Config, error) {
-	config := Config{}
-
-	if err := toml.Unmarshal(configFile, &config); err != nil {
-		panic(fmt.Errorf("failed to parse TOML: %w", err))
-	}
-
-	return config, nil
 }

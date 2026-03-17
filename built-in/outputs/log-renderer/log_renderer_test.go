@@ -6,15 +6,13 @@ import (
 	"io"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
-	"os"
 	"strings"
 	"sync"
 	"testing"
 )
 
 func TestDisplayRenderLogAtomic(t *testing.T) {
-	configFile, _ := os.ReadFile("./config.toml")
-	config, _ := LoadConfig(configFile)
+	config := Config{}
 
 	finalBuffer := &bytes.Buffer{}
 	logger := NewLogRenderer(&logging.SourceGenerator{}, finalBuffer, config)
@@ -73,8 +71,7 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 }
 
 func BenchmarkLogger(b *testing.B) {
-	configFile, _ := os.ReadFile("./config.toml")
-	config, _ := LoadConfig(configFile)
+	config := Config{}
 
 	logger := NewLogRenderer(logging.GetTestLogSource(io.Discard), io.Discard, config)
 
