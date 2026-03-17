@@ -1,6 +1,7 @@
 package main
 
 import (
+	"minimal/minimal-core/built-in/configs/toml"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/startup"
@@ -21,7 +22,7 @@ func run() int {
 	defer messaging.Close()
 	messaging.AddOutput(logRenderer)
 	
-	commands := startup.NewCommands(sourceGen, messaging)
+	commands := startup.NewCommands(sourceGen, messaging, toml.NewConfigLoader(sourceGen))
 
 	registerCommands(sourceGen, commands)
 

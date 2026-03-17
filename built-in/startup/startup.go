@@ -3,13 +3,12 @@ package startup
 import (
 	"errors"
 	"io/fs"
-	"minimal/minimal-core/built-in/config"
+	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"path"
 
-	"github.com/BurntSushi/toml"
 	"github.com/rs/zerolog"
 )
 
@@ -25,16 +24,22 @@ type Commands struct {
 	commands map[string]func(args []string) (ok bool)
 	logger zerolog.Logger
 	messenger *usermessaging.Messenger
+	configLoader configloader.ConfigLoader
 	fs fs.FS
 }
 
-func NewCommands(sourceGen *logging.SourceGenerator, messenger *usermessaging.Messenger) *Commands {
+func NewCommands(
+	sourceGen *logging.SourceGenerator, 
+	messenger *usermessaging.Messenger,
+	configLoader configloader.ConfigLoader,
+) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 
 	return &Commands{
 		make(map[string]func(args []string) (ok bool)), 
 		logger,
 		messenger,
+		configLoader,
 		os.DirFS("."),
 	}
 }
@@ -49,10 +54,6 @@ func (c *Commands) AddCommand(name string, function func(args []string) (ok bool
 	c.logCommandRegistered(name)
 
 	return nil
-}
-
-type StartupConfig struct {
-	Command string `toml:"command"`
 }
 
 // Returns the program entrypoint based on the first argument
@@ -74,44 +75,26 @@ func (c *Commands) GetEntrypoint(args []string) (fn func(args []string) (ok bool
 }
 
 func (c *Commands) loadFromConfig(configName string) func(args []string) (ok bool) {
-	startupConfig := &StartupConfig{}
+	c.configLoader.SetLocalConfigSource(configName)
 
-	file, err := fs.ReadFile(c.fs, path.Join(commandsConfigPath, configName, baseConfigName))
+	commandAny, ok := c.configLoader.Get("base", "", "command")
 
-	if err != nil {
-		c.logConfigNotFound(configName)
+	if !ok {
 		return nil
 	}
 
-	err = config.LoadConfig(string(file), startupConfig)
-
-	if err != nil {
-		c.logger.Error().Err(err).Msg("error loading config")
-
-		if parserErr, ok := err.(toml.ParseError); ok {
-			t := c.messenger.CreateLogTransaction()
-
-			c.messenger.LogMessage(
-				t, 
-				usermessaging.Message{
-					Severity: usermessaging.Critical, 
-					Category: "ConfigError", 
-					Message: parserErr.Error(),
-				},
-			)
-
-			c.messenger.CommitLogTransaction(t)
-		}
-
+	command, ok := commandAny.(string)
+	
+	if !ok {
 		return nil
 	}
 
-	if startupFunc, ok := c.commands[startupConfig.Command]; ok {
-		c.logRunningCommand(startupConfig.Command, true)
+	if startupFunc, ok := c.commands[command]; ok {
+		c.logRunningCommand(command, true)
 		return startupFunc
 	}
 	
-	c.logCommandNotExists(startupConfig.Command, configName)
+	c.logCommandNotExists(command, configName)
 
 	return nil
 }
@@ -141,12 +124,6 @@ func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {
 		Str("command_name", commandName).
 		Bool("from_config", fromConfig).
 		Msg("running command")
-}
-
-func (c *Commands) logConfigNotFound(configName string) {
-	c.logger.Error().
-		Str("config_name", configName).
-		Msg("config not found on file system")
 }
 
 func (c *Commands) logCommandNotExists(commandName, configName string) {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"minimal/minimal-core/built-in/commands/templates"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
@@ -14,15 +13,9 @@ import (
 
 func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Commands) {
 	logger, _ := sourceGen.GetLogger("commandRegistry")
-	
-	err := commands.AddCommand("hello", helloWorld)
-
-	if err != nil {
-		logger.Fatal().Msg("Failed to register the hello command")
-	}
 
 	projectCreator := templates.NewProjectCreator(sourceGen)
-	err = projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
+	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
 
 	if err != nil {
 		logger.Fatal().Msg("Failed to register the directory template store")
@@ -45,11 +38,6 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 	if err != nil {
 		logger.Fatal().Msg("Failed to register the tui command")
 	}
-}
-
-func helloWorld(_ []string) bool {
-	fmt.Println("Hello, world!")
-	return true
 }
 
 func messagingTest(sourceGen *logging.SourceGenerator) bool {

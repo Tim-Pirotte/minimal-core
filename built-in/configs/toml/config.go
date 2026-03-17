@@ -1,23 +1,33 @@
-package tomlconfig
+package toml
 
 import (
 	"maps"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"os"
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/rs/zerolog"
 )
 
 var configPath = filepath.Join(".", "commands")
 var globalConfig = filepath.Join("global")
 
 type TOMLConfig struct {
-	defaultLocation string
+	location string
 	cache map[string]map[string]map[string]any
+	logger zerolog.Logger
 }
 
-func NewConfig(defaultLocation string) *TOMLConfig {
-	return &TOMLConfig{defaultLocation, nil}
+func NewConfigLoader(srcGen *logging.SourceGenerator) *TOMLConfig {
+	logger, _ := srcGen.GetLogger("tomlConfigLoader")
+	
+	return &TOMLConfig{"", nil, logger}
+}
+
+func (t *TOMLConfig) SetLocalConfigSource(location string) {
+	t.location = location
+	t.logger.Debug().Msg("new config location set")
 }
 
 func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
@@ -27,6 +37,13 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 
 	if _, loaded := t.cache[source]; !loaded {
 		if err := t.loadFile(source); err != nil {
+			t.logger.Error().
+				Err(err).
+				Str("source", source).
+				Str("section", section).
+				Str("field", field).
+				Msg("error loading toml file")
+
 			return nil, false
 		}
 	}
@@ -34,12 +51,24 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 	sectionContent, ok := t.cache[source][section]
 	
 	if !ok {
+		t.logger.Error().
+			Str("source", source).
+			Str("section", section).
+			Str("field", field).
+			Msg("section not in config")
+		
 		return nil, false
 	}
 
 	value, ok = sectionContent[field]
 
 	if !ok {
+		t.logger.Error().
+			Str("source", source).
+			Str("section", section).
+			Str("field", field).
+			Msg("section not in config")
+	
 		return nil, false
 	}
 
@@ -57,7 +86,7 @@ func (t *TOMLConfig) loadFile(source string) error {
 
 	local := make(map[string]map[string]any)
 
-	localPath := filepath.Join(configPath, t.defaultLocation, source)
+	localPath := filepath.Join(configPath, t.location, source)
 
 	if _, err := toml.DecodeFile(localPath, &local); err != nil {
 		return err
