@@ -32,7 +32,7 @@ func run() int {
 		return 1
 	}
 
-	ok := entrypoint(args)
+	ok := entrypoint(commands.ConfigLoader, args)
 
 	if !ok {
 		return 1

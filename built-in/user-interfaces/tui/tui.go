@@ -1,6 +1,8 @@
 package tui
 
 import (
+	configloader "minimal/minimal-core/built-in/config-loader"
+
 	"github.com/rivo/tview"
 )
 
@@ -26,7 +28,7 @@ func NewTUI() *TUI {
 	return tui
 }
 
-func (t *TUI) StartTUI(args []string) bool {
+func (t *TUI) StartTUI(configLoader configloader.ConfigLoader, args []string) bool {
 	if err := t.app.Run(); err != nil {
 		return false
 	}

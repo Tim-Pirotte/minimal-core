@@ -2,8 +2,10 @@ package startup
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	configloader "minimal/minimal-core/built-in/config-loader"
+	noconfig "minimal/minimal-core/built-in/config-loaders/no-config"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
@@ -12,19 +14,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	minimumExpectedArgs = 2
-	baseConfigName = "base.toml"
-)
+const minimumExpectedArgs = 2
 
 var ErrDuplicateCommand = errors.New("command with this name already exists")
 var commandsConfigPath = path.Join(".", "commands")
 
 type Commands struct {
-	commands map[string]func(args []string) (ok bool)
+	commands map[string]func(configLoader configloader.ConfigLoader, args []string) (ok bool)
 	logger zerolog.Logger
 	messenger *usermessaging.Messenger
-	configLoader configloader.ConfigLoader
+	ConfigLoader configloader.ConfigLoader
 	fs fs.FS
 }
 
@@ -36,7 +35,7 @@ func NewCommands(
 	logger, _ := sourceGen.GetLogger("startup")
 
 	return &Commands{
-		make(map[string]func(args []string) (ok bool)), 
+		make(map[string]func(configLoader configloader.ConfigLoader, args []string) (ok bool)), 
 		logger,
 		messenger,
 		configLoader,
@@ -44,7 +43,7 @@ func NewCommands(
 	}
 }
 
-func (c *Commands) AddCommand(name string, function func(args []string) (ok bool)) error {
+func (c *Commands) AddCommand(name string, function func(configLoader configloader.ConfigLoader, args []string) (ok bool)) error {
 	if _, ok := c.commands[name]; ok {
 		c.logDuplicateCommand(name)
 		return ErrDuplicateCommand
@@ -56,28 +55,34 @@ func (c *Commands) AddCommand(name string, function func(args []string) (ok bool
 	return nil
 }
 
-// Returns the program entrypoint based on the first argument
-// or nil if something went wrong
-func (c *Commands) GetEntrypoint(args []string) (fn func(args []string) (ok bool), arguments []string) {
+// Returns the program entrypoint based on the first argument or nil if something went wrong.
+// The config gets replaced by no-config when a command is executed directly.
+func (c *Commands) GetEntrypoint(
+	args []string,
+) (fn func(configLoader configloader.ConfigLoader, args []string) (ok bool), arguments []string) {
 	if len(args) < minimumExpectedArgs {
+		c.ConfigLoader = noconfig.NewNoConfig()
 		c.logNotEnoughArgs(len(args))
+		
 		return nil, nil
 	}
 
 	configOrCommand := args[1]
 
 	if startupFunc, ok := c.commands[configOrCommand]; ok {
+		c.ConfigLoader = noconfig.NewNoConfig()
 		c.logRunningCommand(configOrCommand, false)
+
 		return startupFunc, args[2:]
 	} else {
 		return c.loadFromConfig(configOrCommand), args[2:]
 	}
 }
 
-func (c *Commands) loadFromConfig(configName string) func(args []string) (ok bool) {
-	c.configLoader.SetLocalConfigSource(configName)
+func (c *Commands) loadFromConfig(configName string) func(configLoader configloader.ConfigLoader, args []string) (ok bool) {
+	c.ConfigLoader.SetLocalConfigSource(configName)
 
-	commandAny, ok := c.configLoader.Get("base", "execute", "command")
+	commandAny, ok := c.ConfigLoader.Get("base", "execute", "command")
 
 	if !ok {
 		return nil
@@ -117,6 +122,20 @@ func (c *Commands) logNotEnoughArgs(argsLength int) {
 		Int("min_expected_args", minimumExpectedArgs).
 		Int("actual_args", argsLength).
 		Msg("not enough arguments")
+
+	t := c.messenger.CreateLogTransaction()
+
+	c.messenger.LogMessage(
+		t, 
+		usermessaging.Message{
+			Severity: usermessaging.Critical, 
+			Category: "StartupError", 
+			Message: fmt.Sprintf("Expected at least %d arguments but got %d arguments", minimumExpectedArgs, argsLength)},
+	)
+
+	c.messenger.LogHint(t, usermessaging.Hint{Text: "mnm <commandName>", MoreInfoReference: ""})
+
+	c.messenger.CommitLogTransaction(t)
 }
 
 func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {
