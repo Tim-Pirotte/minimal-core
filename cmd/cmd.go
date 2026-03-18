@@ -1,7 +1,7 @@
 package main
 
 import (
-	"minimal/minimal-core/built-in/configs/toml"
+	"minimal/minimal-core/built-in/config-loaders/toml"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/startup"
