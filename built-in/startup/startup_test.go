@@ -1,7 +1,6 @@
 package startup
 
 import (
-	configloader "minimal/minimal-core/built-in/config-loader"
 	"testing"
 	"testing/fstest"
 
@@ -10,7 +9,7 @@ import (
 
 func setupTestCommands(mockFiles fstest.MapFS) *Commands {
 	return &Commands{
-		commands: make(map[string]func(configloader.ConfigLoader, []string) bool),
+		commands: make(map[string]func([]string) bool),
 		logger:   zerolog.Nop(),
 		fs:       mockFiles,
 	}
@@ -18,7 +17,7 @@ func setupTestCommands(mockFiles fstest.MapFS) *Commands {
 
 func TestAddCommand(t *testing.T) {
 	c := setupTestCommands(nil)
-	err := c.AddCommand("build", func(configloader.ConfigLoader, []string) bool {return true})
+	err := c.AddCommand("build", func([]string) bool {return true})
 
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
@@ -31,8 +30,8 @@ func TestAddCommand(t *testing.T) {
 
 func TestAddDuplicateCommand(t *testing.T) {
 	c := setupTestCommands(nil)
-	_ = c.AddCommand("build", func(configloader.ConfigLoader, []string) bool {return true})
-	err := c.AddCommand("build", func(configloader.ConfigLoader, []string) bool {return true})
+	_ = c.AddCommand("build", func([]string) bool {return true})
+	err := c.AddCommand("build", func([]string) bool {return true})
 
 	if err != ErrDuplicateCommand {
 		t.Errorf("expected DuplicateCommand error, got %v", err)
@@ -42,7 +41,7 @@ func TestAddDuplicateCommand(t *testing.T) {
 func TestGetEntrypointFromCommand(t *testing.T) {
 	c := setupTestCommands(nil)
 	called := false
-	err := c.AddCommand("build", func(configloader.ConfigLoader, []string) bool { called = true; return true })
+	err := c.AddCommand("build", func([]string) bool { called = true; return true })
 
 	if err != nil {
 		t.Error("Adding command failed")
@@ -54,7 +53,7 @@ func TestGetEntrypointFromCommand(t *testing.T) {
 		t.Fatal("expected function, got nil")
 	}
 
-	fn(c.ConfigLoader, args)
+	fn(args)
 
 	if !called {
 		t.Error("the returned function was not the registered one")
@@ -80,7 +79,7 @@ func TestGetEntrypointFromConfig(t *testing.T) {
 
 	c := setupTestCommands(mockFS)
 	called := false
-	err := c.AddCommand("compile", func(configloader.ConfigLoader, []string) bool { called = true; return true })
+	err := c.AddCommand("compile", func([]string) bool { called = true; return true })
 
 	if err != nil {
 		t.Error("Adding command failed")
@@ -92,7 +91,7 @@ func TestGetEntrypointFromConfig(t *testing.T) {
 		t.Fatal("expected function from config, got nil")
 	}
 
-	fn(c.ConfigLoader, args)
+	fn(args)
 
 	if !called {
 		t.Error("the function from config was not executed")

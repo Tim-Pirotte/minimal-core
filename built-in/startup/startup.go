@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	configloader "minimal/minimal-core/built-in/config-loader"
 	noconfig "minimal/minimal-core/built-in/config-loaders/no-config"
+	"minimal/minimal-core/built-in/config-loaders/shell"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
@@ -20,22 +20,22 @@ var ErrDuplicateCommand = errors.New("command with this name already exists")
 var commandsConfigPath = path.Join(".", "commands")
 
 type Commands struct {
-	commands map[string]func(configLoader configloader.ConfigLoader, args []string) (ok bool)
+	commands map[string]func(args []string) (ok bool)
 	logger zerolog.Logger
 	messenger *usermessaging.Messenger
-	ConfigLoader configloader.ConfigLoader
+	ConfigLoader *shell.Shell
 	fs fs.FS
 }
 
 func NewCommands(
 	sourceGen *logging.SourceGenerator, 
 	messenger *usermessaging.Messenger,
-	configLoader configloader.ConfigLoader,
+	configLoader *shell.Shell,
 ) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 
 	return &Commands{
-		make(map[string]func(configLoader configloader.ConfigLoader, args []string) (ok bool)), 
+		make(map[string]func(args []string) (ok bool)), 
 		logger,
 		messenger,
 		configLoader,
@@ -43,7 +43,7 @@ func NewCommands(
 	}
 }
 
-func (c *Commands) AddCommand(name string, function func(configLoader configloader.ConfigLoader, args []string) (ok bool)) error {
+func (c *Commands) AddCommand(name string, function func(args []string) (ok bool)) error {
 	if _, ok := c.commands[name]; ok {
 		c.logDuplicateCommand(name)
 		return ErrDuplicateCommand
@@ -57,20 +57,18 @@ func (c *Commands) AddCommand(name string, function func(configLoader configload
 
 // Returns the program entrypoint based on the first argument or nil if something went wrong.
 // The config gets replaced by no-config when a command is executed directly.
-func (c *Commands) GetEntrypoint(
-	args []string,
-) (fn func(configLoader configloader.ConfigLoader, args []string) (ok bool), arguments []string) {
+func (c *Commands) GetEntrypoint(args []string) (fn func(args []string) (ok bool), arguments []string) {
 	if len(args) < minimumExpectedArgs {
-		c.ConfigLoader = noconfig.NewNoConfig()
+		c.ConfigLoader.Implementation = noconfig.NewNoConfig()
 		c.logNotEnoughArgs(len(args))
-		
+
 		return nil, nil
 	}
 
 	configOrCommand := args[1]
 
 	if startupFunc, ok := c.commands[configOrCommand]; ok {
-		c.ConfigLoader = noconfig.NewNoConfig()
+		c.ConfigLoader.Implementation = noconfig.NewNoConfig()
 		c.logRunningCommand(configOrCommand, false)
 
 		return startupFunc, args[2:]
@@ -79,7 +77,7 @@ func (c *Commands) GetEntrypoint(
 	}
 }
 
-func (c *Commands) loadFromConfig(configName string) func(configLoader configloader.ConfigLoader, args []string) (ok bool) {
+func (c *Commands) loadFromConfig(configName string) func(args []string) (ok bool) {
 	c.ConfigLoader.SetLocalConfigSource(configName)
 
 	commandAny, ok := c.ConfigLoader.Get("base", "execute", "command")

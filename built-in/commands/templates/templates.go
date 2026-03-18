@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"io"
-	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
 
 	"github.com/google/shlex"
@@ -53,7 +52,7 @@ func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore) error {
 	return nil
 }
 
-func (p *ProjectCreator) NewProject(configLoader configloader.ConfigLoader, args []string) bool {
+func (p *ProjectCreator) NewProject(args []string) bool {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.SetOutput(io.Discard) // TODO log error
 

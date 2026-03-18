@@ -1,6 +1,7 @@
 package main
 
 import (
+	"minimal/minimal-core/built-in/config-loaders/shell"
 	"minimal/minimal-core/built-in/config-loaders/toml"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
@@ -17,12 +18,15 @@ func main() {
 
 func run() int {
 	sourceGen := logging.Init(zerolog.ConsoleWriter{Out: os.Stdout})
-	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, toml.NewConfigLoader(sourceGen))
+
+	configLoader := shell.NewShell(toml.NewConfigLoader(sourceGen))
+
+	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, configLoader)
 	messaging := usermessaging.NewMessenger(sourceGen)
 	defer messaging.Close()
 	messaging.AddOutput(logRenderer)
 	
-	commands := startup.NewCommands(sourceGen, messaging, toml.NewConfigLoader(sourceGen))
+	commands := startup.NewCommands(sourceGen, messaging, configLoader)
 
 	registerCommands(sourceGen, commands)
 
@@ -32,7 +36,7 @@ func run() int {
 		return 1
 	}
 
-	ok := entrypoint(commands.ConfigLoader, args)
+	ok := entrypoint(args)
 
 	if !ok {
 		return 1

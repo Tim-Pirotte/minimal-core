@@ -6,14 +6,14 @@ type Shell struct {
 	Implementation configloader.ConfigLoader
 }
 
-func NewShell() *Shell {
-	return &Shell{}
+func NewShell(defaultImplementation configloader.ConfigLoader) *Shell {
+	return &Shell{defaultImplementation}
 }
 
 func (s *Shell) SetLocalConfigSource(location string) {
-	s.SetLocalConfigSource(location)
+	s.Implementation.SetLocalConfigSource(location)
 }
 
 func (s *Shell) Get(source, section, field string) (value any, ok bool) {
-	return s.Get(source, section, field)
+	return s.Implementation.Get(source, section, field)
 }
