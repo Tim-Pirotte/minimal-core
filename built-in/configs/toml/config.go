@@ -78,7 +78,7 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 func (t *TOMLConfig) loadFile(source string) error {
 	global := make(map[string]map[string]any)
 
-	globalPath := filepath.Join(configPath, globalConfig, source)
+	globalPath := filepath.Join(configPath, globalConfig, source + ".toml")
 
 	if _, err := toml.DecodeFile(globalPath, &global); err != nil && !os.IsNotExist(err) {
 		return err
@@ -86,7 +86,7 @@ func (t *TOMLConfig) loadFile(source string) error {
 
 	local := make(map[string]map[string]any)
 
-	localPath := filepath.Join(configPath, t.location, source)
+	localPath := filepath.Join(configPath, t.location, source + ".toml")
 
 	if _, err := toml.DecodeFile(localPath, &local); err != nil {
 		return err

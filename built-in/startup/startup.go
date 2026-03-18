@@ -77,7 +77,7 @@ func (c *Commands) GetEntrypoint(args []string) (fn func(args []string) (ok bool
 func (c *Commands) loadFromConfig(configName string) func(args []string) (ok bool) {
 	c.configLoader.SetLocalConfigSource(configName)
 
-	commandAny, ok := c.configLoader.Get("base", "", "command")
+	commandAny, ok := c.configLoader.Get("base", "execute", "command")
 
 	if !ok {
 		return nil
