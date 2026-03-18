@@ -21,27 +21,27 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
     }
 
     // Header
-    bb.WriteString(l.config.General.SymbolColor)
-    bb.WriteString(l.config.Context.SourceStart)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+    bb.WriteString(l.getStrOrDefault("context", "source_start", "["))
     bb.WriteString(resetAnsi)
 
-    bb.WriteString(l.config.Context.SourceColor)
+    bb.WriteString(l.getStrOrDefault("context", "source_color", ""))
     bb.WriteString(ctx.Source)
     bb.WriteString(resetAnsi)
 
-    bb.WriteString(l.config.General.SymbolColor)
-    bb.WriteString(l.config.Context.SourceLineSep)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+    bb.WriteString(l.getStrOrDefault("context", "source_line_separator", ":"))
     bb.WriteString(resetAnsi)
     
-    bb.WriteString(l.config.Context.StartLineColor)
+    bb.WriteString(l.getStrOrDefault("context", "start_line_color", ""))
     bb.WriteString(strconv.FormatUint(uint64(ctx.StartLineNumber), 10))
     bb.WriteString(resetAnsi)
     
-    bb.WriteString(l.config.General.SymbolColor)
-    bb.WriteString(l.config.Context.SourceEnd)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+    bb.WriteString(l.getStrOrDefault("context", "source_end", "]"))
     bb.WriteString(resetAnsi)
     
-    bb.WriteString(strings.Repeat("\n", l.config.Context.SourceContextPadding + 1))
+    bb.WriteString(strings.Repeat("\n", l.getIntOrDefault("context", "source_context_padding", 1) + 1))
 
     largestAmountOfDigits := countDigits(ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) - 1 + uint(len(ctx.LinesAfter)))
 
@@ -50,8 +50,8 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
     // Window top
     bb.WriteString(leftPadding)
 
-    bb.WriteString(l.config.General.SymbolColor)
-    bb.WriteString(l.config.Context.ContextWindowTopSymbol)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+    bb.WriteString(l.getStrOrDefault("context", "context_window_top_symbol", ""))
     bb.WriteString(resetAnsi)
 
     bb.WriteString("\n")
@@ -60,7 +60,12 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
     for i, line := range ctx.LinesBefore {
         lineNumber := ctx.StartLineNumber - uint(len(ctx.LinesBefore)) + uint(i)
 
-        l.renderLinePrefix(bb, lineNumber, largestAmountOfDigits, l.config.Context.OutOfFocusLineNumberColor)
+        l.renderLinePrefix(
+            bb, 
+            lineNumber, 
+            largestAmountOfDigits, 
+            l.getStrOrDefault("context", "out_of_focus_line_number_color", ""),
+        )
         
         bb.WriteString(line)
         bb.WriteString("\n")
@@ -70,7 +75,7 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
     for i, line := range ctx.LinesInFocus {
         lineNumber := ctx.StartLineNumber + uint(i)
 
-        l.renderLinePrefix(bb, lineNumber, largestAmountOfDigits, l.config.Context.InFocusLineNumberColor)
+        l.renderLinePrefix(bb, lineNumber, largestAmountOfDigits, l.getStrOrDefault("context", "in_focus_line_number_color", ""))
         
         bb.WriteString(line.Content)
         bb.WriteString("\n")
@@ -83,20 +88,20 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
         currentLineEnd := uint(0)
 
         if len(line.Annotations) > 0 {
-            l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationLineStartSymbol)
+            l.renderAnnotationPrefix(bb, leftPadding, l.getStrOrDefault("context", "annotation_line_start_symbol", "-"))
         }
 
         for _, annotation := range line.Annotations {
             if annotation.Span.Start < currentLineEnd {
                 bb.WriteString("\n")
-                l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationLineStartSymbol)
+                l.renderAnnotationPrefix(bb, leftPadding, l.getStrOrDefault("context", "annotation_line_start_symbol", "-"))
                 currentLineEnd = 0
             }
 
             bb.WriteString(strings.Repeat(" ", int(annotation.Span.Start - currentLineEnd)))
 
-            bb.WriteString(l.config.Severity.color(annotation.Severity))
-            bb.WriteString(strings.Repeat(l.config.Context.AnnotationSymbol, int(annotation.Span.Length)))
+            bb.WriteString(l.getSeverityColor(annotation.Severity))
+            bb.WriteString(strings.Repeat(l.getStrOrDefault("context", "annotation_symbol", "_"), int(annotation.Span.Length)))
             bb.WriteString(resetAnsi)
 
             currentLineEnd = annotation.Span.Start + annotation.Span.Length
@@ -105,7 +110,7 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
         bb.WriteString("\n")
 
         if len(line.Annotations) > 0 {
-            l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationCommentStartSymbol)
+            l.renderAnnotationPrefix(bb, leftPadding, l.getStrOrDefault("context", "annotation_comment_start_symbol", ":"))
         }
 
         // Annotation comments
@@ -114,19 +119,19 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
         for _, annotation := range line.Annotations {
             if annotation.Span.Start < currentLineEnd {
                 bb.WriteString("\n")
-                l.renderAnnotationPrefix(bb, leftPadding, l.config.Context.AnnotationCommentStartSymbol)
+                l.renderAnnotationPrefix(bb, leftPadding, l.getStrOrDefault("context", "annotation_comment_start_symbol", ":"))
                 currentLineEnd = 0
             }
 
             bb.WriteString(strings.Repeat(" ", int(annotation.Span.Start - currentLineEnd)))
             
-            if l.config.Context.TextHasSeverityColor {
-                bb.WriteString(l.config.Severity.color(annotation.Severity))
+            if l.getBoolOrDefault("context", "text_has_severity_color", true) {
+                bb.WriteString(l.getSeverityColor(annotation.Severity))
             }
             
             bb.WriteString(annotation.Message)
 
-            if l.config.Context.TextHasSeverityColor {
+            if l.getBoolOrDefault("context", "text_has_severity_color", true) {
                 bb.WriteString(resetAnsi)
             }
             
@@ -140,7 +145,7 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
     for i, line := range ctx.LinesAfter {
         lineNumber := ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) + uint(i)
 
-        l.renderLinePrefix(bb, lineNumber, largestAmountOfDigits, l.config.Context.OutOfFocusLineNumberColor)
+        l.renderLinePrefix(bb, lineNumber, largestAmountOfDigits, l.getStrOrDefault("context", "out_of_focus_line_number_color", ""))
         bb.WriteString(line)
         bb.WriteString("\n")
     }
@@ -148,8 +153,8 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
     // Window bottom
     bb.WriteString(leftPadding)
     
-    bb.WriteString(l.config.General.SymbolColor)
-    bb.WriteString(l.config.Context.ContextWindowBottomSymbol)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+    bb.WriteString(l.getStrOrDefault("context", "context_window_bottom_symbol", ""))
     bb.WriteString(resetAnsi)
     
     bb.WriteString("\n")
@@ -158,7 +163,7 @@ func (l *LogRenderer) OutputContext(h usermessaging.Handle, ctx usermessaging.Co
 func (l *LogRenderer) renderAnnotationPrefix(bb *bytes.Buffer, leftPadding, prefixSymbol string) {
     bb.WriteString(leftPadding)
             
-    bb.WriteString(l.config.General.SymbolColor)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
     bb.WriteString(prefixSymbol)
     bb.WriteString(resetAnsi)
     
@@ -168,8 +173,8 @@ func (l *LogRenderer) renderAnnotationPrefix(bb *bytes.Buffer, leftPadding, pref
 func (l *LogRenderer) renderLinePrefix(bb *bytes.Buffer, lineNumber uint, largestAmountOfDigits int, color string) {
     renderLineNumber(bb, lineNumber, largestAmountOfDigits, color)
     
-    bb.WriteString(l.config.General.SymbolColor)
-    bb.WriteString(l.config.Context.LineCountSep)
+    bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+    bb.WriteString(l.getStrOrDefault("context", "line_count_sep", "|"))
     bb.WriteString(resetAnsi)
     
     bb.WriteString(" ")

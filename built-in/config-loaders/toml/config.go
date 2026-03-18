@@ -27,7 +27,7 @@ func NewConfigLoader(srcGen *logging.SourceGenerator) *TOMLConfig {
 
 func (t *TOMLConfig) SetLocalConfigSource(location string) {
 	t.location = location
-	t.logger.Debug().Msg("new config location set")
+	t.logger.Debug().Str("location", location).Msg("new config location set")
 }
 
 func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
@@ -37,12 +37,7 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 
 	if _, loaded := t.cache[source]; !loaded {
 		if err := t.loadFile(source); err != nil {
-			t.logger.Error().
-				Err(err).
-				Str("source", source).
-				Str("section", section).
-				Str("field", field).
-				Msg("error loading toml file")
+			t.logConfigLoadError(err, source, section, field)
 
 			return nil, false
 		}
@@ -51,11 +46,7 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 	sectionContent, ok := t.cache[source][section]
 	
 	if !ok {
-		t.logger.Error().
-			Str("source", source).
-			Str("section", section).
-			Str("field", field).
-			Msg("section not in config")
+		t.logSectionNotInConfig(source, section, field)
 		
 		return nil, false
 	}
@@ -63,11 +54,7 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 	value, ok = sectionContent[field]
 
 	if !ok {
-		t.logger.Error().
-			Str("source", source).
-			Str("section", section).
-			Str("field", field).
-			Msg("section not in config")
+		t.logFieldNotInSection(source, section, field)
 	
 		return nil, false
 	}
@@ -103,4 +90,29 @@ func (t *TOMLConfig) loadFile(source string) error {
 	t.cache[source] = global
 
 	return nil
+}
+
+func (t *TOMLConfig) logConfigLoadError(err error, source, section, field string) {
+	t.logger.Error().
+		Err(err).
+		Str("source", source).
+		Str("section", section).
+		Str("field", field).
+		Msg("error loading toml file")
+}
+
+func (t *TOMLConfig) logSectionNotInConfig(source, section, field string) {
+	t.logger.Error().
+		Str("source", source).
+		Str("section", section).
+		Str("field", field).
+		Msg("section not in config")
+}
+
+func (t *TOMLConfig) logFieldNotInSection(source, section, field string) {
+	t.logger.Error().
+		Str("source", source).
+		Str("section", section).
+		Str("field", field).
+		Msg("field not in section")
 }

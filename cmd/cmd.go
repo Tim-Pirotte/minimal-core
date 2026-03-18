@@ -17,7 +17,7 @@ func main() {
 
 func run() int {
 	sourceGen := logging.Init(zerolog.ConsoleWriter{Out: os.Stdout})
-	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, logrendering.Config{})
+	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, toml.NewConfigLoader(sourceGen))
 	messaging := usermessaging.NewMessenger(sourceGen)
 	defer messaging.Close()
 	messaging.AddOutput(logRenderer)

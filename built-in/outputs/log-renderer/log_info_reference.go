@@ -12,25 +12,25 @@ func (l *LogRenderer) OutputHint(handle usermessaging.Handle, hint usermessaging
         panic("an uninitialized bytes buffer was passed to the hint renderer")
     }
 
-	bb.WriteString(l.config.InfoReference.HintPrefixColor)
+	bb.WriteString(l.getStrOrDefault("info_reference", "hint_prefix_color", ""))
 	bb.WriteString("Hint")
 	bb.WriteString(resetAnsi)
 
-	bb.WriteString(l.config.General.SymbolColor)
+	bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
 	bb.WriteString(": ")
 	bb.WriteString(resetAnsi)
 
-	bb.WriteString(l.config.InfoReference.HintColor)
+	bb.WriteString(l.getStrOrDefault("info_reference", "hint_color", ""))
 	bb.WriteString(hint.Text)
 	bb.WriteString(resetAnsi)
 	bb.WriteString("\n")
 
 	if hint.MoreInfoReference != "" {
-		bb.WriteString(l.config.InfoReference.MoreInfoColor)
+		bb.WriteString(l.getStrOrDefault("info_reference", "more_info_color", ""))
 		bb.WriteString("More info about this")
 		bb.WriteString(resetAnsi)
 
-		bb.WriteString(l.config.General.SymbolColor)
+		bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
 		bb.WriteString(": ")
 		bb.WriteString(resetAnsi)
 

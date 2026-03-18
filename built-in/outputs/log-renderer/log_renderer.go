@@ -3,6 +3,7 @@ package logrendering
 import (
 	"bytes"
 	"io"
+	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 
@@ -12,13 +13,17 @@ import (
 type LogRenderer struct {
 	logger zerolog.Logger
 	writer io.Writer
-	config Config
+	configLoader configloader.ConfigLoader
 }
 
-func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer, config Config) *LogRenderer {
+func NewLogRenderer(
+	sourceGen *logging.SourceGenerator, 
+	writer io.Writer, 
+	configLoader configloader.ConfigLoader,
+) *LogRenderer {
 	logger, _ := sourceGen.GetLogger("logRendering")
 
-	return &LogRenderer{logger, writer, config}
+	return &LogRenderer{logger, writer, configLoader}
 }
 
 type bytesBuffer struct {

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	noconfig "minimal/minimal-core/built-in/config-loaders/no-config"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"strings"
@@ -12,10 +13,8 @@ import (
 )
 
 func TestDisplayRenderLogAtomic(t *testing.T) {
-	config := Config{}
-
 	finalBuffer := &bytes.Buffer{}
-	logger := NewLogRenderer(&logging.SourceGenerator{}, finalBuffer, config)
+	logger := NewLogRenderer(&logging.SourceGenerator{}, finalBuffer, noconfig.NewNoConfig())
 	
 	iterations := 1000
 	stringLength := 100
@@ -71,9 +70,7 @@ func TestDisplayRenderLogAtomic(t *testing.T) {
 }
 
 func BenchmarkLogger(b *testing.B) {
-	config := Config{}
-
-	logger := NewLogRenderer(logging.GetTestLogSource(io.Discard), io.Discard, config)
+	logger := NewLogRenderer(logging.GetTestLogSource(io.Discard), io.Discard, noconfig.NewNoConfig())
 
 	ctx := usermessaging.CodeContext{
 		Source: "main.go", 

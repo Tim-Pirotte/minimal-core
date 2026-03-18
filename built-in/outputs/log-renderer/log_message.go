@@ -12,22 +12,22 @@ func (l *LogRenderer) OutputMessage(h usermessaging.Handle, m usermessaging.Mess
         panic("an uninitialized bytes buffer was passed to the message renderer")
     }
 
-	bb.WriteString(l.config.Severity.color(m.Severity))
+	bb.WriteString(l.getSeverityColor(m.Severity))
 	bb.WriteString(severityToString(m.Severity))
 	bb.WriteString(resetAnsi)
 	bb.WriteString(" ")
 	bb.WriteString(m.Category)
-	bb.WriteString(l.config.General.SymbolColor)
+	bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
 	bb.WriteString(": ")
 	bb.WriteString(resetAnsi)
 
-	if l.config.Message.TextHasSeverityColor {
-		bb.WriteString(l.config.Severity.color(m.Severity))
+	if l.getBoolOrDefault("general", "text_has_severity_color", false) {
+		bb.WriteString(l.getSeverityColor(m.Severity))
 	}
 	
 	bb.WriteString(m.Message)
 
-	if l.config.Message.TextHasSeverityColor {
+	if l.getBoolOrDefault("general", "text_has_severity_color", false) {
 		bb.WriteString(resetAnsi)
 	}
 	

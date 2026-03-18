@@ -26,18 +26,23 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	// Window top
 	bb.WriteString(leftPadding)
 
-	bb.WriteString(l.config.General.SymbolColor)
-	bb.WriteString(l.config.Diff.DiffWindowTopSymbol)
+	bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+	bb.WriteString(l.getStrOrDefault("diff", "window_top_symbol", ""))
 	bb.WriteString(resetAnsi)
 
 	bb.WriteString("\n")
 
 	// Lines out of focus before
 	for i, line := range diff.LinesBefore {
-		renderLineNumber(bb, diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i), largestAmountOfDigits, l.config.Diff.OutOfFocusLineNumberColor)
+		renderLineNumber(
+			bb, 
+			diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i), 
+			largestAmountOfDigits, 
+			l.getStrOrDefault("diff", "out_of_focus_line_number_color", ""),
+		)
 		
-		bb.WriteString(l.config.General.SymbolColor)
-		bb.WriteString(l.config.Diff.LineCountSep)
+		bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+		bb.WriteString(l.getStrOrDefault("diff", "line_count_separator", "|"))
 		bb.WriteString(resetAnsi)
 
 		bb.WriteString(" ")
@@ -47,10 +52,15 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	
 	// Lines to remove
 	for i, line := range diff.LinesToRemove {
-		renderLineNumber(bb, diff.StartLineNumber + uint(i), largestAmountOfDigits, l.config.Diff.InFocusLineNumberColor)
+		renderLineNumber(
+			bb, 
+			diff.StartLineNumber + uint(i), 
+			largestAmountOfDigits, 
+			l.getStrOrDefault("diff", "in_focus_line_number_color", ""),
+		)
 		
-		bb.WriteString(l.config.Diff.RemoveLineColor)
-		bb.WriteString(l.config.Diff.RemoveLineSymbol)
+		bb.WriteString(l.getStrOrDefault("diff", "remove_line_color", ""))
+		bb.WriteString(l.getStrOrDefault("diff", "remove_line_symbol", "-"))
 		bb.WriteString(resetAnsi)
 
 		bb.WriteString(" ")
@@ -60,10 +70,15 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 
 	// Lines to add
 	for i, line := range diff.LinesToAdd {
-		renderLineNumber(bb, diff.StartLineNumber + uint(i), largestAmountOfDigits, l.config.Diff.InFocusLineNumberColor)
+		renderLineNumber(
+			bb, 
+			diff.StartLineNumber + uint(i), 
+			largestAmountOfDigits, 
+			l.getStrOrDefault("diff", "in_focus_line_number_color", ""),
+		)
 
-		bb.WriteString(l.config.Diff.AddLineColor)
-		bb.WriteString(l.config.Diff.AddLineSymbol)
+		bb.WriteString(l.getStrOrDefault("diff", "add_line_color", ""))
+		bb.WriteString(l.getStrOrDefault("diff", "add_line_symbol", "+"))
 		bb.WriteString(resetAnsi)
 
 		bb.WriteString(" ")
@@ -73,10 +88,15 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 
 	// Lines out of focus after
 	for i, line := range diff.LinesAfter {
-		renderLineNumber(bb, diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i), largestAmountOfDigits, l.config.Diff.OutOfFocusLineNumberColor)
+		renderLineNumber(
+			bb, 
+			diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i), 
+			largestAmountOfDigits, 
+			l.getStrOrDefault("diff", "out_of_focus_line_number_color", ""),
+		)
 		
-		bb.WriteString(l.config.General.SymbolColor)
-		bb.WriteString(l.config.Diff.LineCountSep)
+		bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+		bb.WriteString(l.getStrOrDefault("diff", "line_count_separator", "|"))
 		bb.WriteString(resetAnsi)
 
 		bb.WriteString(" ")
@@ -87,8 +107,8 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	// Window bottom
 	bb.WriteString(leftPadding)
 
-	bb.WriteString(l.config.General.SymbolColor)
-	bb.WriteString(l.config.Diff.DiffWindowBottomSymbol)
+	bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
+	bb.WriteString(l.getStrOrDefault("diff", "window_bottom_symbol", ""))
 	bb.WriteString(resetAnsi)
 
 	bb.WriteString("\n")
