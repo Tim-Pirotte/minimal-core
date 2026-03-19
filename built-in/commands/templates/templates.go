@@ -5,6 +5,9 @@ import (
 	"flag"
 	"io"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	"minimal/minimal-core/built-in/ui"
+	"strconv"
+	"strings"
 
 	"github.com/google/shlex"
 )
@@ -18,7 +21,7 @@ var ErrDuplicateTemplateStore = errors.New("template store with this name and pr
 
 type ProjectCreator struct {
 	logger          logging.Logger
-	SourceGen       *logging.SourceGenerator
+	ui              ui.UI
 	stores          []templateStoreWithMetadata
 }
 
@@ -39,10 +42,10 @@ type MutableTemplateStore interface {
 	RemoveTemplate(name string, args []string) (ok bool)
 }
 
-func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
-	logger, gen := sourceGen.GetLogger("templates")
+func NewProjectCreator(sourceGen *logging.SourceGenerator, ui ui.UI) *ProjectCreator {
+	logger, _ := sourceGen.GetLogger("templates")
 	
-	return &ProjectCreator{logger, gen, make([]templateStoreWithMetadata, 0)}
+	return &ProjectCreator{logger, ui, make([]templateStoreWithMetadata, 0)}
 }
 
 func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore, name string, priority uint) error {
@@ -118,16 +121,59 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 		}
 	}
 
+	var store templateStoreWithMetadata
+
 	switch len(availableSources) {
 	case 0:
 		p.logger.Error().Str("template_name", templateName).Msg("no sources to load template")
 		return false
 	case 1:
-		if ok := availableSources[0].LoadTemplate(templateName, projectName, destination, implArgs); !ok {
-			p.logger.Error().Str("template_name", templateName).Str("source", availableSources[0].name).Msg("failure during template load")
-		}
+		store = availableSources[0]
 	default:
-		// TODO ask user which store to load from
+		var question strings.Builder
+		question.WriteString("Which store would you like to load from? ")
+
+		for i, source := range availableSources {
+			question.WriteString("(")
+			question.WriteString(strconv.Itoa(i))
+			question.WriteString(": ")
+			question.WriteString(source.name)
+			question.WriteString(")")
+		}
+
+		answer, ok := p.ui.PromptString(question.String(), "0")
+
+		if !ok {
+			p.logger.Error().Str("answer", answer).Msg("no valid answer for project creation")
+
+			return false
+		}
+
+		answerAsInt, err := strconv.Atoi(answer)
+
+		if err == nil && 0 <= answerAsInt && answerAsInt < len(availableSources) {
+			store = availableSources[answerAsInt]
+		} else {
+			found := false
+
+			for _, s := range availableSources {
+				if s.name == answer {
+					store = s
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				p.logger.Error().Str("answer", answer).Msg("no valid answer for project creation")
+				
+				return false
+			}
+		}
+	}
+
+	if ok := store.LoadTemplate(templateName, projectName, destination, implArgs); !ok {
+		p.logger.Error().Str("template_name", templateName).Str("source", store.name).Msg("failure during template load")
 	}
 
 	return true
