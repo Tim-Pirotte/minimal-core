@@ -15,16 +15,21 @@ const (
 	implementationArgsFlagName = "args"
 )
 
-var ErrDuplicateTemplateStore = errors.New("template store with this name already exists")
+var ErrDuplicateTemplateStore = errors.New("template store with this name and priority already exists")
 
 type ProjectCreator struct {
 	logger          zerolog.Logger
 	SourceGen       *logging.SourceGenerator
-	stores          map[string]TemplateStore
+	stores          []templateStoreWithMetadata
+}
+
+type templateStoreWithMetadata struct {
+	TemplateStore
+	name string
+	priority uint
 }
 
 type TemplateStore interface {
-	Name() string
 	HasTemplate(name string) bool
 	LoadTemplate(name, projectName, destination string, args []string) (ok bool)
 }
@@ -32,27 +37,30 @@ type TemplateStore interface {
 type MutableTemplateStore interface {
 	TemplateStore
 	StoreTemplate(name, source string, args []string) (ok bool)
+	RemoveTemplate(name string, args []string) (ok bool)
 }
 
 func NewProjectCreator(sourceGen *logging.SourceGenerator) *ProjectCreator {
 	logger, gen := sourceGen.GetLogger("templates")
 	
-	return &ProjectCreator{logger, gen, make(map[string]TemplateStore, 0)}
+	return &ProjectCreator{logger, gen, make([]templateStoreWithMetadata, 0)}
 }
 
-func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore) error {
-	if _, ok := p.stores[store.Name()]; ok {
-		p.logDuplicateTemplateStore(store.Name())
-		return ErrDuplicateTemplateStore
+func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore, name string, priority uint) error {
+	for _, s := range p.stores {
+		if s.name == name && s.priority == priority {
+			p.logDuplicateTemplateStore(name)
+			return ErrDuplicateTemplateStore
+		}
 	}
 	
-	p.stores[store.Name()] = store
-	p.logTemplateRegistered(store.Name())
+	p.stores = append(p.stores, templateStoreWithMetadata{store, name, priority})
+	p.logTemplateRegistered(name)
 
 	return nil
 }
 
-func (p *ProjectCreator) NewProject(args []string) bool {
+func (p *ProjectCreator) NewProjectCLI(args []string) bool {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.SetOutput(io.Discard) // TODO log error
 
@@ -93,10 +101,20 @@ func (p *ProjectCreator) NewProject(args []string) bool {
 		return false
 	}
 
-	availableSources := make([]TemplateStore, 0)
+	return p.CreateNewProject(templateName, projectName, destination, implArgs)
+}
+
+func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination string, implArgs []string) bool {
+	highestPriority := uint(0)
+	availableSources := make([]templateStoreWithMetadata, 0)
 
 	for _, store := range p.stores {
-		if store.HasTemplate(templateName) {
+		if store.HasTemplate(templateName) && store.priority >= highestPriority {
+			if store.priority > highestPriority {
+				availableSources = make([]templateStoreWithMetadata, 0)
+				highestPriority = store.priority
+			}
+
 			availableSources = append(availableSources, store)
 		}
 	}
@@ -107,7 +125,7 @@ func (p *ProjectCreator) NewProject(args []string) bool {
 		return false
 	case 1:
 		if ok := availableSources[0].LoadTemplate(templateName, projectName, destination, implArgs); !ok {
-			p.logger.Error().Str("template_name", templateName).Str("source", availableSources[0].Name()).Msg("failure during template load")
+			p.logger.Error().Str("template_name", templateName).Str("source", availableSources[0].name).Msg("failure during template load")
 		}
 	default:
 		// TODO ask user which store to load from
@@ -116,7 +134,7 @@ func (p *ProjectCreator) NewProject(args []string) bool {
 	return true
 }
 
-func (p *ProjectCreator) StoreTemplate(args []string) bool {
+func (p *ProjectCreator) StoreTemplateCLI(args []string) bool {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.SetOutput(io.Discard) // TODO log error
 
@@ -154,10 +172,22 @@ func (p *ProjectCreator) StoreTemplate(args []string) bool {
 		return false
 	}
 
+	return p.StoreTemplate(templateName, source, implArgs)
+}
+
+func (p *ProjectCreator) StoreTemplate(templateName, source string, implArgs []string) bool {
+	highestPriority := uint(0)
 	availableStores := make([]MutableTemplateStore, 0)
 
-	for _, store := range p.stores {
-		if mutableStore, ok := store.(MutableTemplateStore); ok {
+	for _, s := range p.stores {
+		var store TemplateStore = s
+
+		if mutableStore, ok := store.(MutableTemplateStore); ok && s.priority >= highestPriority {
+			if s.priority > highestPriority {
+				availableStores = make([]MutableTemplateStore, 0)
+				highestPriority = s.priority
+			}
+
 			availableStores = append(availableStores, mutableStore)
 		}
 	}

@@ -12,13 +12,13 @@ func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Comm
 	logger, _ := sourceGen.GetLogger("commandRegistry")
 
 	projectCreator := templates.NewProjectCreator(sourceGen)
-	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen))
+	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen), "directory", 1)
 
 	if err != nil {
 		logger.Fatal().Msg("Failed to register the directory template store")
 	}
 
-	err = commands.AddCommand("new", projectCreator.NewProject)
+	err = commands.AddCommand("new", projectCreator.NewProjectCLI)
 
 	if err != nil {
 		logger.Fatal().Msg("Failed to register the new command")
