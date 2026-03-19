@@ -5,14 +5,12 @@ import (
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"reflect"
 	"sync"
-
-	"github.com/rs/zerolog"
 )
 
 const bufferSize = 10
 
 type Messenger struct {
-	logger zerolog.Logger
+	logger  logging.Logger
 	outputs []Output
 	queue   chan func()
 	done    chan bool

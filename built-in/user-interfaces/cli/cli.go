@@ -10,8 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/rs/zerolog"
 )
 
 const RingBufferSize = 4096
@@ -20,7 +18,7 @@ type CLI struct {
 	loggingBuffer logging.RingBuffer
 	inputReader   *bufio.Reader
 	outputWriter  *bufio.Writer
-	logger        zerolog.Logger
+	logger        logging.Logger
 }
 
 func NewCli(

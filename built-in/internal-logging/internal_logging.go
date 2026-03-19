@@ -11,6 +11,10 @@ import (
 var rootLogger zerolog.Logger
 var initCalled bool
 
+type Logger struct { 
+    zerolog.Logger 
+}
+
 type SourceGenerator struct {
     path            []string
     declaredSources map[string]int
@@ -35,7 +39,7 @@ func Init(target io.Writer) *SourceGenerator {
     return &sourceGenerator
 }
 
-func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, *SourceGenerator) {
+func (s *SourceGenerator) GetLogger(name string) (Logger, *SourceGenerator) {
     if !s.authentic {
         panic("this is not a SourceGenerator given by the logging package")
     }
@@ -57,7 +61,7 @@ func (s *SourceGenerator) GetLogger(name string) (zerolog.Logger, *SourceGenerat
     newPath := append([]string(nil), s.path...)
     newPath = append(newPath, name)
 
-    return rootLogger.With().Strs("source", newPath).Logger(), &SourceGenerator{newPath, make(map[string]int), true}
+    return Logger{rootLogger.With().Strs("source", newPath).Logger()}, &SourceGenerator{newPath, make(map[string]int), true}
 }
 
 func GetTestLogSource(target io.Writer) *SourceGenerator {

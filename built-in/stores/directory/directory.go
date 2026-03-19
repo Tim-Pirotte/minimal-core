@@ -8,8 +8,6 @@ import (
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"os"
 	"path/filepath"
-
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -19,7 +17,7 @@ const (
 )
 
 type DirectoryStore struct {
-	logger zerolog.Logger
+	logger logging.Logger
 }
 
 func NewDirectoryStore(sourceGen *logging.SourceGenerator) *DirectoryStore {

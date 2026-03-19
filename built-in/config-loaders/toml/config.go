@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"github.com/rs/zerolog"
 )
 
 var configPath = filepath.Join(".", "commands")
@@ -16,7 +15,7 @@ var globalConfig = filepath.Join("global")
 type TOMLConfig struct {
 	location string
 	cache map[string]map[string]map[string]any
-	logger zerolog.Logger
+	logger logging.Logger
 }
 
 func NewConfigLoader(srcGen *logging.SourceGenerator) *TOMLConfig {

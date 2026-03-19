@@ -17,7 +17,7 @@ func setupTestCLI(input string) *CLI {
 		loggingBuffer: *logging.NewRingBuffer(256),
 		inputReader: bufio.NewReader(strings.NewReader(input)),
 		outputWriter: bufio.NewWriter(io.Discard),
-		logger:      zerolog.Nop(),
+		logger:      logging.Logger{Logger: zerolog.Nop()},
 	}
 }
 

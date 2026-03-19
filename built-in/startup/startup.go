@@ -10,8 +10,6 @@ import (
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"path"
-
-	"github.com/rs/zerolog"
 )
 
 const minimumExpectedArgs = 2
@@ -21,7 +19,7 @@ var commandsConfigPath = path.Join(".", "commands")
 
 type Commands struct {
 	commands map[string]func(args []string) (ok bool)
-	logger zerolog.Logger
+	logger logging.Logger
 	messenger *usermessaging.Messenger
 	ConfigLoader *shell.Shell
 	fs fs.FS

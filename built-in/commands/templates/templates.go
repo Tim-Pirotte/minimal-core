@@ -7,7 +7,6 @@ import (
 	logging "minimal/minimal-core/built-in/internal-logging"
 
 	"github.com/google/shlex"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -18,7 +17,7 @@ const (
 var ErrDuplicateTemplateStore = errors.New("template store with this name and priority already exists")
 
 type ProjectCreator struct {
-	logger          zerolog.Logger
+	logger          logging.Logger
 	SourceGen       *logging.SourceGenerator
 	stores          []templateStoreWithMetadata
 }

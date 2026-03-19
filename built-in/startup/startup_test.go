@@ -1,6 +1,7 @@
 package startup
 
 import (
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"testing"
 	"testing/fstest"
 
@@ -10,7 +11,7 @@ import (
 func setupTestCommands(mockFiles fstest.MapFS) *Commands {
 	return &Commands{
 		commands: make(map[string]func([]string) bool),
-		logger:   zerolog.Nop(),
+		logger:   logging.Logger{Logger: zerolog.Nop()},
 		fs:       mockFiles,
 	}
 }

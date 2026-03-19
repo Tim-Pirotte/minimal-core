@@ -6,12 +6,10 @@ import (
 	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
-
-	"github.com/rs/zerolog"
 )
 
 type LogRenderer struct {
-	logger zerolog.Logger
+	logger logging.Logger
 	writer io.Writer
 	configLoader configloader.ConfigLoader
 }
