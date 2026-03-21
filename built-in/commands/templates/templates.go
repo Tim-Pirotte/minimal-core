@@ -107,6 +107,35 @@ func (p *ProjectCreator) NewProjectCLI(args []string) bool {
 }
 
 func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination string, implArgs []string) bool {
+	availableSources := p.getStoresWithTemplate(templateName)
+
+	var selectedStore templateStoreWithMetadata
+
+	switch len(availableSources) {
+	case 0:
+		p.logger.Error().Str("template_name", templateName).Msg("no sources to load template")
+		
+		return false
+	case 1:
+		selectedStore = availableSources[0]
+	default:
+		var ok bool
+
+		if selectedStore, ok = p.askUserForStore(availableSources); !ok {
+			return false
+		}
+	}
+
+	if ok := selectedStore.LoadTemplate(templateName, projectName, destination, implArgs); !ok {
+		p.logger.Error().Str("template_name", templateName).Str("source", selectedStore.name).Msg("failure during template load")
+		
+		return false
+	}
+
+	return true
+}
+
+func (p *ProjectCreator) getStoresWithTemplate(templateName string) []templateStoreWithMetadata {
 	highestPriority := uint(0)
 	availableSources := make([]templateStoreWithMetadata, 0)
 
@@ -121,62 +150,42 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 		}
 	}
 
-	var store templateStoreWithMetadata
+	return availableSources
+}
 
-	switch len(availableSources) {
-	case 0:
-		p.logger.Error().Str("template_name", templateName).Msg("no sources to load template")
-		return false
-	case 1:
-		store = availableSources[0]
-	default:
-		var question strings.Builder
-		question.WriteString("Which store would you like to load from? ")
+func (p *ProjectCreator) askUserForStore(stores []templateStoreWithMetadata) (templateStoreWithMetadata, bool) {
+	var question strings.Builder
+	question.WriteString("Which store would you like to load from? ")
 
-		for i, source := range availableSources {
-			question.WriteString("(")
-			question.WriteString(strconv.Itoa(i))
-			question.WriteString(": ")
-			question.WriteString(source.name)
-			question.WriteString(")")
-		}
-
-		answer, ok := p.ui.PromptString(question.String(), "0")
-
-		if !ok {
-			p.logger.Error().Str("answer", answer).Msg("no valid answer for project creation")
-
-			return false
-		}
-
-		answerAsInt, err := strconv.Atoi(answer)
-
-		if err == nil && 0 <= answerAsInt && answerAsInt < len(availableSources) {
-			store = availableSources[answerAsInt]
-		} else {
-			found := false
-
-			for _, s := range availableSources {
-				if s.name == answer {
-					store = s
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				p.logger.Error().Str("answer", answer).Msg("no valid answer for project creation")
-				
-				return false
-			}
-		}
+	for i, source := range stores {
+		question.WriteString("(")
+		question.WriteString(strconv.Itoa(i))
+		question.WriteString(": ")
+		question.WriteString(source.name)
+		question.WriteString(")")
 	}
 
-	if ok := store.LoadTemplate(templateName, projectName, destination, implArgs); !ok {
-		p.logger.Error().Str("template_name", templateName).Str("source", store.name).Msg("failure during template load")
+	answer, ok := p.ui.PromptString(question.String(), "0")
+
+	if !ok {
+		p.logger.Error().Str("answer", answer).Msg("no valid answer for project creation")
+
+		return templateStoreWithMetadata{}, false
 	}
 
-	return true
+	answerAsInt, err := strconv.Atoi(answer)
+
+	if err == nil && 0 <= answerAsInt && answerAsInt < len(stores) {
+		return stores[answerAsInt], true
+	} else {
+		for _, s := range stores {
+			if s.name == answer {
+				return s, true
+			}
+		}
+		
+		return templateStoreWithMetadata{}, false
+	}
 }
 
 func (p *ProjectCreator) StoreTemplateCLI(args []string) bool {
