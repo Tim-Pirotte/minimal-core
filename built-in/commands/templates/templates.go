@@ -22,10 +22,10 @@ var ErrDuplicateTemplateStore = errors.New("template store with this name and pr
 type ProjectCreator struct {
 	logger          logging.Logger
 	ui              ui.UI
-	stores          []templateStoreWithMetadata
+	stores          []templateStore
 }
 
-type templateStoreWithMetadata struct {
+type templateStore struct {
 	TemplateStore
 	name string
 	priority uint
@@ -33,7 +33,7 @@ type templateStoreWithMetadata struct {
 
 type TemplateStore interface {
 	HasTemplate(name string) bool
-	LoadTemplate(name, projectName, destination string, args []string) (ok bool)
+	LoadTemplate(name, projectName, destination string, fields map[string]string) (ok bool)
 }
 
 type MutableTemplateStore interface {
@@ -45,71 +45,96 @@ type MutableTemplateStore interface {
 func NewProjectCreator(sourceGen *logging.SourceGenerator, ui ui.UI) *ProjectCreator {
 	logger, _ := sourceGen.GetLogger("templates")
 	
-	return &ProjectCreator{logger, ui, make([]templateStoreWithMetadata, 0)}
+	return &ProjectCreator{logger, ui, make([]templateStore, 0)}
 }
 
 func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore, name string, priority uint) error {
 	for _, s := range p.stores {
 		if s.name == name && s.priority == priority {
 			p.logDuplicateTemplateStore(name)
+
 			return ErrDuplicateTemplateStore
 		}
 	}
 	
-	p.stores = append(p.stores, templateStoreWithMetadata{store, name, priority})
+	p.stores = append(p.stores, templateStore{store, name, priority})
 	p.logTemplateRegistered(name)
 
 	return nil
 }
 
 func (p *ProjectCreator) NewProjectCLI(args []string) bool {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.SetOutput(io.Discard) // TODO log error
-
-	var destination string
-	fs.StringVar(&destination, destinationFlagName, "", "")
-	fs.StringVar(&destination, string(destinationFlagName[0]), "", "")
-
-	var implementationArgs string
-	fs.StringVar(&implementationArgs, implementationArgsFlagName, "", "")
-	fs.StringVar(&implementationArgs, string(implementationArgsFlagName[0]), "", "")
-
-	if err := fs.Parse(args); err != nil {
-        return false
-    }
-
-	implArgs, err := shlex.Split(implementationArgs)
-
-	if err != nil {
-		// TODO log error
-	}
+	projectArgs := p.getNewProjectArgs(args)
 
 	var templateName string
 	var projectName string
 
-	switch fs.NArg() {
+	switch uint(len(args)) - projectArgs.positionalArgStart {
 	case 1:
-		projectName = fs.Arg(0)
+		projectName = args[projectArgs.positionalArgStart]
 	case 2:
-		templateName = fs.Arg(0)
-		projectName = fs.Arg(1)
+		templateName = args[projectArgs.positionalArgStart]
+		projectName = args[projectArgs.positionalArgStart + 1]
 	default:
 		p.logger.Error().
 			Int("expected_args_1", 1).
 			Int("expected_args_2", 2).
-			Int("actual_args", fs.NArg()).
+			Int("actual_args", len(args) - int(projectArgs.positionalArgStart)).
 			Msg("incorrect amount of arguments")
 
 		return false
 	}
 
-	return p.CreateNewProject(templateName, projectName, destination, implArgs)
+	return p.CreateNewProject(templateName, projectName, projectArgs.destination, projectArgs.fields)
 }
 
-func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination string, implArgs []string) bool {
+type newProjectArgs struct {
+	destination string
+	fields map[string]string
+	positionalArgStart uint
+}
+
+func (p *ProjectCreator) getNewProjectArgs(args []string) newProjectArgs {
+	destination := ""
+	fields := map[string]string{}
+	positionalArgStart := uint(0)
+
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		
+		switch arg {
+		case "-destination", "-d":
+			if i + 1 < len(args) {
+				destination = args[i + 1]
+				i++
+
+				positionalArgStart = uint(i) + 1
+			} else {
+				p.logger.Error().Strs("args", args).Msg("missing argument after destination flag")
+			}
+		case "-field", "-f":
+			if i + 2 < len(args) {
+				key := args[i+1]
+                val := args[i+2]
+                
+				fields[key] = val
+
+				i += 2
+
+				positionalArgStart = uint(i) + 1
+			} else {
+				p.logger.Error().Strs("args", args).Msg("missing key and/or value after field flag")
+			}
+		}
+	}
+
+	return newProjectArgs{destination, fields, positionalArgStart}
+}
+
+func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination string, fields map[string]string) bool {
 	availableSources := p.getStoresWithTemplate(templateName)
 
-	var selectedStore templateStoreWithMetadata
+	var selectedStore templateStore
 
 	switch len(availableSources) {
 	case 0:
@@ -126,7 +151,7 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 		}
 	}
 
-	if ok := selectedStore.LoadTemplate(templateName, projectName, destination, implArgs); !ok {
+	if ok := selectedStore.LoadTemplate(templateName, projectName, destination, fields); !ok {
 		p.logger.Error().Str("template_name", templateName).Str("source", selectedStore.name).Msg("failure during template load")
 		
 		return false
@@ -135,14 +160,14 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 	return true
 }
 
-func (p *ProjectCreator) getStoresWithTemplate(templateName string) []templateStoreWithMetadata {
+func (p *ProjectCreator) getStoresWithTemplate(templateName string) []templateStore {
 	highestPriority := uint(0)
-	availableSources := make([]templateStoreWithMetadata, 0)
+	availableSources := make([]templateStore, 0)
 
 	for _, store := range p.stores {
 		if store.HasTemplate(templateName) && store.priority >= highestPriority {
 			if store.priority > highestPriority {
-				availableSources = make([]templateStoreWithMetadata, 0)
+				availableSources = make([]templateStore, 0)
 				highestPriority = store.priority
 			}
 
@@ -153,7 +178,7 @@ func (p *ProjectCreator) getStoresWithTemplate(templateName string) []templateSt
 	return availableSources
 }
 
-func (p *ProjectCreator) askUserForStore(stores []templateStoreWithMetadata) (templateStoreWithMetadata, bool) {
+func (p *ProjectCreator) askUserForStore(stores []templateStore) (templateStore, bool) {
 	var question strings.Builder
 	question.WriteString("Which store would you like to load from? ")
 
@@ -170,7 +195,7 @@ func (p *ProjectCreator) askUserForStore(stores []templateStoreWithMetadata) (te
 	if !ok {
 		p.logger.Error().Str("answer", answer).Msg("no valid answer for project creation")
 
-		return templateStoreWithMetadata{}, false
+		return templateStore{}, false
 	}
 
 	answerAsInt, err := strconv.Atoi(answer)
@@ -184,7 +209,7 @@ func (p *ProjectCreator) askUserForStore(stores []templateStoreWithMetadata) (te
 			}
 		}
 		
-		return templateStoreWithMetadata{}, false
+		return templateStore{}, false
 	}
 }
 

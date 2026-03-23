@@ -2,7 +2,6 @@ package directory
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"io/fs"
 	logging "minimal/minimal-core/built-in/internal-logging"
@@ -42,9 +41,7 @@ func (d *DirectoryStore) HasTemplate(name string) bool {
 	return err == nil
 }
 
-func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string, args []string) (ok bool) {
-	fmt.Println(args)
-
+func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string, fields map[string]string) (ok bool) {
 	if name == "" {
 		name = defaultTemplateName
 	}
