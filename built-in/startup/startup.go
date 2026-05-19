@@ -21,14 +21,14 @@ type Commands struct {
 	commands map[string]func(args []string) (ok bool)
 	logger logging.Logger
 	messenger *usermessaging.Messenger
-	ConfigLoader *shell.Shell
+	ConfigLoader *shell.ShellConfigLoader
 	fs fs.FS
 }
 
 func NewCommands(
 	sourceGen *logging.SourceGenerator, 
 	messenger *usermessaging.Messenger,
-	configLoader *shell.Shell,
+	configLoader *shell.ShellConfigLoader,
 ) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 

@@ -5,14 +5,21 @@ import (
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/startup"
 	"minimal/minimal-core/built-in/stores/directory"
+	"minimal/minimal-core/built-in/ui"
 	"minimal/minimal-core/built-in/user-interfaces/tui"
+	usermessaging "minimal/minimal-core/built-in/user-messaging"
 )
 
-func registerCommands(sourceGen *logging.SourceGenerator, commands *startup.Commands) {
+func registerCommands(
+	commands *startup.Commands, 
+	sourceGen *logging.SourceGenerator, 
+	messenger *usermessaging.Messenger,
+	ui ui.UI,
+) {
 	logger, _ := sourceGen.GetLogger("commandRegistry")
 
-	projectCreator := templates.NewProjectCreator(sourceGen)
-	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(projectCreator.SourceGen), "directory", 1)
+	projectCreator := templates.NewProjectCreator(sourceGen, messenger, ui)
+	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(sourceGen), "directory", 1)
 
 	if err != nil {
 		logger.Fatal().Msg("Failed to register the directory template store")

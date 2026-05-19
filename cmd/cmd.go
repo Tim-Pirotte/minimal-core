@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"minimal/minimal-core/built-in/config-loaders/shell"
 	"minimal/minimal-core/built-in/config-loaders/toml"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/startup"
+	"minimal/minimal-core/built-in/user-interfaces/cli"
 	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 
@@ -19,16 +21,18 @@ func main() {
 func run() int {
 	sourceGen := logging.Init(zerolog.ConsoleWriter{Out: os.Stdout})
 
-	configLoader := shell.NewShell(toml.NewConfigLoader(sourceGen))
+	configLoader := shell.NewShellConfigLoader(toml.NewConfigLoader(sourceGen))
+
+	messenger := usermessaging.NewMessenger(sourceGen)
+	defer messenger.Close()
 
 	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, configLoader)
-	messaging := usermessaging.NewMessenger(sourceGen)
-	defer messaging.Close()
-	messaging.AddOutput(logRenderer)
-	
-	commands := startup.NewCommands(sourceGen, messaging, configLoader)
+	messenger.AddOutput(logRenderer)
 
-	registerCommands(sourceGen, commands)
+	cli := cli.NewCli(sourceGen, messenger, bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout), configLoader)
+
+	commands := startup.NewCommands(sourceGen, messenger, configLoader)
+	registerCommands(commands, sourceGen, messenger, cli)
 
 	entrypoint, args := commands.GetEntrypoint(os.Args)
 
