@@ -1,139 +1,94 @@
 package identifiers
 
 import (
-	"minimal/minimal-core/built-in/tokenizer"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
-	"reflect"
+	"minimal/minimal-core/built-in/primitives"
+	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 	"testing"
 )
 
+func testTokensEqual(t *testing.T, expected, actual []tokenizerv2.Token) {
+	if len(expected) != len(actual) {
+		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens", "\nExpected:", expected, "\nActual:", actual)
+	}
+
+	for i := range len(expected) {
+		if actual[i].Type != expected[i].Type {
+			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect type)")
+		} else if actual[i].Value != expected[i].Value {
+			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect value)")
+		} else if actual[i].Range != expected[i].Range {
+			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect range)")
+		}
+	}
+}
+
 func TestLexIdentifiers(t *testing.T) {
-	config := tokenizer.NewTokenizerConfig()
-	identifierType := config.NewTokenType()
+	tokenizer := tokenizerv2.NewTokenizer()
+	identifierType := tokenizer.NewTokenType()
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
-	config.AddMatcher(&identifierMatcher)
+	tokenizer.AddMatcher(&identifierMatcher)
 
-	expected := []tokenizer.Token{
-		{Type: identifierType, Value: "identifier1", Span: usermessaging.Span{Start: 0, Length: 11}},
-		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 11, Length: 0}},
+	expected := []tokenizerv2.Token{
+		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
+		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
 	}
 
-	actual := tokenizer.NewTokenizer(config, []byte("identifier1"))
+	actual := tokenizer.Tokenize("identifier1")
 
-	i := 0
-	for ;actual.CurrentToken().Type != tokenizer.EOF; i++ {
-		if i >= len(expected) {
-			t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-		}
-
-		if !reflect.DeepEqual(actual.CurrentToken(), expected[i]) {
-			t.Error("Expected", expected[i], "but got", actual.CurrentToken())
-		}
-
-		actual.Consume()
-	}
-
-	if i + 1 != len(expected) {
-		t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-	}
+	testTokensEqual(t, expected, actual)
 }
 
 func TestLexMultipleIdentifiers(t *testing.T) {
-	config := tokenizer.NewTokenizerConfig()
-	identifierType := config.NewTokenType()
+	tokenizer := tokenizerv2.NewTokenizer()
+	identifierType := tokenizer.NewTokenType()
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
-	config.AddMatcher(&identifierMatcher)
+	tokenizer.AddMatcher(&identifierMatcher)
 
-	expected := []tokenizer.Token{
-		{Type: identifierType, Value: "identifier1", Span: usermessaging.Span{Start: 0, Length: 11}},
-		{Type: tokenizer.UNKNOWN, Value: " ", Span: usermessaging.Span{Start: 11, Length: 1}},
-		{Type: identifierType, Value: "identifier2", Span: usermessaging.Span{Start: 12, Length: 11}},
-		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 23, Length: 0}},
+	expected := []tokenizerv2.Token{
+		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
+		{Type: tokenizerv2.UNKNOWN, Value: " ", Range: primitives.Range{Start: 11, Length: 1}},
+		{Type: identifierType, Value: "identifier2", Range: primitives.Range{Start: 12, Length: 11}},
+		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 23, Length: 0}},
 	}
 
-	actual := tokenizer.NewTokenizer(config, []byte("identifier1 identifier2"))
+	actual := tokenizer.Tokenize("identifier1 identifier2")
 
-	i := 0
-	for ;actual.CurrentToken().Type != tokenizer.EOF; i++ {
-		if i >= len(expected) {
-			t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-		}
-
-		if !reflect.DeepEqual(actual.CurrentToken(), expected[i]) {
-			t.Error("Expected", expected[i], "but got", actual.CurrentToken())
-		}
-
-		actual.Consume()
-	}
-
-	if i + 1 != len(expected) {
-		t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-	}
+	testTokensEqual(t, expected, actual)
 }
 
 func TestLexUnicode(t *testing.T) {
-	config := tokenizer.NewTokenizerConfig()
-	identifierType := config.NewTokenType()
+	tokenizer := tokenizerv2.NewTokenizer()
+	identifierType := tokenizer.NewTokenType()
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
-	config.AddMatcher(&identifierMatcher)
+	tokenizer.AddMatcher(&identifierMatcher)
 
-	expected := []tokenizer.Token{
-		{Type: identifierType, Value: "🐻‍❄️", Span: usermessaging.Span{Start: 0, Length: 13}},
-		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 13, Length: 0}},
+	expected := []tokenizerv2.Token{
+		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
+		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 13, Length: 0}},
 	}
 
-	actual := tokenizer.NewTokenizer(config, []byte("🐻‍❄️"))
+	actual := tokenizer.Tokenize("🐻‍❄️")
 
-	i := 0
-	for ;actual.CurrentToken().Type != tokenizer.EOF; i++ {
-		if i >= len(expected) {
-			t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-		}
-
-		if !reflect.DeepEqual(actual.CurrentToken(), expected[i]) {
-			t.Error("Expected", expected[i], "but got", actual.CurrentToken())
-		}
-
-		actual.Consume()
-	}
-
-	if i + 1 != len(expected) {
-		t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-	}
+	testTokensEqual(t, expected, actual)
 }
 
 func TestLexStartingWithNumber(t *testing.T) {
-	config := tokenizer.NewTokenizerConfig()
-	identifierType := config.NewTokenType()
+	tokenizer := tokenizerv2.NewTokenizer()
+	identifierType := tokenizer.NewTokenType()
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
-	config.AddMatcher(&identifierMatcher)
+	tokenizer.AddMatcher(&identifierMatcher)
 
-	expected := []tokenizer.Token{
-		{Type: tokenizer.UNKNOWN, Value: "1", Span: usermessaging.Span{Start: 0, Length: 1}},
-		{Type: identifierType, Value: "identifier", Span: usermessaging.Span{Start: 1, Length: 10}},
-		{Type: tokenizer.EOF, Value: "", Span: usermessaging.Span{Start: 11, Length: 0}},
+	expected := []tokenizerv2.Token{
+		{Type: tokenizerv2.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: identifierType, Value: "identifier", Range: primitives.Range{Start: 1, Length: 10}},
+		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
 	}
 
-	actual := tokenizer.NewTokenizer(config, []byte("1identifier"))
+	actual := tokenizer.Tokenize("1identifier")
 
-	i := 0
-	for ;actual.CurrentToken().Type != tokenizer.EOF; i++ {
-		if i >= len(expected) {
-			t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-		}
-
-		if !reflect.DeepEqual(actual.CurrentToken(), expected[i]) {
-			t.Error("Expected", expected[i], "but got", actual.CurrentToken())
-		}
-
-		actual.Consume()
-	}
-
-	if i + 1 != len(expected) {
-		t.Fatal("Expected", len(expected), "tokens but got", i + 1, "tokens")
-	}
+	testTokensEqual(t, expected, actual)
 }

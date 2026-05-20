@@ -1,17 +1,17 @@
 package tokenizerv2
 
 import (
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"minimal/minimal-core/built-in/primitives"
 	"reflect"
 	"testing"
 )
 
 func TestLexEmpty(t *testing.T) {
-	expected := []Token{{Type: EOF, Value: "", Span: usermessaging.Span{Start: 0, Length: 0}}}
+	expected := []Token{{Type: EOF, Value: "", Range: primitives.Range{Start: 0, Length: 0}}}
 
 	tokenizerConfig := NewTokenizer()
 
-	actual := tokenizerConfig.Tokenize([]byte(""))
+	actual := tokenizerConfig.Tokenize("")
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)
@@ -20,13 +20,13 @@ func TestLexEmpty(t *testing.T) {
 
 func TestLexUnknown(t *testing.T) {
 	expected := []Token{
-		{Type: UNKNOWN, Value: "a", Span: usermessaging.Span{Start: 0, Length: 1}},
-		{Type: EOF, Value: "", Span: usermessaging.Span{Start: 1, Length: 0}},
+		{Type: UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: EOF, Value: "", Range: primitives.Range{Start: 1, Length: 0}},
 	}
 
 	tokenizerConfig := NewTokenizer()
 
-	actual := tokenizerConfig.Tokenize([]byte("a"))
+	actual := tokenizerConfig.Tokenize("a")
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)

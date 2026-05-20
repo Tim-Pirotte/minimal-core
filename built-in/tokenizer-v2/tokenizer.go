@@ -1,7 +1,7 @@
 package tokenizerv2
 
 import (
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"minimal/minimal-core/built-in/primitives"
 )
 
 type TokenType uint
@@ -14,7 +14,7 @@ const (
 type Token struct {
 	Type  TokenType
 	Value string
-	Span  usermessaging.Span
+	Range primitives.Range
 }
 
 type Tokenizer struct {
@@ -28,8 +28,11 @@ type Matcher interface {
 }
 
 func NewTokenizer() Tokenizer {
-	// We start from the highest value for TokenType and decrement due to the constant TokenTypes declared in types.go
-	return Tokenizer{[]Matcher{}, ^TokenType(0)}
+	return Tokenizer{
+		[]Matcher{}, 
+		// We start from the highest value for TokenType and decrement due to the constant TokenTypes declared in types.go
+		^TokenType(0),
+	}
 }
 
 func (t *Tokenizer) AddMatcher(matcher Matcher) {
@@ -43,19 +46,37 @@ func (t *Tokenizer) NewTokenType() TokenType {
 }
 
 type TokenizerState struct {
-	Data []byte
+	data     string
 	Position uint
-	tokens []Token
+	tokens   []Token
+}
+
+func (t *TokenizerState) Get(i uint) (byte, bool) {
+	offset := t.Position + i
+	
+	if offset >= uint(len(t.data)) {
+		return 0, false
+	}
+
+	return t.data[offset], true
+}
+
+func (t *TokenizerState) GetRange(start, length uint) (string, bool) {
+	if start + length > uint(len(t.data)) {
+		return "", false
+	}
+
+	return t.data[start:start + length], true
 }
 
 func (t *TokenizerState) Emit(token Token) {
 	t.tokens = append(t.tokens, token)
 }
 
-func (t *Tokenizer) Tokenize(source []byte) []Token {
+func (t *Tokenizer) Tokenize(source string) []Token {
 	s := TokenizerState{source, 0, []Token{}}
 
-	for s.Position < uint(len(s.Data)) {
+	for s.Position < uint(len(s.data)) {
 		largestLength := uint(0)
 		var matcherWithLargestLength Matcher = nil
 
@@ -74,15 +95,15 @@ func (t *Tokenizer) Tokenize(source []byte) []Token {
 		} else {
 			s.Emit(Token{
 				Type: UNKNOWN, 
-				Value: string(s.Data[s.Position]),
-				Span: usermessaging.Span{Start: s.Position, Length: 1},
+				Value: string(s.data[s.Position]),
+				Range: primitives.Range{Start: s.Position, Length: 1},
 			})
 
 			s.Position++
 		}
 	}
 
-	s.Emit(Token{Type: EOF, Value: "", Span: usermessaging.Span{Start: s.Position, Length: 0}})
+	s.Emit(Token{Type: EOF, Value: "", Range: primitives.Range{Start: s.Position, Length: 0}})
 
 	return s.tokens
 }

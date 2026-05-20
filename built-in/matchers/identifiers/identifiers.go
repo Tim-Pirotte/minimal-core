@@ -1,42 +1,46 @@
 package identifiers
 
 import (
-	"minimal/minimal-core/built-in/tokenizer"
-	"strings"
+	"minimal/minimal-core/built-in/primitives"
+	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
 
 type IdentifierMatcher struct {
-	tokenType tokenizer.TokenType
+	tokenType tokenizerv2.TokenType
 }
 
-func NewIdentifierMatcher(tt tokenizer.TokenType) IdentifierMatcher {
+func NewIdentifierMatcher(tt tokenizerv2.TokenType) IdentifierMatcher {
 	return IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) Match(s *tokenizer.Source) (uint, tokenizer.TokenType, string) {
-	firstChar, _ := s.Get(0)
+func (i *IdentifierMatcher) Match(s *tokenizerv2.TokenizerState) uint {
+	firstChar, ok := s.Get(0)
 
-	if !isAlphaOrUnicode(firstChar) {
-		return 0, tokenizer.IGNORE, ""
+	if !ok || !isAlphaOrUnicode(firstChar) {
+		return 0
 	}
 
-	sb := strings.Builder{}
-	sb.WriteByte(firstChar)
+	pos := uint(1)
 
-	pos := 1
-	for {
-		currentChar, ok := s.Get(pos)
-
-		if !ok || (!isAlphaOrUnicode(currentChar) && !isDigit(currentChar)) {
-			break;
-		}
-
-		sb.WriteByte(currentChar)
-
+	for char, ok := s.Get(pos); ok && isValidIdentifierChar(char); char, ok = s.Get(pos) {
 		pos++
 	}
 
-	return uint(pos), i.tokenType, sb.String()
+	return pos
+}
+
+func (i *IdentifierMatcher) Consume(s *tokenizerv2.TokenizerState, length uint) {
+	identifier, _ := s.GetRange(s.Position, length)
+
+	s.Emit(tokenizerv2.Token{
+		Type: i.tokenType, 
+		Value: identifier, 
+		Range: primitives.Range{Start: s.Position, Length: length}},
+	)
+}
+
+func isValidIdentifierChar(char byte) bool {
+	return isAlphaOrUnicode(char) || isDigit(char)
 }
 
 const asciiMax = 127
