@@ -24,7 +24,7 @@ func testTokensEqual(t *testing.T, expected, actual []tokenizerv2.Token) {
 
 func TestLexIdentifiers(t *testing.T) {
 	tokenizer := tokenizerv2.NewTokenizer()
-	identifierType := tokenizer.NewTokenType()
+	identifierType := tokenizer.NewTokenType(tokenizerv2.TokenTypeMetadata{DisplayName: "identifier", DebugName: "identifier"})
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
 	tokenizer.AddMatcher(&identifierMatcher)
@@ -41,7 +41,7 @@ func TestLexIdentifiers(t *testing.T) {
 
 func TestLexMultipleIdentifiers(t *testing.T) {
 	tokenizer := tokenizerv2.NewTokenizer()
-	identifierType := tokenizer.NewTokenType()
+	identifierType := tokenizer.NewTokenType(tokenizerv2.TokenTypeMetadata{DisplayName: "identifier", DebugName: "identifier"})
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
 	tokenizer.AddMatcher(&identifierMatcher)
@@ -60,7 +60,7 @@ func TestLexMultipleIdentifiers(t *testing.T) {
 
 func TestLexUnicode(t *testing.T) {
 	tokenizer := tokenizerv2.NewTokenizer()
-	identifierType := tokenizer.NewTokenType()
+	identifierType := tokenizer.NewTokenType(tokenizerv2.TokenTypeMetadata{DisplayName: "identifier", DebugName: "identifier"})
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
 	tokenizer.AddMatcher(&identifierMatcher)
@@ -77,7 +77,7 @@ func TestLexUnicode(t *testing.T) {
 
 func TestLexStartingWithNumber(t *testing.T) {
 	tokenizer := tokenizerv2.NewTokenizer()
-	identifierType := tokenizer.NewTokenType()
+	identifierType := tokenizer.NewTokenType(tokenizerv2.TokenTypeMetadata{DisplayName: "identifier", DebugName: "identifier"})
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
 	tokenizer.AddMatcher(&identifierMatcher)

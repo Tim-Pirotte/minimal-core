@@ -17,9 +17,15 @@ type Token struct {
 	Range primitives.Range
 }
 
+type TokenTypeMetadata struct {
+	DisplayName string
+	DebugName   string
+}
+
 type Tokenizer struct {
-	matchers     []Matcher
+	matchers      []Matcher
 	lastTokenType TokenType
+	tokenTypesMetadata map[TokenType]TokenTypeMetadata
 }
 
 type Matcher interface {
@@ -30,8 +36,12 @@ type Matcher interface {
 func NewTokenizer() Tokenizer {
 	return Tokenizer{
 		[]Matcher{}, 
-		// We start from the highest value for TokenType and decrement due to the constant TokenTypes declared in types.go
+		// We start from the highest value for TokenType and decrement due to the constant TokenTypes declared above
 		^TokenType(0),
+		map[TokenType]TokenTypeMetadata{
+			EOF: {"the end of the file", "EOF"}, 
+			UNKNOWN: {"a character that is not a valid token", "UNKNOWN"},
+		},
 	}
 }
 
@@ -39,8 +49,9 @@ func (t *Tokenizer) AddMatcher(matcher Matcher) {
 	t.matchers = append(t.matchers, matcher)
 }
 
-func (t *Tokenizer) NewTokenType() TokenType {
+func (t *Tokenizer) NewTokenType(displayName TokenTypeMetadata) TokenType {
 	t.lastTokenType--
+	t.tokenTypesMetadata[t.lastTokenType] = displayName
 
 	return t.lastTokenType
 }
@@ -106,4 +117,10 @@ func (t *Tokenizer) Tokenize(source string) []Token {
 	s.Emit(Token{Type: EOF, Value: "", Range: primitives.Range{Start: s.Position, Length: 0}})
 
 	return s.tokens
+}
+
+func (t *Tokenizer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
+	v, ok := t.tokenTypesMetadata[tokenType]
+	
+	return v, ok
 }
