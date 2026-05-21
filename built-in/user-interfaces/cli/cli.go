@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"io"
 	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
@@ -24,14 +25,14 @@ type CLI struct {
 func NewCli(
 	sourceGen *logging.SourceGenerator, 
 	messenger *usermessaging.Messenger, 
-	reader *bufio.Reader, 
-	writer *bufio.Writer,
+	reader io.Reader, 
+	writer io.Writer,
 	configLoader configloader.ConfigLoader,
 ) *CLI {
 	messenger.AddOutput(logrendering.NewLogRenderer(sourceGen, os.Stdout, configLoader))
 	logger, _ := sourceGen.GetLogger("cli")
 
-	return &CLI{*logging.NewRingBuffer(RingBufferSize), reader, writer, logger}
+	return &CLI{*logging.NewRingBuffer(RingBufferSize), bufio.NewReader(reader), bufio.NewWriter(writer), logger}
 }
 
 func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok bool) {

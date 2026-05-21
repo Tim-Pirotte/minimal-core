@@ -1,8 +1,8 @@
 package list
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 	"strconv"
@@ -10,15 +10,16 @@ import (
 
 type TokenListDisplay struct {
 	logger logging.Logger
+	output io.Writer
 }
 
-func NewTokenListDisplay(sourceGen logging.SourceGenerator) TokenListDisplay {
+func NewTokenListDisplay(sourceGen logging.SourceGenerator, output io.Writer) *TokenListDisplay {
 	logger, _ := sourceGen.GetLogger("tokenListDisplay")
 
-	return TokenListDisplay{logger}
+	return &TokenListDisplay{logger, output}
 } 
 
-func (t *TokenListDisplay) displayTokens(tokenizer *tokenizerv2.Tokenizer, tokens []tokenizerv2.Token, output bufio.Writer) {
+func (t *TokenListDisplay) DisplayTokens(tokenizer *tokenizerv2.Tokenizer, tokens []tokenizerv2.Token) {
 	for _, token := range tokens {
 		tokenTypeMetadata, ok := tokenizer.GetTokenTypeMetadata(token.Type)
 		name := tokenTypeMetadata.DebugName
@@ -28,8 +29,8 @@ func (t *TokenListDisplay) displayTokens(tokenizer *tokenizerv2.Tokenizer, token
 		}
 
 		_, err := fmt.Fprintf(
-			&output,
-			"%s %s %d..%d (%d)",
+			t.output,
+			"%s %s %d..%d (%d)\n",
 			name, 
 			token.Value, 
 			token.Range.Start, 

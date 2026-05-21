@@ -1,25 +1,54 @@
 package identifiers
 
 import (
+	"fmt"
+	"io"
+	"minimal/minimal-core/built-in/debug/tokenizer/list"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/primitives"
 	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
+	"os"
 	"testing"
 )
 
-func testTokensEqual(t *testing.T, expected, actual []tokenizerv2.Token) {
+func testTokensEqual(t *testing.T, tokenizer *tokenizerv2.Tokenizer, expected, actual []tokenizerv2.Token) {
+	sourceGen := logging.GetTestLogSource(io.Discard)
+
 	if len(expected) != len(actual) {
-		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens", "\nExpected:", expected, "\nActual:", actual)
+		showSequences(*sourceGen, tokenizer, expected, actual)
+		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
 	}
+
+	err := false
 
 	for i := range len(expected) {
 		if actual[i].Type != expected[i].Type {
 			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect type)")
+			err = true
 		} else if actual[i].Value != expected[i].Value {
 			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect value)")
+			err = true
 		} else if actual[i].Range != expected[i].Range {
 			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect range)")
+			err = true
 		}
 	}
+
+	if err {
+		showSequences(*sourceGen, tokenizer, expected, actual)
+	}
+}
+
+func showSequences(sourceGen logging.SourceGenerator, tokenizer *tokenizerv2.Tokenizer, expected, actual []tokenizerv2.Token) {
+	tokenListDisplay := list.NewTokenListDisplay(sourceGen, os.Stdout)
+
+	fmt.Println("Expected")
+	tokenListDisplay.DisplayTokens(tokenizer, expected)
+	
+	fmt.Println("\nActual")
+	tokenListDisplay.DisplayTokens(tokenizer, actual)
+
+	fmt.Println("")
 }
 
 func getTokenizer() (tokenizerv2.Tokenizer, tokenizerv2.TokenType) {
@@ -42,7 +71,7 @@ func TestLexIdentifiers(t *testing.T) {
 
 	actual := tokenizer.Tokenize("identifier1")
 
-	testTokensEqual(t, expected, actual)
+	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexMultipleIdentifiers(t *testing.T) {
@@ -57,7 +86,7 @@ func TestLexMultipleIdentifiers(t *testing.T) {
 
 	actual := tokenizer.Tokenize("identifier1 identifier2")
 
-	testTokensEqual(t, expected, actual)
+	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexUnicode(t *testing.T) {
@@ -70,7 +99,7 @@ func TestLexUnicode(t *testing.T) {
 
 	actual := tokenizer.Tokenize("🐻‍❄️")
 
-	testTokensEqual(t, expected, actual)
+	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexStartingWithNumber(t *testing.T) {
@@ -84,5 +113,5 @@ func TestLexStartingWithNumber(t *testing.T) {
 
 	actual := tokenizer.Tokenize("1identifier")
 
-	testTokensEqual(t, expected, actual)
+	testTokensEqual(t, &tokenizer, expected, actual)
 }
