@@ -30,7 +30,7 @@ func (t *TokenListDisplay) DisplayTokens(tokenizer *tokenizerv2.Tokenizer, token
 
 		_, err := fmt.Fprintf(
 			t.output,
-			"%s %s %d..%d (%d)\n",
+			"%-20s %-20s %6d..%-6d (%d)\n",
 			name, 
 			token.Value, 
 			token.Range.Start, 
