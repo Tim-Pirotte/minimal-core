@@ -1,6 +1,7 @@
 package diff
 
 import (
+	"math/rand"
 	"reflect"
 	"testing"
 )
@@ -85,7 +86,6 @@ func TestGetDiff(t *testing.T) {
 	}
 }
 
-// Helper to format output neatly if a test fails
 func formatDiff(parts []DiffPart[string]) []string {
 	res := make([]string, len(parts))
 	for i, p := range parts {
@@ -99,4 +99,53 @@ func formatDiff(parts []DiffPart[string]) []string {
 		res[i] = prefix + p.Value
 	}
 	return res
+}
+
+func generateRandomBytes(count int) []byte {
+	rng := rand.New(rand.NewSource(42))
+	b := make([]byte, count)
+	_, _ = rng.Read(b)
+
+	return b
+}
+
+func byteEqual(a, b byte) bool {
+	return a == b
+}
+
+func BenchmarkIdentical(b *testing.B) {
+	src := generateRandomBytes(1_000_000)
+	dst := make([]byte, len(src))
+	copy(dst, src)
+
+	for b.Loop() {
+		getDiff(src, dst, byteEqual)
+	}
+}
+
+func BenchmarkInsert(b *testing.B) {
+	src := []byte{}
+	dst := generateRandomBytes(1_000_000)
+
+	for b.Loop() {
+		getDiff(src, dst, byteEqual)
+	}
+}
+
+func BenchmarkDelete(b *testing.B) {
+	src := generateRandomBytes(1_000_000)
+	dst := []byte{}
+
+	for b.Loop() {
+		getDiff(src, dst, byteEqual)
+	}
+}
+
+func BenchmarkRandom(b *testing.B) {
+	src := generateRandomBytes(1_000_000)
+	dst := generateRandomBytes(1_000_000)
+
+	for b.Loop() {
+		getDiff(src, dst, byteEqual)
+	}
 }

@@ -21,3 +21,5 @@ go.work.sum
 
 cmd/templates/*
 cmd/commands/*
+
+*.prof
