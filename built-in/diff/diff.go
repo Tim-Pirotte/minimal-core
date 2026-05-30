@@ -92,8 +92,8 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
 				}
 			} else {
-				if value.x > 0 {
-					coord := coord{value.x - 1, value.y}
+				if value.y > 0 {
+					coord := coord{value.x, value.y - 1}
 					
 					if _, found := backwardVisited[coord]; !found {
 						newInverseFront = append(newInverseFront, coord)
@@ -105,8 +105,8 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 					}
 				}
 
-				if value.y > 0 {
-					coord := coord{value.x, value.y - 1}
+				if value.x > 0 {
+					coord := coord{value.x - 1, value.y}
 					
 					if _, found := backwardVisited[coord]; !found {
 						newInverseFront = append(newInverseFront, coord)
@@ -123,7 +123,7 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 		inverseFront = newInverseFront
 	}
 
-	panic("unreachable")
+	return []DiffPart[T]{}
 }
 
 func getPath[T any](
