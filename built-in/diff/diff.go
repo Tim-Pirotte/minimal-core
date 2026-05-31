@@ -151,8 +151,8 @@ func getPath[T any](
 		parent := forwardVisited[coord]
 		
 		if coord.x != parent.x && coord.y != parent.y {
-			for i := coord.x - parent.x - 1; i >= 0; i-- {
-				commonToStart = append(commonToStart, DiffPart[T]{Equal, a[parent.x + i]})
+			for i := coord.y - parent.y - 1; i >= 0; i-- {
+				commonToStart = append(commonToStart, DiffPart[T]{Equal, b[parent.y + i]})
 			}
 		} else if coord.x != parent.x {
 			commonToStart = append(commonToStart, DiffPart[T]{Delete, a[parent.x]})
@@ -167,8 +167,8 @@ func getPath[T any](
 		parent := backwardVisited[coord]
 
 		if coord.x != parent.x && coord.y != parent.y {
-			for i := 0; i < parent.x - coord.x; i++ {
-				commonToEnd = append(commonToEnd, DiffPart[T]{Equal, a[coord.x + i]})
+			for i := 0; i < parent.y - coord.y; i++ {
+				commonToEnd = append(commonToEnd, DiffPart[T]{Equal, b[coord.y + i]})
 			}
 		} else if coord.x != parent.x {
 			commonToEnd = append(commonToEnd, DiffPart[T]{Delete, a[parent.x - 1]})
