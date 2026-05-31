@@ -101,16 +101,27 @@ func formatDiff(parts []DiffPart[string]) []string {
 	return res
 }
 
+func byteEqual(a, b byte) bool {
+	return a == b
+}
+
+func FuzzGetDiff(f *testing.F) {
+	f.Add([]byte("abc"), []byte("abc"))
+	f.Add([]byte(""), []byte("abc"))
+	f.Add([]byte("abc"), []byte(""))
+	f.Add([]byte(""), []byte(""))
+
+	f.Fuzz(func(t *testing.T, a []byte, b []byte) {
+		getDiff(a, b, byteEqual)
+	})
+}
+
 func generateRandomBytes(count int) []byte {
 	rng := rand.New(rand.NewSource(42))
 	b := make([]byte, count)
 	_, _ = rng.Read(b)
 
 	return b
-}
-
-func byteEqual(a, b byte) bool {
-	return a == b
 }
 
 func BenchmarkIdentical(b *testing.B) {

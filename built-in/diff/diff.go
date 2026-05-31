@@ -1,6 +1,8 @@
 package diff
 
-import "slices"
+import (
+	"slices"
+)
 
 type PartType int
 
@@ -35,16 +37,21 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 		newFront := []coord{}
 
 		for _, value := range front {
-			if value.x < len(a) && value.y < len(b) && isEqual(a[value.x], b[value.y]) {
-				coord := coord{value.x + 1, value.y + 1}
+			snaked := value
 
-				if _, found := forwardVisited[coord]; !found {
-					newFront = append(newFront, coord)
-					forwardVisited[coord] = value
+			for snaked.x < len(a) && snaked.y < len(b) && isEqual(a[snaked.x], b[snaked.y]) {
+				snaked.x++
+				snaked.y++
+			}
+
+			if snaked != value {
+				if _, found := forwardVisited[snaked]; !found {
+					newFront = append(newFront, snaked)
+					forwardVisited[snaked] = value
 				}
 
-				if _, found := backwardVisited[coord]; found {
-					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
+				if _, found := backwardVisited[snaked]; found {
+					return getPath(a, b, snaked, forwardVisited, backwardVisited, start, end)
 				}
 			} else {
 				if value.x < len(a) {
@@ -80,16 +87,21 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 		newInverseFront := []coord{}
 
 		for _, value := range inverseFront {
-			if value.x > 0 && value.y > 0 && isEqual(a[value.x - 1], b[value.y - 1]) {
-				coord := coord{value.x - 1, value.y - 1}
+			snaked := value
 
-				if _, found := backwardVisited[coord]; !found {
-					newInverseFront = append(newInverseFront, coord)
-					backwardVisited[coord] = value
+			for snaked.x > 0 && snaked.y > 0 && isEqual(a[snaked.x - 1], b[snaked.y - 1]) {
+				snaked.x--
+				snaked.y--
+			}
+
+			if snaked != value {
+				if _, found := backwardVisited[snaked]; !found {
+					newInverseFront = append(newInverseFront, snaked)
+					backwardVisited[snaked] = value
 				}
 
-				if _, found := forwardVisited[coord]; found {
-					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
+				if _, found := forwardVisited[snaked]; found {
+					return getPath(a, b, snaked, forwardVisited, backwardVisited, start, end)
 				}
 			} else {
 				if value.y > 0 {
@@ -139,7 +151,9 @@ func getPath[T any](
 		parent := forwardVisited[coord]
 		
 		if coord.x != parent.x && coord.y != parent.y {
-			commonToStart = append(commonToStart, DiffPart[T]{Equal, a[parent.x]})
+			for i := coord.x - parent.x - 1; i >= 0; i-- {
+				commonToStart = append(commonToStart, DiffPart[T]{Equal, a[parent.x + i]})
+			}
 		} else if coord.x != parent.x {
 			commonToStart = append(commonToStart, DiffPart[T]{Delete, a[parent.x]})
 		} else {
@@ -153,7 +167,9 @@ func getPath[T any](
 		parent := backwardVisited[coord]
 
 		if coord.x != parent.x && coord.y != parent.y {
-			commonToEnd = append(commonToEnd, DiffPart[T]{Equal, a[parent.x - 1]})
+			for i := 0; i < parent.x - coord.x; i++ {
+				commonToEnd = append(commonToEnd, DiffPart[T]{Equal, a[coord.x + i]})
+			}
 		} else if coord.x != parent.x {
 			commonToEnd = append(commonToEnd, DiffPart[T]{Delete, a[parent.x - 1]})
 		} else {
