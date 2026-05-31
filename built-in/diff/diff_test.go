@@ -18,13 +18,13 @@ func TestGetDiff(t *testing.T) {
 		expected []DiffPart[string]
 	}{
 		{
-			name:     "Empty inputs",
+			name:     "Empty",
 			a:        []string{},
 			b:        []string{},
 			expected: []DiffPart[string]{},
 		},
 		{
-			name: "Identical slices",
+			name: "Identical",
 			a:    []string{"apple", "banana"},
 			b:    []string{"apple", "banana"},
 			expected: []DiffPart[string]{
@@ -33,7 +33,7 @@ func TestGetDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "Pure insertions",
+			name: "Only insertions",
 			a:    []string{},
 			b:    []string{"apple", "banana"},
 			expected: []DiffPart[string]{
@@ -42,7 +42,7 @@ func TestGetDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "Pure deletions",
+			name: "Only deletions",
 			a:    []string{"apple", "banana"},
 			b:    []string{},
 			expected: []DiffPart[string]{
@@ -51,7 +51,7 @@ func TestGetDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "Mixed changes",
+			name: "Replace middle",
 			a:    []string{"A", "B", "C"},
 			b:    []string{"A", "D", "C"},
 			expected: []DiffPart[string]{
@@ -62,7 +62,7 @@ func TestGetDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "Complex reordering and edits",
+			name: "Remove prefix and replace suffix",
 			a:    []string{"X", "A", "B", "Y"},
 			b:    []string{"A", "B", "Z"},
 			expected: []DiffPart[string]{
@@ -110,6 +110,7 @@ func FuzzGetDiff(f *testing.F) {
 	f.Add([]byte(""), []byte("abc"))
 	f.Add([]byte("abc"), []byte(""))
 	f.Add([]byte(""), []byte(""))
+	f.Add([]byte("abc"), []byte("adc"))
 
 	f.Fuzz(func(t *testing.T, a []byte, b []byte) {
 		GetDiff(a, b, byteEqual)
