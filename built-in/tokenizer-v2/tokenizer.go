@@ -1,14 +1,14 @@
 package tokenizerv2
 
 import (
+	"math"
 	"minimal/minimal-core/built-in/primitives"
 )
 
 type TokenType uint
 
 const (
-	UNKNOWN TokenType = iota
-	EOF
+	UNKNOWN TokenType = math.MaxUint - iota
 )
 
 type Token struct {
@@ -33,15 +33,15 @@ type Matcher interface {
 	Consume(s *TokenizerState, length uint)
 }
 
+type Stopper interface {
+	End(s *TokenizerState) bool
+}
+
 func NewTokenizer() Tokenizer {
 	return Tokenizer{
 		[]Matcher{}, 
-		// We start from the highest value for TokenType and decrement due to the constant TokenTypes declared above
-		^TokenType(0),
-		map[TokenType]TokenTypeMetadata{
-			EOF: {"the end of the file", "EOF"}, 
-			UNKNOWN: {"a character that is not a valid token", "UNKNOWN"},
-		},
+		TokenType(0),
+		map[TokenType]TokenTypeMetadata{UNKNOWN: {"a character that is not a valid token", "UNKNOWN"}},
 	}
 }
 
@@ -49,15 +49,15 @@ func (t *Tokenizer) AddMatcher(matcher Matcher) {
 	t.matchers = append(t.matchers, matcher)
 }
 
-func (t *Tokenizer) NewTokenType(displayName TokenTypeMetadata) TokenType {
-	t.lastTokenType--
-	t.tokenTypesMetadata[t.lastTokenType] = displayName
+func (t *Tokenizer) NewTokenType(metadata TokenTypeMetadata) TokenType {
+	t.lastTokenType++
+	t.tokenTypesMetadata[t.lastTokenType] = metadata
 
 	return t.lastTokenType
 }
 
 type TokenizerState struct {
-	data     string
+	Data     string
 	Position uint
 	tokens   []Token
 }
@@ -65,34 +65,34 @@ type TokenizerState struct {
 func (t *TokenizerState) Get(i uint) (byte, bool) {
 	offset := t.Position + i
 	
-	if offset >= uint(len(t.data)) {
+	if offset >= uint(len(t.Data)) {
 		return 0, false
 	}
 
-	return t.data[offset], true
+	return t.Data[offset], true
 }
 
 func (t *TokenizerState) GetRange(start, length uint) (string, bool) {
-	if start + length > uint(len(t.data)) {
+	if start + length > uint(len(t.Data)) {
 		return "", false
 	}
 
-	return t.data[start:start + length], true
+	return t.Data[start:start + length], true
 }
 
 func (t *TokenizerState) Emit(token Token) {
 	t.tokens = append(t.tokens, token)
 }
 
-func (t *Tokenizer) Tokenize(source string) []Token {
-	s := TokenizerState{source, 0, []Token{}}
+func (t *Tokenizer) Tokenize(source string, stopper Stopper) []Token {
+	s := &TokenizerState{source, 0, []Token{}}
 
-	for s.Position < uint(len(s.data)) {
+	for !stopper.End(s) {
 		largestLength := uint(0)
 		var matcherWithLargestLength Matcher = nil
 
 		for _, matcher := range t.matchers {
-			length := matcher.Match(&s)
+			length := matcher.Match(s)
 
 			if length > largestLength {
 				largestLength = length
@@ -101,20 +101,18 @@ func (t *Tokenizer) Tokenize(source string) []Token {
 		}
 
 		if matcherWithLargestLength != nil {
-			matcherWithLargestLength.Consume(&s, largestLength)	
+			matcherWithLargestLength.Consume(s, largestLength)	
 			s.Position += largestLength
 		} else {
 			s.Emit(Token{
 				Type: UNKNOWN, 
-				Value: string(s.data[s.Position]),
+				Value: string(s.Data[s.Position]),
 				Range: primitives.Range{Start: s.Position, Length: 1},
 			})
 
 			s.Position++
 		}
 	}
-
-	s.Emit(Token{Type: EOF, Value: "", Range: primitives.Range{Start: s.Position, Length: 0}})
 
 	return s.tokens
 }

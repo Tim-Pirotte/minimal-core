@@ -6,6 +6,7 @@ import (
 	tokenizerdebugger "minimal/minimal-core/built-in/debug/tokenizer-debugger"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/primitives"
+	eofstopper "minimal/minimal-core/built-in/stoppers/eof-stopper"
 	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 	"os"
 	"strings"
@@ -61,86 +62,87 @@ func testTokensEqual(t *testing.T, tokenizer *tokenizerv2.Tokenizer, expected, a
 	}
 }
 
-func getTokenizer() (tokenizerv2.Tokenizer, tokenizerv2.TokenType) {
+func getTokenizer() (tokenizerv2.Tokenizer, tokenizerv2.TokenType, *eofstopper.EOFStopper) {
 	tokenizer := tokenizerv2.NewTokenizer()
 	identifierType := tokenizer.NewTokenType(tokenizerv2.TokenTypeMetadata{DisplayName: "an identifier", DebugName: "Identifier"})
 	identifierMatcher := NewIdentifierMatcher(identifierType)
 
 	tokenizer.AddMatcher(&identifierMatcher)
+	eofStopper := eofstopper.NewEOFStopper(tokenizer)
 
-	return tokenizer, identifierType
+	return tokenizer, identifierType, eofStopper
 }
 
 func TestLexIdentifier(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType, eofStopper := getTokenizer()
 
 	expected := []tokenizerv2.Token{
 		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
-		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
+		{Type: eofStopper.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("identifier1")
+	actual := tokenizer.Tokenize("identifier1", eofStopper)
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexMultipleIdentifiers(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType, eofStopper := getTokenizer()
 
 	expected := []tokenizerv2.Token{
 		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
 		{Type: tokenizerv2.UNKNOWN, Value: " ", Range: primitives.Range{Start: 11, Length: 1}},
 		{Type: identifierType, Value: "identifier2", Range: primitives.Range{Start: 12, Length: 11}},
-		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 23, Length: 0}},
+		{Type: eofStopper.EOF, Value: "", Range: primitives.Range{Start: 23, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("identifier1 identifier2")
+	actual := tokenizer.Tokenize("identifier1 identifier2", eofStopper)
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexZeroWidthJoiner(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType, eofStopper := getTokenizer()
 
 	expected := []tokenizerv2.Token{
 		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
-		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 13, Length: 0}},
+		{Type: eofStopper.EOF, Value: "", Range: primitives.Range{Start: 13, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("🐻‍❄️")
+	actual := tokenizer.Tokenize("🐻‍❄️", eofStopper)
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexUnicode(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType, eofStopper := getTokenizer()
 
 	expected := []tokenizerv2.Token{
 		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
-		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 13, Length: 0}},
+		{Type: eofStopper.EOF, Value: "", Range: primitives.Range{Start: 13, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("🐻‍❄️")
+	actual := tokenizer.Tokenize("🐻‍❄️", eofStopper)
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func TestLexStartingWithNumber(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType, eofStopper := getTokenizer()
 
 	expected := []tokenizerv2.Token{
 		{Type: tokenizerv2.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
 		{Type: identifierType, Value: "identifier", Range: primitives.Range{Start: 1, Length: 10}},
-		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
+		{Type: eofStopper.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("1identifier")
+	actual := tokenizer.Tokenize("1identifier", eofStopper)
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
 
 func FuzzLexIdentifier(f *testing.F) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType, eofStopper := getTokenizer()
 
 	f.Add("identifier")
 
@@ -163,7 +165,7 @@ func FuzzLexIdentifier(f *testing.F) {
 			return
 		}
 		
-		tokens := tokenizer.Tokenize(input)
+		tokens := tokenizer.Tokenize(input, eofStopper)
 
 		if len(tokens) != 2 {
 			t.Fatalf("expected 2 tokens, got %d tokens", len(tokens))
@@ -189,7 +191,7 @@ func FuzzLexIdentifier(f *testing.F) {
 			)
 		}
 
-		if tokens[1].Type != tokenizerv2.EOF {
+		if tokens[1].Type != eofStopper.EOF {
 			t.Fatalf("expected EOF, got %v", tokens[1].Type)
 		}
 	})
