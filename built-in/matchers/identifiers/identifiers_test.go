@@ -8,6 +8,7 @@ import (
 	"minimal/minimal-core/built-in/primitives"
 	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -70,7 +71,7 @@ func getTokenizer() (tokenizerv2.Tokenizer, tokenizerv2.TokenType) {
 	return tokenizer, identifierType
 }
 
-func TestLexIdentifiers(t *testing.T) {
+func TestLexIdentifier(t *testing.T) {
 	tokenizer, identifierType := getTokenizer()
 
 	expected := []tokenizerv2.Token{
@@ -136,4 +137,60 @@ func TestLexStartingWithNumber(t *testing.T) {
 	actual := tokenizer.Tokenize("1identifier")
 
 	testTokensEqual(t, &tokenizer, expected, actual)
+}
+
+func FuzzLexIdentifier(f *testing.F) {
+	tokenizer, identifierType := getTokenizer()
+
+	f.Add("identifier")
+
+	f.Fuzz(func(t *testing.T, input string) {
+		if len(input) > 0 && '0' <= input[0] && input[0] <= '9' {
+			input = input[1:]
+		}
+
+		var cleanedInput strings.Builder
+
+		for _, c := range []byte(input) {
+			if isAlphaOrUnicode(c) {
+				cleanedInput.WriteString(string([]byte{c}))
+			}
+		}
+
+		input = cleanedInput.String()
+		
+		if input == "" {
+			return
+		}
+		
+		tokens := tokenizer.Tokenize(input)
+
+		if len(tokens) != 2 {
+			t.Fatalf("expected 2 tokens, got %d tokens", len(tokens))
+		}
+
+		if tokens[0].Type != identifierType {
+			t.Fatalf("expected identifier token, got %v", tokens[0].Type)
+		}
+
+		if tokens[0].Value != input {
+			t.Fatalf("expected %q, got %q", input, tokens[0].Value)
+		}
+
+		if tokens[0].Range.Start != 0 {
+			t.Fatalf("expected start=0, got %d", tokens[0].Range.Start)
+		}
+
+		if tokens[0].Range.Length != uint(len(input)) {
+			t.Fatalf(
+				"expected length=%d, got %d",
+				len(input),
+				tokens[0].Range.Length,
+			)
+		}
+
+		if tokens[1].Type != tokenizerv2.EOF {
+			t.Fatalf("expected EOF, got %v", tokens[1].Type)
+		}
+	})
 }
