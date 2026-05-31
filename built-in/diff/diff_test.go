@@ -89,13 +89,15 @@ func TestGetDiff(t *testing.T) {
 func formatDiff(parts []DiffPart[string]) []string {
 	res := make([]string, len(parts))
 	for i, p := range parts {
-		prefix := " "
+		prefix := "  "
+
 		switch p.Type {
 		case Insert:
-			prefix = "+"
+			prefix = "+ "
 		case Delete:
-			prefix = "-"
+			prefix = "- "
 		}
+
 		res[i] = prefix + p.Value
 	}
 	return res

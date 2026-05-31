@@ -19,34 +19,32 @@ func testTokensEqual(t *testing.T, tokenizer *tokenizerv2.Tokenizer, expected, a
 		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
 	}
 
-	err := false
+	ok := true
 
 	for i := range len(expected) {
 		if actual[i].Type != expected[i].Type {
 			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect type)")
-			err = true
+			ok = false
+			break
 		} else if actual[i].Value != expected[i].Value {
 			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect value)")
-			err = true
+			ok = false
+			break
 		} else if actual[i].Range != expected[i].Range {
 			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect range)")
-			err = true
+			ok = false
+			break
 		}
 	}
 
-	if err {
+	if !ok {
 		showSequences(*sourceGen, tokenizer, expected, actual)
 	}
 }
 
 func showSequences(sourceGen logging.SourceGenerator, tokenizer *tokenizerv2.Tokenizer, expected, actual []tokenizerv2.Token) {
 	tokenListDisplay := list.NewTokenListDisplay(sourceGen, os.Stdout)
-
-	fmt.Println("Expected")
-	tokenListDisplay.DisplayTokens(tokenizer, expected)
-	
-	fmt.Println("\nActual")
-	tokenListDisplay.DisplayTokens(tokenizer, actual)
+	tokenListDisplay.DisplayTokensDiff(tokenizer, expected, actual)
 
 	fmt.Println("")
 }
@@ -69,7 +67,7 @@ func TestLexIdentifiers(t *testing.T) {
 		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("identifier1")
+	actual := tokenizer.Tokenize("identifier")
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
