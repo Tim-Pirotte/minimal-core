@@ -44,7 +44,7 @@ func testTokensEqual(t *testing.T, tokenizer *tokenizerv2.Tokenizer, expected, a
 
 func showSequences(sourceGen logging.SourceGenerator, tokenizer *tokenizerv2.Tokenizer, expected, actual []tokenizerv2.Token) {
 	tokenListDisplay := list.NewTokenListDisplay(sourceGen, os.Stdout)
-	tokenListDisplay.DisplayTokensDiff(tokenizer, expected, actual)
+	tokenListDisplay.DisplayTokensDiff(tokenizer, actual, expected)
 
 	fmt.Println("")
 }
@@ -67,7 +67,7 @@ func TestLexIdentifiers(t *testing.T) {
 		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 11, Length: 0}},
 	}
 
-	actual := tokenizer.Tokenize("identifier")
+	actual := tokenizer.Tokenize("identifier1")
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }

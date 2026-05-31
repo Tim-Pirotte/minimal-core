@@ -63,11 +63,17 @@ func (t *TokenListDisplay) displayToken(tokenizer *tokenizerv2.Tokenizer, token 
 		name = strconv.Itoa(int(token.Type))
 	}
 
+	value := token.Value
+
+	if value != "" {
+		value = "\"" + value + "\""
+	}
+
 	_, err := fmt.Fprintf(
 		t.output,
 		"%-20s %-20s %6d..%-6d (%d)\n",
 		name, 
-		token.Value, 
+		value, 
 		token.Range.Start, 
 		token.Range.Start + token.Range.Length, 
 		token.Range.Length,
