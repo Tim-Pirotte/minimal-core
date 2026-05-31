@@ -3,7 +3,7 @@ package identifiers
 import (
 	"fmt"
 	"io"
-	"minimal/minimal-core/built-in/debug/tokenizer/list"
+	tokenizerdebugger "minimal/minimal-core/built-in/debug/tokenizer-debugger"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/primitives"
 	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
@@ -13,9 +13,11 @@ import (
 
 func testTokensEqual(t *testing.T, tokenizer *tokenizerv2.Tokenizer, expected, actual []tokenizerv2.Token) {
 	sourceGen := logging.GetTestLogSource(io.Discard)
+	tokenizerDebugger := tokenizerdebugger.NewTokenizerDebugger(tokenizer, sourceGen, os.Stdout)
 
 	if len(expected) != len(actual) {
-		showSequences(*sourceGen, tokenizer, expected, actual)
+		tokenizerDebugger.DisplayTokensDiff(actual, expected)
+		fmt.Println("")
 		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
 	}
 
@@ -23,30 +25,39 @@ func testTokensEqual(t *testing.T, tokenizer *tokenizerv2.Tokenizer, expected, a
 
 	for i := range len(expected) {
 		if actual[i].Type != expected[i].Type {
-			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect type)")
+			t.Error(
+				"\nExpected\n", tokenizerDebugger.StringifyToken(expected[i]), 
+				"\nbut got\n", tokenizerDebugger.StringifyToken(actual[i]), "(incorrect type)",
+			)
+
 			ok = false
+
 			break
 		} else if actual[i].Value != expected[i].Value {
-			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect value)")
+			t.Error(
+				"\nExpected\n", tokenizerDebugger.StringifyToken(expected[i]), 
+				"\nbut got\n", tokenizerDebugger.StringifyToken(actual[i]), "(incorrect value)",
+			)
+
 			ok = false
+
 			break
 		} else if actual[i].Range != expected[i].Range {
-			t.Error("Expected", expected[i], "but got", actual[i], "(incorrect range)")
+			t.Error(
+				"\nExpected\n", tokenizerDebugger.StringifyToken(expected[i]), 
+				"\nbut got\n", tokenizerDebugger.StringifyToken(actual[i]), "(incorrect range)",
+			)
+
 			ok = false
+
 			break
 		}
 	}
 
 	if !ok {
-		showSequences(*sourceGen, tokenizer, expected, actual)
+		tokenizerDebugger.DisplayTokensDiff(actual, expected)
+		fmt.Println("")
 	}
-}
-
-func showSequences(sourceGen logging.SourceGenerator, tokenizer *tokenizerv2.Tokenizer, expected, actual []tokenizerv2.Token) {
-	tokenListDisplay := list.NewTokenListDisplay(sourceGen, os.Stdout)
-	tokenListDisplay.DisplayTokensDiff(tokenizer, actual, expected)
-
-	fmt.Println("")
 }
 
 func getTokenizer() (tokenizerv2.Tokenizer, tokenizerv2.TokenType) {
@@ -83,6 +94,19 @@ func TestLexMultipleIdentifiers(t *testing.T) {
 	}
 
 	actual := tokenizer.Tokenize("identifier1 identifier2")
+
+	testTokensEqual(t, &tokenizer, expected, actual)
+}
+
+func TestLexZeroWidthJoiner(t *testing.T) {
+	tokenizer, identifierType := getTokenizer()
+
+	expected := []tokenizerv2.Token{
+		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
+		{Type: tokenizerv2.EOF, Value: "", Range: primitives.Range{Start: 13, Length: 0}},
+	}
+
+	actual := tokenizer.Tokenize("🐻‍❄️")
 
 	testTokensEqual(t, &tokenizer, expected, actual)
 }
