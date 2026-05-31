@@ -77,7 +77,7 @@ func TestGetDiff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := getDiff(tt.a, tt.b, isEqual)
+			actual := GetDiff(tt.a, tt.b, isEqual)
 			
 			if !reflect.DeepEqual(actual, tt.expected) {
 				t.Errorf("\nGetDiff() mismatch:\nExpected: %v\nActual:   %v", formatDiff(tt.expected), formatDiff(actual))
@@ -112,7 +112,7 @@ func FuzzGetDiff(f *testing.F) {
 	f.Add([]byte(""), []byte(""))
 
 	f.Fuzz(func(t *testing.T, a []byte, b []byte) {
-		getDiff(a, b, byteEqual)
+		GetDiff(a, b, byteEqual)
 	})
 }
 
@@ -130,7 +130,7 @@ func BenchmarkIdentical(b *testing.B) {
 	copy(dst, src)
 
 	for b.Loop() {
-		getDiff(src, dst, byteEqual)
+		GetDiff(src, dst, byteEqual)
 	}
 }
 
@@ -139,7 +139,7 @@ func BenchmarkInsert(b *testing.B) {
 	dst := generateRandomBytes(1_000_000)
 
 	for b.Loop() {
-		getDiff(src, dst, byteEqual)
+		GetDiff(src, dst, byteEqual)
 	}
 }
 
@@ -148,7 +148,7 @@ func BenchmarkDelete(b *testing.B) {
 	dst := []byte{}
 
 	for b.Loop() {
-		getDiff(src, dst, byteEqual)
+		GetDiff(src, dst, byteEqual)
 	}
 }
 
@@ -157,6 +157,6 @@ func BenchmarkRandom(b *testing.B) {
 	dst := generateRandomBytes(1_000_000)
 
 	for b.Loop() {
-		getDiff(src, dst, byteEqual)
+		GetDiff(src, dst, byteEqual)
 	}
 }

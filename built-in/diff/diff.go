@@ -22,7 +22,7 @@ type coord struct {
 	y      int
 }
 
-func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
+func GetDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 	// This can be improved a lot
 	start := coord{0, 0}
 	end := coord{len(a), len(b)}
@@ -53,31 +53,31 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 				if _, found := backwardVisited[snaked]; found {
 					return getPath(a, b, snaked, forwardVisited, backwardVisited, start, end)
 				}
-			} else {
-				if value.x < len(a) {
-					coord := coord{value.x + 1, value.y}
+			}
 
-					if _, found := forwardVisited[coord]; !found {
-						newFront = append(newFront, coord)
-						forwardVisited[coord] = value
-					}
+			if snaked.x < len(a) {
+				coord := coord{snaked.x + 1, snaked.y}
 
-					if _, found := backwardVisited[coord]; found {
-						return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
-					}
+				if _, found := forwardVisited[coord]; !found {
+					newFront = append(newFront, coord)
+					forwardVisited[coord] = snaked
 				}
 
-				if value.y < len(b) {
-					coord := coord{value.x, value.y + 1}
+				if _, found := backwardVisited[coord]; found {
+					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
+				}
+			}
 
-					if _, found := forwardVisited[coord]; !found {
-						newFront = append(newFront, coord)
-						forwardVisited[coord] = value
-					}
+			if snaked.y < len(b) {
+				coord := coord{snaked.x, snaked.y + 1}
 
-					if _, found := backwardVisited[coord]; found {
-						return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
-					}
+				if _, found := forwardVisited[coord]; !found {
+					newFront = append(newFront, coord)
+					forwardVisited[coord] = snaked
+				}
+
+				if _, found := backwardVisited[coord]; found {
+					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
 				}
 			}
 		}
@@ -103,31 +103,31 @@ func getDiff[T any](a, b []T, isEqual func(T, T) bool) []DiffPart[T] {
 				if _, found := forwardVisited[snaked]; found {
 					return getPath(a, b, snaked, forwardVisited, backwardVisited, start, end)
 				}
-			} else {
-				if value.y > 0 {
-					coord := coord{value.x, value.y - 1}
-					
-					if _, found := backwardVisited[coord]; !found {
-						newInverseFront = append(newInverseFront, coord)
-						backwardVisited[coord] = value
-					}
-
-					if _, found := forwardVisited[coord]; found {
-						return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
-					}
+			}
+			
+			if value.y > 0 {
+				coord := coord{value.x, value.y - 1}
+				
+				if _, found := backwardVisited[coord]; !found {
+					newInverseFront = append(newInverseFront, coord)
+					backwardVisited[coord] = value
 				}
 
-				if value.x > 0 {
-					coord := coord{value.x - 1, value.y}
-					
-					if _, found := backwardVisited[coord]; !found {
-						newInverseFront = append(newInverseFront, coord)
-						backwardVisited[coord] = value
-					}
+				if _, found := forwardVisited[coord]; found {
+					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
+				}
+			}
 
-					if _, found := forwardVisited[coord]; found {
-						return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
-					}
+			if value.x > 0 {
+				coord := coord{value.x - 1, value.y}
+				
+				if _, found := backwardVisited[coord]; !found {
+					newInverseFront = append(newInverseFront, coord)
+					backwardVisited[coord] = value
+				}
+
+				if _, found := forwardVisited[coord]; found {
+					return getPath(a, b, coord, forwardVisited, backwardVisited, start, end)
 				}
 			}
 		}
