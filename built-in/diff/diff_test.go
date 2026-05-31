@@ -6,88 +6,158 @@ import (
 	"testing"
 )
 
-func TestGetDiff(t *testing.T) {
-	isEqual := func(x, y string) bool {
-		return x == y
+func areStringsEqual(a, b string) bool {
+	return a == b
+}
+
+func TestEmpty(t *testing.T) {
+	a := []string{}
+	b := []string{}
+
+	expected := []DiffPart[string]{}
+
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual:   %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestIdentical(t *testing.T) {
+	a := []string{"A", "B"}
+	b := []string{"A", "B"}
+
+	expected := []DiffPart[string]{
+		{Type: Equal, Value: "A"},
+		{Type: Equal, Value: "B"},
 	}
 
-	tests := []struct {
-		name     string
-		a        []string
-		b        []string
-		expected []DiffPart[string]
-	}{
-		{
-			name:     "Empty",
-			a:        []string{},
-			b:        []string{},
-			expected: []DiffPart[string]{},
-		},
-		{
-			name: "Identical",
-			a:    []string{"apple", "banana"},
-			b:    []string{"apple", "banana"},
-			expected: []DiffPart[string]{
-				{Type: Equal, Value: "apple"},
-				{Type: Equal, Value: "banana"},
-			},
-		},
-		{
-			name: "Only insertions",
-			a:    []string{},
-			b:    []string{"apple", "banana"},
-			expected: []DiffPart[string]{
-				{Type: Insert, Value: "apple"},
-				{Type: Insert, Value: "banana"},
-			},
-		},
-		{
-			name: "Only deletions",
-			a:    []string{"apple", "banana"},
-			b:    []string{},
-			expected: []DiffPart[string]{
-				{Type: Delete, Value: "apple"},
-				{Type: Delete, Value: "banana"},
-			},
-		},
-		{
-			name: "Replace middle",
-			a:    []string{"A", "B", "C"},
-			b:    []string{"A", "D", "C"},
-			expected: []DiffPart[string]{
-				{Type: Equal, Value: "A"},
-				{Type: Delete, Value: "B"},
-				{Type: Insert, Value: "D"},
-				{Type: Equal, Value: "C"},
-			},
-		},
-		{
-			name: "Remove prefix and replace suffix",
-			a:    []string{"X", "A", "B", "Y"},
-			b:    []string{"A", "B", "Z"},
-			expected: []DiffPart[string]{
-				{Type: Delete, Value: "X"},
-				{Type: Equal, Value: "A"},
-				{Type: Equal, Value: "B"},
-				{Type: Delete, Value: "Y"},
-				{Type: Insert, Value: "Z"},
-			},
-		},
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestInsert(t *testing.T) {
+	a := []string{}
+	b := []string{"A", "B"}
+
+	expected := []DiffPart[string]{
+		{Type: Insert, Value: "A"},
+		{Type: Insert, Value: "B"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := GetDiff(tt.a, tt.b, isEqual)
-			
-			if !reflect.DeepEqual(actual, tt.expected) {
-				t.Errorf("\nGetDiff() mismatch:\nExpected: %v\nActual:   %v", formatDiff(tt.expected), formatDiff(actual))
-			}
-		})
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestDelete(t *testing.T) {
+	a := []string{"A", "B"}
+	b := []string{}
+
+	expected := []DiffPart[string]{
+		{Type: Delete, Value: "A"},
+		{Type: Delete, Value: "B"},
+	}
+
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestReplacePrefix(t *testing.T) {
+	a := []string{"A", "B", "C"}
+	b := []string{"D", "B", "C"}
+
+	expected := []DiffPart[string]{
+		{Type: Delete, Value: "A"},
+		{Type: Insert, Value: "D"},
+		{Type: Equal, Value: "B"},
+		{Type: Equal, Value: "C"},
+	}
+
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestReplaceMiddle(t *testing.T) {
+	a := []string{"A", "B", "C"}
+	b := []string{"A", "D", "C"}
+
+	expected := []DiffPart[string]{
+		{Type: Equal, Value: "A"},
+		{Type: Delete, Value: "B"},
+		{Type: Insert, Value: "D"},
+		{Type: Equal, Value: "C"},
+	}
+
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestReplaceSuffix(t *testing.T) {
+	a := []string{"A", "B", "C"}
+	b := []string{"A", "B", "D"}
+
+	expected := []DiffPart[string]{
+		{Type: Equal, Value: "A"},
+		{Type: Equal, Value: "B"},
+		{Type: Delete, Value: "C"},
+		{Type: Insert, Value: "D"},
+	}
+
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
+	}
+}
+
+func TestComplex(t *testing.T) {
+	a := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"}
+	b := []string{"K", "L", "C", "D", "M", "N", "G", "H", "O", "P"}
+
+	expected := []DiffPart[string]{
+		{Type: Delete, Value: "A"},
+		{Type: Delete, Value: "B"},
+		{Type: Insert, Value: "K"},
+		{Type: Insert, Value: "L"},
+		{Type: Equal,  Value: "C"},
+		{Type: Equal,  Value: "D"},
+		{Type: Delete, Value: "E"},
+		{Type: Delete, Value: "F"},
+		{Type: Insert, Value: "M"},
+		{Type: Insert, Value: "N"},
+		{Type: Equal,  Value: "G"},
+		{Type: Equal,  Value: "H"},
+		{Type: Delete, Value: "I"},
+		{Type: Delete, Value: "J"},
+		{Type: Insert, Value: "O"},
+		{Type: Insert, Value: "P"},
+	}
+
+	actual := GetDiff(a, b, areStringsEqual)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\nExpected: %v\nActual: %v", formatDiff(expected), formatDiff(actual))
 	}
 }
 
 func formatDiff(parts []DiffPart[string]) []string {
 	res := make([]string, len(parts))
+
 	for i, p := range parts {
 		prefix := "  "
 
@@ -100,10 +170,11 @@ func formatDiff(parts []DiffPart[string]) []string {
 
 		res[i] = prefix + p.Value
 	}
+
 	return res
 }
 
-func byteEqual(a, b byte) bool {
+func areBytesEqual(a, b byte) bool {
 	return a == b
 }
 
@@ -115,7 +186,7 @@ func FuzzGetDiff(f *testing.F) {
 	f.Add([]byte("abc"), []byte("adc"))
 
 	f.Fuzz(func(t *testing.T, a []byte, b []byte) {
-		GetDiff(a, b, byteEqual)
+		GetDiff(a, b, areBytesEqual)
 	})
 }
 
@@ -133,7 +204,7 @@ func BenchmarkIdentical(b *testing.B) {
 	copy(dst, src)
 
 	for b.Loop() {
-		GetDiff(src, dst, byteEqual)
+		GetDiff(src, dst, areBytesEqual)
 	}
 }
 
@@ -142,7 +213,7 @@ func BenchmarkInsert(b *testing.B) {
 	dst := generateRandomBytes(1_000_000)
 
 	for b.Loop() {
-		GetDiff(src, dst, byteEqual)
+		GetDiff(src, dst, areBytesEqual)
 	}
 }
 
@@ -151,7 +222,7 @@ func BenchmarkDelete(b *testing.B) {
 	dst := []byte{}
 
 	for b.Loop() {
-		GetDiff(src, dst, byteEqual)
+		GetDiff(src, dst, areBytesEqual)
 	}
 }
 
@@ -160,6 +231,6 @@ func BenchmarkRandom(b *testing.B) {
 	dst := generateRandomBytes(1_000_000)
 
 	for b.Loop() {
-		GetDiff(src, dst, byteEqual)
+		GetDiff(src, dst, areBytesEqual)
 	}
 }
