@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-type TestStopper struct {}
+type testStopper struct {}
 
-func (t *TestStopper) End(s *TokenizerState) bool {
+func (t *testStopper) End(s *TokenizerState) bool {
 	return s.Position >= uint(len(s.Data))
 }
 
@@ -16,7 +16,7 @@ func TestLexEmpty(t *testing.T) {
 	tokenizer := NewTokenizer()
 	expected := []Token{}
 
-	actual := tokenizer.Tokenize("", &TestStopper{})
+	actual := tokenizer.Tokenize("", &testStopper{})
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)
@@ -29,9 +29,18 @@ func TestLexUnknown(t *testing.T) {
 		{Type: UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
 	}
 
-	actual := tokenizer.Tokenize("a", &TestStopper{})
+	actual := tokenizer.Tokenize("a", &testStopper{})
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func Benchmark(b *testing.B) {
+	source := string(make([]byte, 1_000_000))
+	tokenizer := NewTokenizer()
+	
+	for b.Loop() {
+		tokenizer.Tokenize(source, &testStopper{})
 	}
 }

@@ -106,7 +106,7 @@ func (t *Tokenizer) Tokenize(source string, stopper Stopper) []Token {
 		} else {
 			s.Emit(Token{
 				Type: UNKNOWN, 
-				Value: string(s.Data[s.Position]),
+				Value: s.Data[s.Position:s.Position + 1],
 				Range: primitives.Range{Start: s.Position, Length: 1},
 			})
 
