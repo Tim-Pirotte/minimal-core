@@ -1,33 +1,32 @@
-package tokenizerdebugger
+package tokenizerv2
 
 import (
 	"fmt"
 	"io"
 	"minimal/minimal-core/built-in/diff"
 	logging "minimal/minimal-core/built-in/internal-logging"
-	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 	"strconv"
 )
 
 type TokenizerDebugger struct {
-	tokenizer *tokenizerv2.Tokenizer
-	logger logging.Logger
-	output io.Writer
+	tokenizer *Tokenizer
+	logger    logging.Logger
+	output    io.Writer
 }
 
 func NewTokenizerDebugger(
-	tokenizer *tokenizerv2.Tokenizer, 
-	sourceGen *logging.SourceGenerator, 
+	tokenizer *Tokenizer,
+	sourceGen *logging.SourceGenerator,
 	output io.Writer,
 ) *TokenizerDebugger {
 	logger, _ := sourceGen.GetLogger("tokenListDisplay")
 
 	return &TokenizerDebugger{tokenizer, logger, output}
-} 
+}
 
-func (t *TokenizerDebugger) DisplayTokens(tokens []tokenizerv2.Token) {
+func (t *TokenizerDebugger) DisplayTokens(tokens []Token) {
 	for _, token := range tokens {
-		if _, err := io.WriteString(t.output, t.StringifyToken(token) + "\n"); err != nil {
+		if _, err := io.WriteString(t.output, t.StringifyToken(token)+"\n"); err != nil {
 			t.logger.Error().Err(err).Msg("failed writing to output")
 
 			return
@@ -35,13 +34,13 @@ func (t *TokenizerDebugger) DisplayTokens(tokens []tokenizerv2.Token) {
 	}
 }
 
-func compareTokens(a, b tokenizerv2.Token) bool {
+func compareTokens(a, b Token) bool {
 	return a.Type == b.Type && a.Value == b.Value
 }
 
 // Prints a diff of tokens to a writer. Tokens are considered the same if there types and values are equal.
 // The range is deliberately ignored since a small change can change all the following ranges.
-func (t *TokenizerDebugger) DisplayTokensDiff(before, after []tokenizerv2.Token) {
+func (t *TokenizerDebugger) DisplayTokensDiff(before, after []Token) {
 	tokenDiff := diff.GetDiff(before, after, compareTokens)
 
 	for _, diffPart := range tokenDiff {
@@ -56,7 +55,7 @@ func (t *TokenizerDebugger) DisplayTokensDiff(before, after []tokenizerv2.Token)
 
 		fmt.Print(prefix)
 
-		if _, err := io.WriteString(t.output, t.StringifyToken(diffPart.Value) + "\n"); err != nil {
+		if _, err := io.WriteString(t.output, t.StringifyToken(diffPart.Value)+"\n"); err != nil {
 			t.logger.Error().Err(err).Msg("failed writing to output")
 
 			return
@@ -64,7 +63,7 @@ func (t *TokenizerDebugger) DisplayTokensDiff(before, after []tokenizerv2.Token)
 	}
 }
 
-func (t *TokenizerDebugger) StringifyToken(token tokenizerv2.Token) string {
+func (t *TokenizerDebugger) StringifyToken(token Token) string {
 	tokenTypeMetadata, ok := t.tokenizer.GetTokenTypeMetadata(token.Type)
 	name := tokenTypeMetadata.DebugName
 
@@ -82,10 +81,10 @@ func (t *TokenizerDebugger) StringifyToken(token tokenizerv2.Token) string {
 
 	return fmt.Sprintf(
 		"%-20s %-20s %6d..%-6d (%d)",
-		name, 
-		value, 
-		token.Range.Start, 
-		token.Range.Start + token.Range.Length, 
+		name,
+		value,
+		token.Range.Start,
+		token.Range.Start+token.Range.Length,
 		token.Range.Length,
 	)
 }
