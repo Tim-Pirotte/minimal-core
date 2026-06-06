@@ -1,9 +1,9 @@
-# Minimal Core
-The base Minimal compiler on which the Minimal language extensions are added.
+# Minimal
+The compiler for Minimal
 
 ## Project Structure
 - **cmd:** Applications used for testing
-- **src:** The root of all layers and extensions
+- **built-in:** The root of all layers and extensions
   - **startup:** Cli system to select an app
     - **commands:** Apps for startup
       - **templates:** App to create projects from templates
@@ -28,5 +28,5 @@ The base Minimal compiler on which the Minimal language extensions are added.
       - **string-literals:** Match strings with interpolation and multiline support
       - **symbols:** A trie to match exact strings
       - **white-space:** Ignore white space
-  
+
 *The docs of the language itself can be found at: TODO*

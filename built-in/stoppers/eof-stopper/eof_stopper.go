@@ -10,6 +10,6 @@ func NewEOFStopper() *EOFStopper {
 	return &EOFStopper{}
 }
 
-func (e *EOFStopper) End(s *tokenizerv2.TokenizerState) bool {
+func (e *EOFStopper) End(s *tokenizerv2.TokenizerJob) bool {
 	return s.Position >= uint(len(s.Data))
 }

@@ -13,7 +13,7 @@ func NewIdentifierMatcher(tt tokenizerv2.TokenType) IdentifierMatcher {
 	return IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) Match(s *tokenizerv2.TokenizerState) uint {
+func (i *IdentifierMatcher) Match(s *tokenizerv2.TokenizerJob) uint {
 	firstChar, ok := s.Get(0)
 
 	if !ok || !isAlphaOrUnicode(firstChar) {
@@ -29,7 +29,7 @@ func (i *IdentifierMatcher) Match(s *tokenizerv2.TokenizerState) uint {
 	return pos
 }
 
-func (i *IdentifierMatcher) Consume(s *tokenizerv2.TokenizerState, length uint) {
+func (i *IdentifierMatcher) Consume(s *tokenizerv2.TokenizerJob, length uint) {
 	identifier, _ := s.GetRange(s.Position, length)
 
 	s.Emit(tokenizerv2.Token{
