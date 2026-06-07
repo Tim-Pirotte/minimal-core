@@ -119,7 +119,6 @@ func (t *TokenizerJob) GetRange(start, length uint) (string, bool) {
 }
 
 func (t *TokenizerJob) Emit(token Token) {
-	// TODO add spillage to fill buffer
 	if t.write - t.read == uint(len(t.buffer)) {
 		t.spillage = append(t.spillage, token)
 
@@ -153,6 +152,20 @@ func (t *TokenizerJob) Advance() {
 }
 
 func (t *TokenizerJob) fillTokenBuffer() {
+	if len(t.spillage) > 0 {
+        nEmpty := uint(len(t.buffer)) - (t.write - t.read)
+		nSpillage := uint(len(t.spillage))
+
+        nFill := min(nEmpty, nSpillage)
+
+        for i := range nFill {
+            t.buffer[t.write % uint(len(t.buffer))] = t.spillage[i]
+            t.write++
+        }
+
+        t.spillage = t.spillage[nFill:]
+    }
+
 	for t.write - t.read != uint(len(t.buffer)) && !t.endReached {
 		if t.stopper.End(t) {
 			t.endReached = true
