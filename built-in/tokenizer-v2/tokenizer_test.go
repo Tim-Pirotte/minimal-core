@@ -87,8 +87,40 @@ func TestLexUnknown(t *testing.T) {
 	CheckTokens(t, tokenizer, expected, "a")
 }
 
-func TestSpillage(t *testing.T) {
+type spillageTestMatcher struct {
+	tokenType TokenType
+}
 
+func newSpillageTestMatcher(tokenizer *Tokenizer) *spillageTestMatcher {
+	return &spillageTestMatcher{
+		tokenizer.NewTokenType(TokenTypeMetadata{"spillage", "Spillage"}),
+	}
+}
+
+func (s *spillageTestMatcher) Match(t *TokenizerJob) uint {
+	return 1
+}
+
+func (s *spillageTestMatcher) Consume(t *TokenizerJob, length uint) {
+	for range 5 {
+		t.Emit(Token{s.tokenType, "", primitives.Range{}})
+	}
+}
+
+func TestSpillage(t *testing.T) {
+	tokenizer := NewTokenizer()
+	s := newSpillageTestMatcher(tokenizer)
+	tokenizer.AddMatcher(s)
+
+	expected := []Token{
+		{s.tokenType, "", primitives.Range{}},
+		{s.tokenType, "", primitives.Range{}},
+		{s.tokenType, "", primitives.Range{}},
+		{s.tokenType, "", primitives.Range{}},
+		{s.tokenType, "", primitives.Range{}},
+	}
+
+	CheckTokens(t, tokenizer, expected, "a")
 }
 
 func Benchmark(b *testing.B) {

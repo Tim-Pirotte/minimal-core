@@ -122,6 +122,8 @@ func (t *TokenizerJob) Emit(token Token) {
 	// TODO add spillage to fill buffer
 	if t.write - t.read == uint(len(t.buffer)) {
 		t.spillage = append(t.spillage, token)
+
+		return
 	}
 
 	t.buffer[t.write] = token
