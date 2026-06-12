@@ -9,12 +9,12 @@ type IdentifierMatcher struct {
 	tokenType tokenizerv2.TokenType
 }
 
-func NewIdentifierMatcher(tt tokenizerv2.TokenType) IdentifierMatcher {
-	return IdentifierMatcher{tt}
+func NewIdentifierMatcher(tt tokenizerv2.TokenType) *IdentifierMatcher {
+	return &IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) Match(s *tokenizerv2.TokenizerJob) uint {
-	firstChar, ok := s.Get(0)
+func (i *IdentifierMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
+	firstChar, ok := t.Get(0)
 
 	if !ok || !isAlphaOrUnicode(firstChar) {
 		return 0
@@ -22,20 +22,20 @@ func (i *IdentifierMatcher) Match(s *tokenizerv2.TokenizerJob) uint {
 
 	pos := uint(1)
 
-	for char, ok := s.Get(pos); ok && isValidIdentifierChar(char); char, ok = s.Get(pos) {
+	for char, ok := t.Get(pos); ok && isValidIdentifierChar(char); char, ok = t.Get(pos) {
 		pos++
 	}
 
 	return pos
 }
 
-func (i *IdentifierMatcher) Consume(s *tokenizerv2.TokenizerJob, length uint) {
-	identifier, _ := s.GetRange(s.Position, length)
+func (i *IdentifierMatcher) Consume(t *tokenizerv2.TokenizerJob, length uint) {
+	identifier, _ := t.GetRange(t.Position, length)
 
-	s.Emit(tokenizerv2.Token{
-		Type: i.tokenType, 
-		Value: identifier, 
-		Range: primitives.Range{Start: s.Position, Length: length}},
+	t.Emit(tokenizerv2.Token{
+		Type: i.tokenType,
+		Value: identifier,
+		Range: primitives.Range{Start: t.Position, Length: length}},
 	)
 }
 

@@ -1,30 +1,26 @@
 package whitespace
 
 import (
-	"minimal/minimal-core/built-in/tokenizer"
+	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
 
 type WhiteSpaceMatcher struct{}
 
-func NewWhiteSpaceMatcher() WhiteSpaceMatcher {
-	return WhiteSpaceMatcher{}
+func NewWhiteSpaceMatcher() *WhiteSpaceMatcher {
+	return &WhiteSpaceMatcher{}
 }
 
-func (*WhiteSpaceMatcher) Match(s *tokenizer.Source) (uint, tokenizer.TokenType, string) {
-	pos := 0
-	
-	for {
-		ch, ok := s.Get(pos)
-		
-		if !ok || !isWhiteSpace(ch) {
-			break
-		}
+func (*WhiteSpaceMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
+	pos := uint(0)
 
+	for ch, ok := t.Get(pos); ok && isWhiteSpace(ch); ch, ok = t.Get(pos) {
 		pos++
 	}
 
-	return uint(pos), tokenizer.IGNORE, ""
+	return pos
 }
+
+func (*WhiteSpaceMatcher) Consume(t *tokenizerv2.TokenizerJob, length uint) {}
 
 func isWhiteSpace(b byte) bool {
 	return b == ' ' || b == '\t'
