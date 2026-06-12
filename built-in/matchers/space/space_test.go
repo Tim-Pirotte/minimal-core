@@ -8,7 +8,7 @@ import (
 
 func TestLexSpace(t *testing.T) {
 	tokenizer := tokenizerv2.NewTokenizer()
-	identifierMatcher := NewWhiteSpaceMatcher()
+	identifierMatcher := NewSpaceMatcher()
 	tokenizer.AddMatcher(identifierMatcher)
 
 	expected := []tokenizerv2.Token{
