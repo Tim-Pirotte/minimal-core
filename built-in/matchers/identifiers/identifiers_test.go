@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func getTokenizer() (*lexer.Lexer, lexer.TokenType) {
+func getLexer() (*lexer.Lexer, lexer.TokenType) {
 	tokenizer := lexer.NewLexer()
 	identifierType := tokenizer.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "an identifier", DebugName: "Identifier"},
@@ -20,7 +20,7 @@ func getTokenizer() (*lexer.Lexer, lexer.TokenType) {
 }
 
 func TestLexIdentifier(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
@@ -30,7 +30,7 @@ func TestLexIdentifier(t *testing.T) {
 }
 
 func TestLexMultipleIdentifiers(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
@@ -42,7 +42,7 @@ func TestLexMultipleIdentifiers(t *testing.T) {
 }
 
 func TestLexUnicode(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: identifierType, Value: "👾", Range: primitives.Range{Start: 0, Length: 4}},
@@ -52,7 +52,7 @@ func TestLexUnicode(t *testing.T) {
 }
 
 func TestLexZeroWidthJoiner(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
@@ -62,7 +62,7 @@ func TestLexZeroWidthJoiner(t *testing.T) {
 }
 
 func TestLexStartingWithNumber(t *testing.T) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
@@ -73,7 +73,7 @@ func TestLexStartingWithNumber(t *testing.T) {
 }
 
 func FuzzLexIdentifier(f *testing.F) {
-	tokenizer, identifierType := getTokenizer()
+	tokenizer, identifierType := getLexer()
 
 	f.Add("identifier")
 
