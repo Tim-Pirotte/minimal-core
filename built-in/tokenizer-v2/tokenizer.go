@@ -171,6 +171,8 @@ func (t *TokenizerJob) fillTokenBuffer() {
         t.spillage = t.spillage[nFill:]
     }
 
+	// TODO separate bounds check from end function and
+	// check if we can put the end condition higher up
 	for t.write - t.read != uint(len(t.buffer)) && !t.endReached {
 		if t.stopper.End(t) {
 			t.endReached = true

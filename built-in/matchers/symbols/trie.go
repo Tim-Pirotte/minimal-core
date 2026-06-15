@@ -2,21 +2,21 @@ package symbols
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/tokenizer"
+	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
+
+const byteValueCount = 256
 
 type trieNode struct {
 	leaf bool
-	token tokenizer.TokenType
-	children [256]*trieNode
+	token tokenizerv2.TokenType
+	children [byteValueCount]*trieNode
 }
 
-func updateTrie(root *trieNode, text string, tokenType tokenizer.TokenType) error {
+func updateTrie(root *trieNode, text string, tokenType tokenizerv2.TokenType) error {
 	node := root
 
-	for i := 0; i < len(text); i++ {
-        char := text[i] 
-
+	for _, char := range []byte(text) {
         if node.children[char] == nil {
             node.children[char] = &trieNode{}
         }

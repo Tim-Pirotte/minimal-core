@@ -2,49 +2,60 @@ package symbols
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/tokenizer"
+	"minimal/minimal-core/built-in/primitives"
+	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
 
 type SymbolMatcher struct {
 	symbols *trieNode
+	cachedTokenType tokenizerv2.TokenType
 }
 
-func NewSymbolMatcher() SymbolMatcher {
-	return SymbolMatcher{&trieNode{children: [256]*trieNode{}}}
+func NewSymbolMatcher() *SymbolMatcher {
+	return &SymbolMatcher{
+		&trieNode{children: [256]*trieNode{}},
+		tokenizerv2.TokenType(0),
+	}
 }
 
-func (s *SymbolMatcher) AddSymbol(t *tokenizer.TokenizerConfig, symbol string) tokenizer.TokenType {
-	tokenType := t.NewTokenType()
+func (s *SymbolMatcher) AddSymbol(t *tokenizerv2.Tokenizer, symbol string, tokenType tokenizerv2.TokenType) {
 	err := updateTrie(s.symbols, symbol, tokenType)
 
 	if err != nil {
 		// TODO log error
 		fmt.Println(err.Error())
 	}
-	
-	return tokenType
 }
 
-func (s *SymbolMatcher) Match(so *tokenizer.Source) (uint, tokenizer.TokenType, string) {
-	var tt tokenizer.TokenType
-	l := 0	
-	node := s.symbols
+func (s *SymbolMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
+	pos := uint(0)
+	length := uint(0)
 
-	var pos int
-	for pos = 0; node != nil; pos++ {
-		i, ok := so.Get(pos)
+	char, ok := t.Get(pos)
+	node := s.symbols.children[char]
 
-		if !ok {
-			break
+	for ; node != nil; node = node.children[char] {
+		pos++
+
+		if node.leaf {
+			length = pos
+			s.cachedTokenType = tokenizerv2.TokenType(node.token)
 		}
 
-		node = node.children[i]
-
-		if node != nil && node.leaf {
-			tt = node.token
-			l = pos + 1
+		if char, ok = t.Get(pos); !ok {
+			return length
 		}
 	}
 
-	return uint(l), tt, ""
+	return length
+}
+
+func (s *SymbolMatcher) Consume(t *tokenizerv2.TokenizerJob, length uint) {
+	symbol, _ := t.GetRange(t.Position, length)
+
+	t.Emit(tokenizerv2.Token{
+		Type: s.cachedTokenType,
+		Value: symbol,
+		Range: primitives.Range{Start: t.Position, Length: length}},
+	)
 }
