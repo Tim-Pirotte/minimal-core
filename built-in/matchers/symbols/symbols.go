@@ -2,31 +2,31 @@ package symbols
 
 import (
 	"fmt"
+	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/primitives"
-	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
 
 const byteValueCount = 256
 
 type trieNode struct {
 	leaf bool
-	token tokenizerv2.TokenType
+	token lexer.TokenType
 	children [byteValueCount]*trieNode
 }
 
 type SymbolMatcher struct {
 	symbols *trieNode
-	cachedTokenType tokenizerv2.TokenType
+	cachedTokenType lexer.TokenType
 }
 
 func NewSymbolMatcher() *SymbolMatcher {
 	return &SymbolMatcher{
 		&trieNode{children: [256]*trieNode{}},
-		tokenizerv2.TokenType(0),
+		lexer.TokenType(0),
 	}
 }
 
-func (s *SymbolMatcher) AddSymbol(t *tokenizerv2.Tokenizer, symbol string, tokenType tokenizerv2.TokenType) {
+func (s *SymbolMatcher) AddSymbol(t *lexer.Lexer, symbol string, tokenType lexer.TokenType) {
 	node := s.symbols
 
 	for _, char := range []byte(symbol) {
@@ -46,7 +46,7 @@ func (s *SymbolMatcher) AddSymbol(t *tokenizerv2.Tokenizer, symbol string, token
 	node.token = tokenType
 }
 
-func (s *SymbolMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
+func (s *SymbolMatcher) Match(t *lexer.LexerJob) uint {
 	pos := uint(0)
 	length := uint(0)
 
@@ -58,7 +58,7 @@ func (s *SymbolMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
 
 		if node.leaf {
 			length = pos
-			s.cachedTokenType = tokenizerv2.TokenType(node.token)
+			s.cachedTokenType = lexer.TokenType(node.token)
 		}
 
 		if char, ok = t.Get(pos); !ok {
@@ -69,10 +69,10 @@ func (s *SymbolMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
 	return length
 }
 
-func (s *SymbolMatcher) Consume(t *tokenizerv2.TokenizerJob, length uint) {
+func (s *SymbolMatcher) Consume(t *lexer.LexerJob, length uint) {
 	symbol, _ := t.GetRange(t.Position, length)
 
-	t.Emit(tokenizerv2.Token{
+	t.Emit(lexer.Token{
 		Type: s.cachedTokenType,
 		Value: symbol,
 		Range: primitives.Range{Start: t.Position, Length: length}},

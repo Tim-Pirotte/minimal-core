@@ -1,4 +1,4 @@
-package tokenizerv2
+package lexer
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 )
 
 type TokenizerDebugger struct {
-	tokenizer *Tokenizer
+	tokenizer *Lexer
 	logger    logging.Logger
 	output    io.Writer
 }
 
 func NewTokenizerDebugger(
-	tokenizer *Tokenizer,
+	tokenizer *Lexer,
 	sourceGen *logging.SourceGenerator,
 	output io.Writer,
 ) *TokenizerDebugger {

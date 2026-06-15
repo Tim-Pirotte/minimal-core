@@ -1,19 +1,19 @@
 package identifiers
 
 import (
+	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/primitives"
-	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
 
 type IdentifierMatcher struct {
-	tokenType tokenizerv2.TokenType
+	tokenType lexer.TokenType
 }
 
-func NewIdentifierMatcher(tt tokenizerv2.TokenType) *IdentifierMatcher {
+func NewIdentifierMatcher(tt lexer.TokenType) *IdentifierMatcher {
 	return &IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
+func (i *IdentifierMatcher) Match(t *lexer.LexerJob) uint {
 	firstChar, ok := t.Get(0)
 
 	if !ok || !isAlphaOrUnicode(firstChar) {
@@ -29,10 +29,10 @@ func (i *IdentifierMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
 	return pos
 }
 
-func (i *IdentifierMatcher) Consume(t *tokenizerv2.TokenizerJob, length uint) {
+func (i *IdentifierMatcher) Consume(t *lexer.LexerJob, length uint) {
 	identifier, _ := t.GetRange(t.Position, length)
 
-	t.Emit(tokenizerv2.Token{
+	t.Emit(lexer.Token{
 		Type: i.tokenType,
 		Value: identifier,
 		Range: primitives.Range{Start: t.Position, Length: length}},

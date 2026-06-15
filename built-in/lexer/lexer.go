@@ -1,4 +1,4 @@
-package tokenizerv2
+package lexer
 
 import (
 	"fmt"
@@ -28,14 +28,14 @@ type TokenTypeMetadata struct {
 	DebugName   string
 }
 
-type Tokenizer struct {
+type Lexer struct {
 	matchers      []Matcher
 	lastTokenType TokenType
 	tokenTypesMetadata map[TokenType]TokenTypeMetadata
 }
 
-type TokenizerJob struct {
-	tokenizer   *Tokenizer
+type LexerJob struct {
+	tokenizer   *Lexer
 	Data        string
 	Position    uint
 	buffer      []Token
@@ -48,16 +48,16 @@ type TokenizerJob struct {
 }
 
 type Matcher interface {
-	Match(t *TokenizerJob) (length uint)
-	Consume(t *TokenizerJob, length uint)
+	Match(t *LexerJob) (length uint)
+	Consume(t *LexerJob, length uint)
 }
 
 type Stopper interface {
-	End(t *TokenizerJob) bool
+	End(t *LexerJob) bool
 }
 
-func NewTokenizer() *Tokenizer {
-	return &Tokenizer{
+func NewLexer() *Lexer {
+	return &Lexer{
 		[]Matcher{},
 		TokenType(0),
 		map[TokenType]TokenTypeMetadata{
@@ -67,27 +67,27 @@ func NewTokenizer() *Tokenizer {
 	}
 }
 
-func (t *Tokenizer) AddMatcher(matcher Matcher) {
+func (t *Lexer) AddMatcher(matcher Matcher) {
 	t.matchers = append(t.matchers, matcher)
 }
 
-func (t *Tokenizer) NewTokenType(metadata TokenTypeMetadata) TokenType {
+func (t *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
 	t.lastTokenType++
 	t.tokenTypesMetadata[t.lastTokenType] = metadata
 
 	return t.lastTokenType
 }
 
-func (t *Tokenizer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
+func (t *Lexer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
 	v, ok := t.tokenTypesMetadata[tokenType]
 
 	return v, ok
 }
 
-func (t *Tokenizer) Tokenize(source string, stopper Stopper, minSafePeek uint) *TokenizerJob {
+func (t *Lexer) Lex(source string, stopper Stopper, minSafePeek uint) *LexerJob {
 	capacity := minSafePeek
 
-	job := &TokenizerJob{
+	job := &LexerJob{
 		t,
 		source,
 		0,
@@ -105,7 +105,7 @@ func (t *Tokenizer) Tokenize(source string, stopper Stopper, minSafePeek uint) *
 	return job
 }
 
-func (t *TokenizerJob) Get(i uint) (byte, bool) {
+func (t *LexerJob) Get(i uint) (byte, bool) {
 	offset := t.Position + i
 
 	if offset >= uint(len(t.Data)) {
@@ -115,7 +115,7 @@ func (t *TokenizerJob) Get(i uint) (byte, bool) {
 	return t.Data[offset], true
 }
 
-func (t *TokenizerJob) GetRange(start, length uint) (string, bool) {
+func (t *LexerJob) GetRange(start, length uint) (string, bool) {
 	if start + length > uint(len(t.Data)) {
 		return "", false
 	}
@@ -123,7 +123,7 @@ func (t *TokenizerJob) GetRange(start, length uint) (string, bool) {
 	return t.Data[start:start + length], true
 }
 
-func (t *TokenizerJob) Emit(token Token) {
+func (t *LexerJob) Emit(token Token) {
 	if t.write - t.read == uint(len(t.buffer)) {
 		t.spillage = append(t.spillage, token)
 
@@ -134,7 +134,7 @@ func (t *TokenizerJob) Emit(token Token) {
 	t.write++
 }
 
-func (t *TokenizerJob) Peek(n uint) Token {
+func (t *LexerJob) Peek(n uint) Token {
 	if n >= t.minSafePeek {
 		panic("attempt to peek more tokens in advance than expected")
 	}
@@ -148,7 +148,7 @@ func (t *TokenizerJob) Peek(n uint) Token {
 	return t.buffer[read % uint(len(t.buffer))]
 }
 
-func (t *TokenizerJob) Advance() {
+func (t *LexerJob) Advance() {
 	t.read++
 
 	if t.read + t.minSafePeek >= t.write {
@@ -156,7 +156,7 @@ func (t *TokenizerJob) Advance() {
 	}
 }
 
-func (t *TokenizerJob) fillTokenBuffer() {
+func (t *LexerJob) fillTokenBuffer() {
 	if len(t.spillage) > 0 {
         nEmpty := uint(len(t.buffer)) - (t.write - t.read)
 		nSpillage := uint(len(t.spillage))
@@ -209,14 +209,14 @@ func (t *TokenizerJob) fillTokenBuffer() {
 
 type testStopper struct {}
 
-func (t *testStopper) End(s *TokenizerJob) bool {
+func (t *testStopper) End(s *LexerJob) bool {
 	return s.Position >= uint(len(s.Data))
 }
 
-func CheckTokens(t *testing.T, tokenizer *Tokenizer, expected []Token, text string) {
+func CheckTokens(t *testing.T, tokenizer *Lexer, expected []Token, text string) {
 	actual := make([]Token, 0, len(expected))
 
-	tokenizerJob := tokenizer.Tokenize(text, &testStopper{}, 1)
+	tokenizerJob := tokenizer.Lex(text, &testStopper{}, 1)
 
 	for current := tokenizerJob.Peek(0); current.Type != END; current = tokenizerJob.Peek(0) {
 		actual = append(actual, current)

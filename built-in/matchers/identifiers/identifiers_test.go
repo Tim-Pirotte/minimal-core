@@ -1,16 +1,16 @@
 package identifiers
 
 import (
+	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/primitives"
-	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 	"strings"
 	"testing"
 )
 
-func getTokenizer() (*tokenizerv2.Tokenizer, tokenizerv2.TokenType) {
-	tokenizer := tokenizerv2.NewTokenizer()
+func getTokenizer() (*lexer.Lexer, lexer.TokenType) {
+	tokenizer := lexer.NewLexer()
 	identifierType := tokenizer.NewTokenType(
-		tokenizerv2.TokenTypeMetadata{DisplayName: "an identifier", DebugName: "Identifier"},
+		lexer.TokenTypeMetadata{DisplayName: "an identifier", DebugName: "Identifier"},
 	)
 
 	identifierMatcher := NewIdentifierMatcher(identifierType)
@@ -22,54 +22,54 @@ func getTokenizer() (*tokenizerv2.Tokenizer, tokenizerv2.TokenType) {
 func TestLexIdentifier(t *testing.T) {
 	tokenizer, identifierType := getTokenizer()
 
-	expected := []tokenizerv2.Token{
+	expected := []lexer.Token{
 		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
 	}
 
-	tokenizerv2.CheckTokens(t, tokenizer, expected, "identifier1")
+	lexer.CheckTokens(t, tokenizer, expected, "identifier1")
 }
 
 func TestLexMultipleIdentifiers(t *testing.T) {
 	tokenizer, identifierType := getTokenizer()
 
-	expected := []tokenizerv2.Token{
+	expected := []lexer.Token{
 		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
-		{Type: tokenizerv2.UNKNOWN, Value: " ", Range: primitives.Range{Start: 11, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 11, Length: 1}},
 		{Type: identifierType, Value: "identifier2", Range: primitives.Range{Start: 12, Length: 11}},
 	}
 
-	tokenizerv2.CheckTokens(t, tokenizer, expected, "identifier1 identifier2")
+	lexer.CheckTokens(t, tokenizer, expected, "identifier1 identifier2")
 }
 
 func TestLexUnicode(t *testing.T) {
 	tokenizer, identifierType := getTokenizer()
 
-	expected := []tokenizerv2.Token{
+	expected := []lexer.Token{
 		{Type: identifierType, Value: "👾", Range: primitives.Range{Start: 0, Length: 4}},
 	}
 
-	tokenizerv2.CheckTokens(t, tokenizer, expected, "👾")
+	lexer.CheckTokens(t, tokenizer, expected, "👾")
 }
 
 func TestLexZeroWidthJoiner(t *testing.T) {
 	tokenizer, identifierType := getTokenizer()
 
-	expected := []tokenizerv2.Token{
+	expected := []lexer.Token{
 		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
 	}
 
-	tokenizerv2.CheckTokens(t, tokenizer, expected, "🐻‍❄️")
+	lexer.CheckTokens(t, tokenizer, expected, "🐻‍❄️")
 }
 
 func TestLexStartingWithNumber(t *testing.T) {
 	tokenizer, identifierType := getTokenizer()
 
-	expected := []tokenizerv2.Token{
-		{Type: tokenizerv2.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
 		{Type: identifierType, Value: "identifier", Range: primitives.Range{Start: 1, Length: 10}},
 	}
 
-	tokenizerv2.CheckTokens(t, tokenizer, expected, "1identifier")
+	lexer.CheckTokens(t, tokenizer, expected, "1identifier")
 }
 
 func FuzzLexIdentifier(f *testing.F) {
@@ -96,7 +96,7 @@ func FuzzLexIdentifier(f *testing.F) {
 			return
 		}
 
-		expected := []tokenizerv2.Token{
+		expected := []lexer.Token{
 			{
 				Type: identifierType,
 				Value: input,
@@ -104,6 +104,6 @@ func FuzzLexIdentifier(f *testing.F) {
 			},
 		}
 
-		tokenizerv2.CheckTokens(t, tokenizer, expected, input)
+		lexer.CheckTokens(t, tokenizer, expected, input)
 	})
 }
