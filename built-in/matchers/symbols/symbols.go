@@ -6,6 +6,14 @@ import (
 	tokenizerv2 "minimal/minimal-core/built-in/tokenizer-v2"
 )
 
+const byteValueCount = 256
+
+type trieNode struct {
+	leaf bool
+	token tokenizerv2.TokenType
+	children [byteValueCount]*trieNode
+}
+
 type SymbolMatcher struct {
 	symbols *trieNode
 	cachedTokenType tokenizerv2.TokenType
@@ -19,12 +27,23 @@ func NewSymbolMatcher() *SymbolMatcher {
 }
 
 func (s *SymbolMatcher) AddSymbol(t *tokenizerv2.Tokenizer, symbol string, tokenType tokenizerv2.TokenType) {
-	err := updateTrie(s.symbols, symbol, tokenType)
+	node := s.symbols
 
-	if err != nil {
-		// TODO log error
-		fmt.Println(err.Error())
+	for _, char := range []byte(symbol) {
+        if node.children[char] == nil {
+            node.children[char] = &trieNode{}
+        }
+
+        node = node.children[char]
+    }
+
+	if node.leaf {
+		// TODO log error message or panic
+		fmt.Printf("'%v' has already been declared", symbol)
 	}
+
+	node.leaf = true
+	node.token = tokenType
 }
 
 func (s *SymbolMatcher) Match(t *tokenizerv2.TokenizerJob) uint {
