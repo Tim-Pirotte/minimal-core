@@ -19,7 +19,7 @@ func getLexer() (*lexer.Lexer, lexer.TokenType) {
 	return tokenizer, identifierType
 }
 
-func TestLexIdentifier(t *testing.T) {
+func TestIdentifier(t *testing.T) {
 	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
@@ -29,7 +29,7 @@ func TestLexIdentifier(t *testing.T) {
 	lexer.CheckTokens(t, tokenizer, expected, "identifier1")
 }
 
-func TestLexMultipleIdentifiers(t *testing.T) {
+func TestMultipleIdentifiers(t *testing.T) {
 	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
@@ -41,7 +41,7 @@ func TestLexMultipleIdentifiers(t *testing.T) {
 	lexer.CheckTokens(t, tokenizer, expected, "identifier1 identifier2")
 }
 
-func TestLexUnicode(t *testing.T) {
+func TestUnicode(t *testing.T) {
 	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
@@ -51,7 +51,7 @@ func TestLexUnicode(t *testing.T) {
 	lexer.CheckTokens(t, tokenizer, expected, "👾")
 }
 
-func TestLexZeroWidthJoiner(t *testing.T) {
+func TestZeroWidthJoiner(t *testing.T) {
 	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
@@ -61,7 +61,7 @@ func TestLexZeroWidthJoiner(t *testing.T) {
 	lexer.CheckTokens(t, tokenizer, expected, "🐻‍❄️")
 }
 
-func TestLexStartingWithNumber(t *testing.T) {
+func TestStartingWithNumber(t *testing.T) {
 	tokenizer, identifierType := getLexer()
 
 	expected := []lexer.Token{
@@ -70,6 +70,23 @@ func TestLexStartingWithNumber(t *testing.T) {
 	}
 
 	lexer.CheckTokens(t, tokenizer, expected, "1identifier")
+}
+
+func TestBounds(t *testing.T) {
+	tokenizer, identifierType := getLexer()
+
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "`", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: identifierType, Value: "az", Range: primitives.Range{Start: 1, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "{", Range: primitives.Range{Start: 3, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: "@", Range: primitives.Range{Start: 4, Length: 1}},
+		{Type: identifierType, Value: "AZ", Range: primitives.Range{Start: 5, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "[", Range: primitives.Range{Start: 7, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: "\u007F", Range: primitives.Range{Start: 8, Length: 1}},
+		{Type: identifierType, Value: "\u0080\U0010FFFF", Range: primitives.Range{Start: 9, Length: 6}},
+	}
+
+	lexer.CheckTokens(t, tokenizer, expected, "`az{@AZ[\u007F\u0080\U0010FFFF")
 }
 
 func FuzzLexIdentifier(f *testing.F) {

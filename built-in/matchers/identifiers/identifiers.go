@@ -22,7 +22,7 @@ func (i *IdentifierMatcher) Match(t *lexer.LexerJob) uint {
 
 	pos := uint(1)
 
-	for char, ok := t.Get(pos); ok && isValidIdentifierChar(char); char, ok = t.Get(pos) {
+	for c, ok := t.Get(pos); ok && (isAlphaOrUnicode(c) || isDigit(c)); c, ok = t.Get(pos) {
 		pos++
 	}
 
@@ -37,10 +37,6 @@ func (i *IdentifierMatcher) Consume(t *lexer.LexerJob, length uint) {
 		Value: identifier,
 		Range: primitives.Range{Start: t.Position, Length: length}},
 	)
-}
-
-func isValidIdentifierChar(char byte) bool {
-	return isAlphaOrUnicode(char) || isDigit(char)
 }
 
 const asciiMax = 127
