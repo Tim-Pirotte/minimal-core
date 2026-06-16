@@ -16,6 +16,8 @@ func NewEOLMatcher(tokenType lexer.TokenType) *EOLMatcher {
 func (*EOLMatcher) Match(t *lexer.LexerJob) uint {
 	pos := uint(0)
 
+	// I have decided that for now we only allow LF and CR as end of line sequences
+	// Since I don't know a good reason to include NEL, LS and PS
 	for c, ok := t.Get(pos); ok && (c == '\n' || c == '\r'); c, ok = t.Get(pos) {
 		pos++
 	}
