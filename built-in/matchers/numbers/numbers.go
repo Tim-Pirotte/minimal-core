@@ -16,7 +16,7 @@ func NewNumberMatcher(tt lexer.TokenType) *NumberMatcher {
 func (n *NumberMatcher) Match(t *lexer.LexerJob) uint {
 	pos := uint(0)
 
-	for char, ok := t.Get(pos); ok && '0' <= char && char <= '9'; char, ok = t.Get(pos) {
+	for c, ok := t.Get(pos); ok && '0' <= c && c <= '9'; c, ok = t.Get(pos) {
 		pos++
 	}
 
