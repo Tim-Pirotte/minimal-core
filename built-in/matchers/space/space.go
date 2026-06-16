@@ -13,15 +13,11 @@ func NewSpaceMatcher() *SpaceMatcher {
 func (*SpaceMatcher) Match(t *lexer.LexerJob) uint {
 	pos := uint(0)
 
-	for ch, ok := t.Get(pos); ok && isWhiteSpace(ch); ch, ok = t.Get(pos) {
+	for c, ok := t.Get(pos); ok && c == ' '; c, ok = t.Get(pos) {
 		pos++
 	}
 
 	return pos
 }
 
-func (*SpaceMatcher) Consume(t *lexer.LexerJob, length uint) {}
-
-func isWhiteSpace(b byte) bool {
-	return b == ' ' || b == '\t'
-}
+func (*SpaceMatcher) Consume(_ *lexer.LexerJob, _ uint) {}
