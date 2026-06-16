@@ -82,11 +82,11 @@ func TestBounds(t *testing.T) {
 		{Type: lexer.UNKNOWN, Value: "@", Range: primitives.Range{Start: 4, Length: 1}},
 		{Type: identifierType, Value: "AZ", Range: primitives.Range{Start: 5, Length: 2}},
 		{Type: lexer.UNKNOWN, Value: "[", Range: primitives.Range{Start: 7, Length: 1}},
-		{Type: lexer.UNKNOWN, Value: "\u007F", Range: primitives.Range{Start: 8, Length: 1}},
-		{Type: identifierType, Value: "\u0080\U0010FFFF", Range: primitives.Range{Start: 9, Length: 6}},
+		{Type: lexer.UNKNOWN, Value: "\u007f", Range: primitives.Range{Start: 8, Length: 1}},
+		{Type: identifierType, Value: "\u0080\U0010ffff", Range: primitives.Range{Start: 9, Length: 6}},
 	}
 
-	lexer.CheckTokens(t, tokenizer, expected, "`az{@AZ[\u007F\u0080\U0010FFFF")
+	lexer.CheckTokens(t, tokenizer, expected, "`az{@AZ[\u007f\u0080\U0010ffff")
 }
 
 func FuzzLexIdentifier(f *testing.F) {

@@ -71,18 +71,10 @@ func (t *TokenizerDebugger) StringifyToken(token Token) string {
 		name = strconv.Itoa(int(token.Type))
 	}
 
-	value := token.Value
-
-	if value != "" {
-		value = "\"" + value + "\""
-	} else {
-		value = "  " // To preserve alignment
-	}
-
 	return fmt.Sprintf(
 		"%-20s %-20s %6d..%-6d (%d)",
 		name,
-		value,
+		strconv.Quote(token.Value),
 		token.Range.Start,
 		token.Range.Start+token.Range.Length,
 		token.Range.Length,
