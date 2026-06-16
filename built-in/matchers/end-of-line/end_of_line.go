@@ -19,7 +19,7 @@ func (*EOLMatcher) Match(t *lexer.LexerJob) uint {
 	// I have decided that for now we only allow LF and CR as end of line sequences
 	// Since I don't know a good reason to include NEL, LS and PS
 	// Keep these EOL sequences with the comment matcher
-	for c, ok := t.Get(pos); ok && (c == '\n' || c == '\r'); c, ok = t.Get(pos) {
+	for c, ok := t.Get(pos); ok && IsEOL(c); c, ok = t.Get(pos) {
 		pos++
 	}
 
@@ -34,4 +34,10 @@ func (e *EOLMatcher) Consume(t *lexer.LexerJob, length uint) {
 		Value: endOfLine,
 		Range: primitives.Range{Start: t.Position, Length: length}},
 	)
+}
+
+func IsEOL(c byte) bool {
+	// Do not inline
+	// This is done to keep it in sync with the comment matcher
+	return c == '\n' || c == '\r'
 }

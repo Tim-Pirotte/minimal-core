@@ -2,6 +2,7 @@ package comments
 
 import (
 	"minimal/minimal-core/built-in/lexer"
+	eol "minimal/minimal-core/built-in/matchers/end-of-line"
 	"minimal/minimal-core/built-in/primitives"
 )
 
@@ -24,8 +25,7 @@ func (n *CommentMatcher) Match(t *lexer.LexerJob) uint {
 
 	pos := uint(1)
 
-	// Keep these EOL sequences with the EOL matcher
-	for c, ok := t.Get(pos); ok && c != '\n' && c != '\r'; c, ok = t.Get(pos) {
+	for c, ok := t.Get(pos); ok && !eol.IsEOL(c); c, ok = t.Get(pos) {
 		pos++
 	}
 
