@@ -31,4 +31,3 @@ The compiler for Minimal
 
 *The docs of the language itself can be found at: TODO*
 
-Test change on mobile
