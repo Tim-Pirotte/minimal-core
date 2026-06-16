@@ -7,23 +7,23 @@ import (
 )
 
 func TestLexSymbols(t *testing.T) {
-	tokenizer := lexer.NewLexer()
+	l := lexer.NewLexer()
 	symbolMatcher := NewSymbolMatcher()
-	tokenizer.AddMatcher(symbolMatcher)
+	l.AddMatcher(symbolMatcher)
 
-	plus := tokenizer.NewTokenType(lexer.TokenTypeMetadata{
+	plus := l.NewTokenType(lexer.TokenTypeMetadata{
 		DisplayName: "'+'",
 		DebugName: "Plus",
 	})
 
-	symbolMatcher.AddSymbol(tokenizer, "+", plus)
+	symbolMatcher.AddSymbol(l, "+", plus)
 
-	minus := tokenizer.NewTokenType(lexer.TokenTypeMetadata{
+	minus := l.NewTokenType(lexer.TokenTypeMetadata{
 		DisplayName: "'-'",
 		DebugName: "Minus",
 	})
 
-	symbolMatcher.AddSymbol(tokenizer, "-", minus)
+	symbolMatcher.AddSymbol(l, "-", minus)
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
@@ -33,27 +33,27 @@ func TestLexSymbols(t *testing.T) {
 		{Type: lexer.UNKNOWN, Value: "3", Range: primitives.Range{Start: 4, Length: 1}},
 	}
 
-	lexer.CheckTokens(t, tokenizer, expected, "1+2-3")
+	lexer.CheckTokens(t, l, expected, "1+2-3")
 }
 
 func TestLexMultiCharSymbols(t *testing.T) {
-	tokenizer := lexer.NewLexer()
+	l := lexer.NewLexer()
 	symbolMatcher := NewSymbolMatcher()
-	tokenizer.AddMatcher(symbolMatcher)
+	l.AddMatcher(symbolMatcher)
 
-	minus := tokenizer.NewTokenType(lexer.TokenTypeMetadata{
+	minus := l.NewTokenType(lexer.TokenTypeMetadata{
 		DisplayName: "'-'",
 		DebugName: "Minus",
 	})
 
-	symbolMatcher.AddSymbol(tokenizer, "-", minus)
+	symbolMatcher.AddSymbol(l, "-", minus)
 
-	minusMinus := tokenizer.NewTokenType(lexer.TokenTypeMetadata{
+	minusMinus := l.NewTokenType(lexer.TokenTypeMetadata{
 		DisplayName: "'--'",
 		DebugName: "MinusMinus",
 	})
 
-	symbolMatcher.AddSymbol(tokenizer, "--", minusMinus)
+	symbolMatcher.AddSymbol(l, "--", minusMinus)
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
@@ -63,27 +63,27 @@ func TestLexMultiCharSymbols(t *testing.T) {
 		{Type: lexer.UNKNOWN, Value: "3", Range: primitives.Range{Start: 5, Length: 1}},
 	}
 
-	lexer.CheckTokens(t, tokenizer, expected, "1-2--3")
+	lexer.CheckTokens(t, l, expected, "1-2--3")
 }
 
 func TestLexUnicodeSymbols(t *testing.T) {
-	tokenizer := lexer.NewLexer()
+	l := lexer.NewLexer()
 	symbolMatcher := NewSymbolMatcher()
-	tokenizer.AddMatcher(symbolMatcher)
+	l.AddMatcher(symbolMatcher)
 
-	club := tokenizer.NewTokenType(lexer.TokenTypeMetadata{
+	club := l.NewTokenType(lexer.TokenTypeMetadata{
 		DisplayName: "'☘'",
 		DebugName: "Club",
 	})
 
-	symbolMatcher.AddSymbol(tokenizer, "☘", club)
+	symbolMatcher.AddSymbol(l, "☘", club)
 
-	heart := tokenizer.NewTokenType(lexer.TokenTypeMetadata{
+	heart := l.NewTokenType(lexer.TokenTypeMetadata{
 		DisplayName: "'❤'",
 		DebugName: "Heart",
 	})
 
-	symbolMatcher.AddSymbol(tokenizer, "❤", heart)
+	symbolMatcher.AddSymbol(l, "❤", heart)
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
@@ -93,5 +93,5 @@ func TestLexUnicodeSymbols(t *testing.T) {
 		{Type: lexer.UNKNOWN, Value: "3", Range: primitives.Range{Start: 8, Length: 1}},
 	}
 
-	lexer.CheckTokens(t, tokenizer, expected, "1☘2❤3")
+	lexer.CheckTokens(t, l, expected, "1☘2❤3")
 }

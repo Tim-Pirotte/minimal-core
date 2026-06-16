@@ -6,26 +6,26 @@ import (
 )
 
 func TestLexEmpty(t *testing.T) {
-	tokenizer := NewLexer()
-	CheckTokens(t, tokenizer, []Token{}, "")
+	l := NewLexer()
+	CheckTokens(t, l, []Token{}, "")
 }
 
 func TestLexUnknown(t *testing.T) {
-	tokenizer := NewLexer()
+	l := NewLexer()
 	expected := []Token{
 		{Type: UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
 	}
 
-	CheckTokens(t, tokenizer, expected, "a")
+	CheckTokens(t, l, expected, "a")
 }
 
 type spillageTestMatcher struct {
 	tokenType TokenType
 }
 
-func newSpillageTestMatcher(tokenizer *Lexer) *spillageTestMatcher {
+func newSpillageTestMatcher(lexer *Lexer) *spillageTestMatcher {
 	return &spillageTestMatcher{
-		tokenizer.NewTokenType(TokenTypeMetadata{"spillage", "Spillage"}),
+		lexer.NewTokenType(TokenTypeMetadata{"spillage", "Spillage"}),
 	}
 }
 
@@ -40,9 +40,9 @@ func (s *spillageTestMatcher) Consume(t *LexerJob, length uint) {
 }
 
 func TestSpillage(t *testing.T) {
-	tokenizer := NewLexer()
-	s := newSpillageTestMatcher(tokenizer)
-	tokenizer.AddMatcher(s)
+	l := NewLexer()
+	s := newSpillageTestMatcher(l)
+	l.AddMatcher(s)
 
 	expected := []Token{
 		{s.tokenType, "", primitives.Range{}},
@@ -52,14 +52,14 @@ func TestSpillage(t *testing.T) {
 		{s.tokenType, "", primitives.Range{}},
 	}
 
-	CheckTokens(t, tokenizer, expected, "a")
+	CheckTokens(t, l, expected, "a")
 }
 
 func Benchmark(b *testing.B) {
 	source := string(make([]byte, 1_000_000))
-	tokenizer := NewLexer()
+	l := NewLexer()
 
 	for b.Loop() {
-		tokenizer.Lex(source, &testStopper{}, 1)
+		l.Lex(source, &testStopper{}, 1)
 	}
 }

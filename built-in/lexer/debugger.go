@@ -8,23 +8,23 @@ import (
 	"strconv"
 )
 
-type TokenizerDebugger struct {
-	tokenizer *Lexer
+type LexerDebugger struct {
+	lexer *Lexer
 	logger    logging.Logger
 	output    io.Writer
 }
 
-func NewTokenizerDebugger(
-	tokenizer *Lexer,
+func NewLexerDebugger(
+	lexer *Lexer,
 	sourceGen *logging.SourceGenerator,
 	output io.Writer,
-) *TokenizerDebugger {
+) *LexerDebugger {
 	logger, _ := sourceGen.GetLogger("tokenListDisplay")
 
-	return &TokenizerDebugger{tokenizer, logger, output}
+	return &LexerDebugger{lexer, logger, output}
 }
 
-func (t *TokenizerDebugger) DisplayTokens(tokens []Token) {
+func (t *LexerDebugger) DisplayTokens(tokens []Token) {
 	for _, token := range tokens {
 		if _, err := io.WriteString(t.output, t.StringifyToken(token)+"\n"); err != nil {
 			t.logger.Error().Err(err).Msg("failed writing to output")
@@ -40,7 +40,7 @@ func compareTokens(a, b Token) bool {
 
 // Prints a diff of tokens to a writer. Tokens are considered the same if there types and values are equal.
 // The range is deliberately ignored since a small change can change all the following ranges.
-func (t *TokenizerDebugger) DisplayTokensDiff(before, after []Token) {
+func (t *LexerDebugger) DisplayTokensDiff(before, after []Token) {
 	tokenDiff := diff.GetDiff(before, after, compareTokens)
 
 	for _, diffPart := range tokenDiff {
@@ -63,8 +63,8 @@ func (t *TokenizerDebugger) DisplayTokensDiff(before, after []Token) {
 	}
 }
 
-func (t *TokenizerDebugger) StringifyToken(token Token) string {
-	tokenTypeMetadata, ok := t.tokenizer.GetTokenTypeMetadata(token.Type)
+func (t *LexerDebugger) StringifyToken(token Token) string {
+	tokenTypeMetadata, ok := t.lexer.GetTokenTypeMetadata(token.Type)
 	name := tokenTypeMetadata.DebugName
 
 	if !ok {

@@ -20,7 +20,7 @@ The compiler for Minimal
     - **user-interfaces:** UI implementations
       - **cli:** UI via CLI
       - **tui:** UI via TUI *(Not meant to be used!)*
-  - **tokenizer:** Layer to convert text into a series of tokens
+  - **lexer:** Layer to convert text into a series of tokens
     - **matchers:** Extensions that match on textual input
       - **identifiers:** Match text that doesn't start with a digit
       - **indentation:** Keep track of indents

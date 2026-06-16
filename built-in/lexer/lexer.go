@@ -35,7 +35,7 @@ type Lexer struct {
 }
 
 type LexerJob struct {
-	tokenizer   *Lexer
+	lexer   *Lexer
 	Data        string
 	Position    uint
 	buffer      []Token
@@ -183,7 +183,7 @@ func (t *LexerJob) fillTokenBuffer() {
 		largestLength := uint(0)
 		var matcherWithLargestLength Matcher = nil
 
-		for _, matcher := range t.tokenizer.matchers {
+		for _, matcher := range t.lexer.matchers {
 			length := matcher.Match(t)
 
 			if length > largestLength {
@@ -213,21 +213,21 @@ func (t *testStopper) End(s *LexerJob) bool {
 	return s.Position >= uint(len(s.Data))
 }
 
-func CheckTokens(t *testing.T, tokenizer *Lexer, expected []Token, text string) {
+func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 	actual := make([]Token, 0, len(expected))
 
-	tokenizerJob := tokenizer.Lex(text, &testStopper{}, 1)
+	lexerJob := lexer.Lex(text, &testStopper{}, 1)
 
-	for current := tokenizerJob.Peek(0); current.Type != END; current = tokenizerJob.Peek(0) {
+	for current := lexerJob.Peek(0); current.Type != END; current = lexerJob.Peek(0) {
 		actual = append(actual, current)
-		tokenizerJob.Advance()
+		lexerJob.Advance()
 	}
 
 	sourceGen := logging.GetTestLogSource(io.Discard)
-	tokenizerDebugger := NewTokenizerDebugger(tokenizer, sourceGen, os.Stdout)
+	lexerDebugger := NewLexerDebugger(lexer, sourceGen, os.Stdout)
 
 	if len(expected) != len(actual) {
-		tokenizerDebugger.DisplayTokensDiff(actual, expected)
+		lexerDebugger.DisplayTokensDiff(actual, expected)
 		fmt.Println("")
 		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
 	}
@@ -237,8 +237,8 @@ func CheckTokens(t *testing.T, tokenizer *Lexer, expected []Token, text string) 
 	for i := range len(expected) {
 		if actual[i].Type != expected[i].Type {
 			t.Error(
-				"\nExpected\n", tokenizerDebugger.StringifyToken(expected[i]),
-				"\nbut got\n", tokenizerDebugger.StringifyToken(actual[i]), "(incorrect type)",
+				"\nExpected\n", lexerDebugger.StringifyToken(expected[i]),
+				"\nbut got\n", lexerDebugger.StringifyToken(actual[i]), "(incorrect type)",
 			)
 
 			ok = false
@@ -246,8 +246,8 @@ func CheckTokens(t *testing.T, tokenizer *Lexer, expected []Token, text string) 
 			break
 		} else if actual[i].Value != expected[i].Value {
 			t.Error(
-				"\nExpected\n", tokenizerDebugger.StringifyToken(expected[i]),
-				"\nbut got\n", tokenizerDebugger.StringifyToken(actual[i]), "(incorrect value)",
+				"\nExpected\n", lexerDebugger.StringifyToken(expected[i]),
+				"\nbut got\n", lexerDebugger.StringifyToken(actual[i]), "(incorrect value)",
 			)
 
 			ok = false
@@ -255,8 +255,8 @@ func CheckTokens(t *testing.T, tokenizer *Lexer, expected []Token, text string) 
 			break
 		} else if actual[i].Range != expected[i].Range {
 			t.Error(
-				"\nExpected\n", tokenizerDebugger.StringifyToken(expected[i]),
-				"\nbut got\n", tokenizerDebugger.StringifyToken(actual[i]), "(incorrect range)",
+				"\nExpected\n", lexerDebugger.StringifyToken(expected[i]),
+				"\nbut got\n", lexerDebugger.StringifyToken(actual[i]), "(incorrect range)",
 			)
 
 			ok = false
@@ -266,7 +266,7 @@ func CheckTokens(t *testing.T, tokenizer *Lexer, expected []Token, text string) 
 	}
 
 	if !ok {
-		tokenizerDebugger.DisplayTokensDiff(actual, expected)
+		lexerDebugger.DisplayTokensDiff(actual, expected)
 		fmt.Println("")
 	}
 }

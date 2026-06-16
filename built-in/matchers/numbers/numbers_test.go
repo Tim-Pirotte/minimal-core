@@ -7,29 +7,29 @@ import (
 )
 
 func getLexer() (*lexer.Lexer, lexer.TokenType) {
-	tokenizer := lexer.NewLexer()
-	numberType := tokenizer.NewTokenType(
+	l := lexer.NewLexer()
+	numberType := l.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "a number", DebugName: "Number"},
 	)
 
 	identifierMatcher := NewNumberMatcher(numberType)
-	tokenizer.AddMatcher(identifierMatcher)
+	l.AddMatcher(identifierMatcher)
 
-	return tokenizer, numberType
+	return l, numberType
 }
 
 func TestNumber(t *testing.T) {
-	tokenizer, numberType := getLexer()
+	l, numberType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: numberType, Value: "0123456789", Range: primitives.Range{Start: 0, Length: 10}},
 	}
 
-	lexer.CheckTokens(t, tokenizer, expected, "0123456789")
+	lexer.CheckTokens(t, l, expected, "0123456789")
 }
 
 func TestMixed(t *testing.T) {
-	tokenizer, numberType := getLexer()
+	l, numberType := getLexer()
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "/", Range: primitives.Range{Start: 0, Length: 1}},
@@ -41,5 +41,5 @@ func TestMixed(t *testing.T) {
 	}
 
 	// / and : are next to 0 and 9 respectively in the ASCII table
-	lexer.CheckTokens(t, tokenizer, expected, "/0:12345 6789")
+	lexer.CheckTokens(t, l, expected, "/0:12345 6789")
 }

@@ -7,13 +7,13 @@ import (
 )
 
 func TestLexSpace(t *testing.T) {
-	tokenizer := lexer.NewLexer()
+	l := lexer.NewLexer()
 	identifierMatcher := NewSpaceMatcher()
-	tokenizer.AddMatcher(identifierMatcher)
+	l.AddMatcher(identifierMatcher)
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 12, Length: 1}},
 	}
 
-	lexer.CheckTokens(t, tokenizer, expected, " \t \t        a\t            ")
+	lexer.CheckTokens(t, l, expected, " \t \t        a\t            ")
 }
