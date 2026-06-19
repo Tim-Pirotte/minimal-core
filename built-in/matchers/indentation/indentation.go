@@ -39,43 +39,22 @@ func NewIndentationMatcher(
 
 // TODO handle not ok cases
 func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
-    c, ok := t.Get(0)
+    pos := uint(0)
+    c, ok := t.Get(pos)
 
-    // TODO merge the duplicate code
     if c == i.openBlockSymbol {
-        pos := uint(1)
-        c, ok := t.Get(pos)
+        pos++
+        c, ok = t.Get(pos)
 
         for ; ok && c == ' '; c, ok = t.Get(pos) {
             pos++
         }
 
-        posBefore := pos
-
-        for ; ok && IsEOL(c); c, ok = t.Get(pos) {
-		    pos++
-	    }
-
-        if pos == posBefore {
+        if ok && !IsEOL(c) {
             return 0
         }
-
-        posBefore = pos
-
-        for ; ok && (c == ' ' || IsEOL(c)); c, ok = t.Get(pos) {
-            pos++
-
-            if IsEOL(c) {
-                posBefore = pos
-            }
-        }
-
-        i.currentSpaceCount = pos - posBefore
-
-        return pos
     }
 
-    pos := uint(0)
     posBefore := pos
 
     for ; ok && (c == ' ' || IsEOL(c)); c, ok = t.Get(pos) {
