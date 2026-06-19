@@ -8,14 +8,15 @@ import (
 )
 
 type IndentationMatcher struct {
-    openBlockSymbol   byte
-    whiteSpace        byte
-    openBlock         lexer.TokenType
-    closeBlock        lexer.TokenType
-    endOfLine         lexer.TokenType
-    indentation       uint
-    indentationCount  uint
-    currentSpaceCount uint
+    openBlockSymbol         byte
+    whiteSpace              byte
+    openBlock               lexer.TokenType
+    closeBlock              lexer.TokenType
+    endOfLine               lexer.TokenType
+    spacesPerIndentation    uint
+    currentIndentation      uint
+    currentSpaceCount       uint
+    correctlyIndentedBefore bool
 }
 
 // TODO option to force a certain whitespace count?
@@ -32,6 +33,7 @@ func NewIndentationMatcher(
         0,
         0,
         0,
+        false,
     }
 }
 
@@ -94,7 +96,8 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
     isOpenBlock := false
 
     if c, _ := t.Get(0); c == i.openBlockSymbol {
-        i.indentationCount++
+        i.currentIndentation++
+        i.correctlyIndentedBefore = false
 
         t.Emit(lexer.Token{
             Type:  i.openBlock,
@@ -108,25 +111,33 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
     level := uint(0)
 
     if i.currentSpaceCount != 0 {
-        if i.indentation == 0 {
-            i.indentation = i.currentSpaceCount
+        if i.spacesPerIndentation == 0 {
+            i.spacesPerIndentation = i.currentSpaceCount
         }
 
-        if i.currentSpaceCount % i.indentation != 0 {
+        if i.correctlyIndentedBefore &&
+           i.currentSpaceCount > i.currentIndentation * i.spacesPerIndentation {
+            i.currentSpaceCount = i.currentIndentation * i.spacesPerIndentation
+        }
+
+        if i.currentSpaceCount % i.spacesPerIndentation != 0 {
             // TODO Error inconsistent indentation
             panic("Inconsistent indentation")
         }
 
-        level = i.currentSpaceCount / i.indentation
+        level = i.currentSpaceCount / i.spacesPerIndentation
 
-        if level > i.indentationCount {
+        if level > i.currentIndentation {
             // TODO Error indented without a new block
             // This is problematic when things like function calls are indented for clarity
+            // Maybe allow extra indentation when at least one line before has the correct indent
             panic("Indent without a new block")
         }
     }
 
-    if !isOpenBlock && i.indentationCount - level == 0 {
+    i.correctlyIndentedBefore = true
+
+    if !isOpenBlock && i.currentIndentation - level == 0 {
         t.Emit(lexer.Token{
             Type: i.endOfLine,
             Value: value,
@@ -136,7 +147,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         return
     }
 
-    for range i.indentationCount - level {
+    for range i.currentIndentation - level {
         t.Emit(lexer.Token{
             Type:  i.closeBlock,
             Value: value,
@@ -144,7 +155,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         })
     }
 
-    i.indentationCount = level
+    i.currentIndentation = level
 }
 
 func IsEOL(c byte) bool {
