@@ -38,7 +38,14 @@ c:
 
    2
 
-d`
+d:
+e
+
+1:
+   2:
+      3
+
+1`
 
 	l, openBlock, closeBlock, eolType := getLexer()
 
@@ -48,14 +55,26 @@ d`
 		{Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 2, Length: 1}},
 		{Type: eolType, Value: "\n\n", Range: primitives.Range{Start: 3, Length: 2}},
 		{Type: lexer.UNKNOWN, Value: "c", Range: primitives.Range{Start: 5, Length: 1}},
-		{Type: openBlock, Value: ":\n", Range: primitives.Range{Start: 6, Length: 2}},
-		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 8, Length: 1}},
-		{Type: openBlock, Value: ":\n", Range: primitives.Range{Start: 9, Length: 2}},
-		{Type: lexer.UNKNOWN, Value: "$", Range: primitives.Range{Start: 11, Length: 1}},
-		{Type: closeBlock, Value: "\n\n\n   ", Range: primitives.Range{Start: 12, Length: 6}},
-		{Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 18, Length: 1}},
-		{Type: closeBlock, Value: "\n\n", Range: primitives.Range{Start: 19, Length: 2}},
-		{Type: lexer.UNKNOWN, Value: "d", Range: primitives.Range{Start: 21, Length: 1}},
+		{Type: openBlock, Value: ":\n   ", Range: primitives.Range{Start: 6, Length: 5}},
+		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 11, Length: 1}},
+		{Type: openBlock, Value: ":\n      ", Range: primitives.Range{Start: 12, Length: 8}},
+		{Type: lexer.UNKNOWN, Value: "$", Range: primitives.Range{Start: 20, Length: 1}},
+		{Type: closeBlock, Value: "\n\n\n   ", Range: primitives.Range{Start: 21, Length: 6}},
+		{Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 27, Length: 1}},
+		{Type: closeBlock, Value: "\n\n", Range: primitives.Range{Start: 28, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "d", Range: primitives.Range{Start: 30, Length: 1}},
+		{Type: openBlock, Value: ":\n", Range: primitives.Range{Start: 31, Length: 2}},
+		{Type: closeBlock, Value: ":\n", Range: primitives.Range{Start: 31, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "e", Range: primitives.Range{Start: 33, Length: 1}},
+		{Type: eolType, Value: "\n\n", Range: primitives.Range{Start: 34, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 36, Length: 1}},
+		{Type: openBlock, Value: ":\n   ", Range: primitives.Range{Start: 37, Length: 5}},
+		{Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 42, Length: 1}},
+		{Type: openBlock, Value: ":\n      ", Range: primitives.Range{Start: 43, Length: 8}},
+		{Type: lexer.UNKNOWN, Value: "3", Range: primitives.Range{Start: 51, Length: 1}},
+		{Type: closeBlock, Value: "\n\n", Range: primitives.Range{Start: 52, Length: 2}},
+		{Type: closeBlock, Value: "\n\n", Range: primitives.Range{Start: 52, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 54, Length: 1}},
 	}
 
 	lexer.CheckTokens(t, l, expected, source)

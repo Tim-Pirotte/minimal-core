@@ -18,6 +18,7 @@ type IndentationMatcher struct {
     currentSpaceCount uint
 }
 
+// TODO option to force a certain whitespace count?
 func NewIndentationMatcher(
     openBlockSymbol, whiteSpace byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
@@ -38,6 +39,7 @@ func NewIndentationMatcher(
 func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
     c, ok := t.Get(0)
 
+    // TODO merge the duplicate code
     if c == i.openBlockSymbol {
         pos := uint(1)
         c, ok := t.Get(pos)
@@ -85,42 +87,43 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
 }
 
 func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
+    value, _ := t.GetRange(t.Position, length)
+    isOpenBlock := false
+
     if c, _ := t.Get(0); c == i.openBlockSymbol {
         i.indentationCount++
 
-        openBlock, _ := t.GetRange(t.Position, length)
-
         t.Emit(lexer.Token{
                 Type:  i.openBlock,
-                Value: openBlock,
+                Value: value,
                 Range: primitives.Range{Start: t.Position, Length: length},
             },
         )
+
+        isOpenBlock = true
     }
 
-    if i.indentation == 0 {
-        if i.currentSpaceCount == 0 {
-            return
+    level := uint(0)
+
+    if i.currentSpaceCount != 0 {
+        if i.indentation == 0 {
+            i.indentation = i.currentSpaceCount
         }
 
-        i.indentation = length
+        if i.currentSpaceCount % i.indentation != 0 {
+            // TODO Error inconsistent indentation
+            panic("Inconsistent indentation")
+        }
+
+        level = i.currentSpaceCount / i.indentation
+
+        if level > i.indentationCount {
+            // TODO Error indented without a new block
+            panic("Indent without a new block")
+        }
     }
 
-    if i.currentSpaceCount % i.indentation != 0 {
-        // TODO Error inconsistent indentation
-        panic("Inconsistent indentation")
-    }
-
-    level := i.currentSpaceCount / i.indentation
-
-    if level > i.indentationCount {
-        // TODO Error indented without a new block
-        panic("Indent without a new block")
-    }
-
-    value, _ := t.GetRange(t.Position, length)
-
-    if i.indentationCount - level == 0 {
+    if !isOpenBlock && i.indentationCount - level == 0 {
         t.Emit(lexer.Token{
             Type: i.endOfLine,
             Value: value,
@@ -137,6 +140,8 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
             Range: primitives.Range{Start: t.Position, Length: length},
         })
     }
+
+    i.indentationCount = level
 }
 
 func IsEOL(c byte) bool {
