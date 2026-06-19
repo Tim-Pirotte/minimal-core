@@ -58,12 +58,12 @@ d`
 		{Type: openBlock, Value: ":", Range: primitives.Range{Start: 9, Length: 1}},
 		{Type: eolType, Value: "\n", Range: primitives.Range{Start: 10, Length: 1}},
 		{Type: lexer.UNKNOWN, Value: "$", Range: primitives.Range{Start: 11, Length: 1}},
-		{Type: eolType, Value: "\n", Range: primitives.Range{Start: 12, Length: 1}},
-		{Type: closeBlock, Value: "   ", Range: primitives.Range{Start: 13, Length: 3}},
-		{Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 16, Length: 1}},
-		{Type: eolType, Value: "\n", Range: primitives.Range{Start: 17, Length: 1}},
-		{Type: closeBlock, Value: "", Range: primitives.Range{Start: 18, Length: 0}},
-		{Type: lexer.UNKNOWN, Value: "d", Range: primitives.Range{Start: 18, Length: 1}},
+		{Type: eolType, Value: "\n\n\n", Range: primitives.Range{Start: 12, Length: 3}},
+		{Type: closeBlock, Value: "   ", Range: primitives.Range{Start: 16, Length: 3}},
+		{Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 19, Length: 1}},
+		{Type: eolType, Value: "\n\n", Range: primitives.Range{Start: 20, Length: 2}},
+		{Type: closeBlock, Value: "", Range: primitives.Range{Start: 22, Length: 0}},
+		{Type: lexer.UNKNOWN, Value: "d", Range: primitives.Range{Start: 22, Length: 1}},
 	}
 
 	lexer.CheckTokens(t, l, expected, source)
