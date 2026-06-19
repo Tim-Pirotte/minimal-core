@@ -10,7 +10,7 @@ type EOLMatcher struct{
 }
 
 func NewEOLMatcher(tokenType lexer.TokenType) *EOLMatcher {
-	return &EOLMatcher{}
+	return &EOLMatcher{tokenType}
 }
 
 func (*EOLMatcher) Match(t *lexer.LexerJob) uint {

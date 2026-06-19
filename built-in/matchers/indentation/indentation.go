@@ -38,7 +38,7 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
         if eol.IsEOL(c) {
             i.handleOpenBlock = true
 
-            return pos - 1
+            return pos
         }
 
         return 0
