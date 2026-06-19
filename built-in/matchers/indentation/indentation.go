@@ -1,8 +1,8 @@
 package indentation
 
-import (
-	"fmt"
+// TODO Should this be merged with newline since it depends on the working of it
 
+import (
 	"minimal/minimal-core/built-in/lexer"
 	eol "minimal/minimal-core/built-in/matchers/end-of-line"
 	"minimal/minimal-core/built-in/primitives"
@@ -90,14 +90,14 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
 
     if length%i.indentation != 0 {
         // TODO Error inconsistent indentation
-        fmt.Println("Inconsistent indentation")
+        panic("Inconsistent indentation")
     }
 
     level := length / i.indentation
 
     if level > i.indentationCount {
         // TODO Error indented without a new block
-        fmt.Println("Indent without a new block")
+        panic("Indent without a new block")
     }
 
     closeBlock, _ := t.GetRange(t.Position, length)
