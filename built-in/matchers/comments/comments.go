@@ -2,7 +2,7 @@ package comments
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	eol "minimal/minimal-core/built-in/matchers/end-of-line"
+	"minimal/minimal-core/built-in/matchers/indentation"
 	"minimal/minimal-core/built-in/primitives"
 )
 
@@ -25,7 +25,7 @@ func (c *CommentMatcher) Match(t *lexer.LexerJob) uint {
 
 	pos := uint(1)
 
-	for ch, ok := t.Get(pos); ok && !eol.IsEOL(ch); ch, ok = t.Get(pos) {
+	for ch, ok := t.Get(pos); ok && !indentation.IsEOL(ch); ch, ok = t.Get(pos) {
 		pos++
 	}
 

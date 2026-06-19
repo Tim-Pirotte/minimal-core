@@ -2,7 +2,6 @@ package indentation
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	eol "minimal/minimal-core/built-in/matchers/end-of-line"
 	"minimal/minimal-core/built-in/primitives"
 	"testing"
 )
@@ -18,15 +17,12 @@ func getLexer() (*lexer.Lexer, lexer.TokenType, lexer.TokenType, lexer.TokenType
 		lexer.TokenTypeMetadata{DisplayName: "the end of a block", DebugName: "CloseBlock"},
 	)
 
-	indentationMatcher := NewIndentationMatcher(':', ' ', openBlock, closeBlock)
-	l.AddMatcher(indentationMatcher)
-
 	eolType := l.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
 	)
 
-	eolMatcher := eol.NewEOLMatcher(eolType)
-	l.AddMatcher(eolMatcher)
+	indentationMatcher := NewIndentationMatcher(':', ' ', openBlock, closeBlock, eolType)
+	l.AddMatcher(indentationMatcher)
 
 	return l, openBlock, closeBlock, eolType
 }

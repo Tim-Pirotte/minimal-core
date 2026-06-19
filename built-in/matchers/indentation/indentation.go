@@ -12,13 +12,26 @@ type IndentationMatcher struct {
     whiteSpace        byte
     openBlock         lexer.TokenType
     closeBlock        lexer.TokenType
+    endOfLine         lexer.TokenType
     indentation       uint
     indentationCount  uint
     currentSpaceCount uint
 }
 
-func NewIndentationMatcher(openBlockSymbol, whiteSpace byte, openBlock, closeBlock lexer.TokenType) *IndentationMatcher {
-    return &IndentationMatcher{openBlockSymbol, whiteSpace, openBlock, closeBlock, 0, 0, 0}
+func NewIndentationMatcher(
+    openBlockSymbol, whiteSpace byte,
+    openBlock, closeBlock, endOfLine lexer.TokenType,
+) *IndentationMatcher {
+    return &IndentationMatcher{
+        openBlockSymbol,
+        whiteSpace,
+        openBlock,
+        closeBlock,
+        endOfLine,
+        0,
+        0,
+        0,
+    }
 }
 
 // TODO handle not ok cases
@@ -83,8 +96,6 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
                 Range: primitives.Range{Start: t.Position, Length: length},
             },
         )
-
-        return
     }
 
     if i.indentation == 0 {
@@ -107,12 +118,22 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         panic("Indent without a new block")
     }
 
-    closeBlock, _ := t.GetRange(t.Position, length)
+    value, _ := t.GetRange(t.Position, length)
+
+    if i.indentationCount - level == 0 {
+        t.Emit(lexer.Token{
+            Type: i.endOfLine,
+            Value: value,
+            Range: primitives.Range{Start: t.Position, Length: length},
+        })
+
+        return
+    }
 
     for range i.indentationCount - level {
         t.Emit(lexer.Token{
             Type:  i.closeBlock,
-            Value: closeBlock,
+            Value: value,
             Range: primitives.Range{Start: t.Position, Length: length},
         })
     }
