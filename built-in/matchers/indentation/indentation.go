@@ -4,23 +4,21 @@ package indentation
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	eol "minimal/minimal-core/built-in/matchers/end-of-line"
 	"minimal/minimal-core/built-in/primitives"
 )
 
 type IndentationMatcher struct {
-    openBlockSymbol  byte
-    whiteSpace       byte
-    openBlock        lexer.TokenType
-    closeBlock       lexer.TokenType
-    handleOpenBlock  bool
-    isEndOfLine      bool
-    indentation      uint
-    indentationCount uint
+    openBlockSymbol   byte
+    whiteSpace        byte
+    openBlock         lexer.TokenType
+    closeBlock        lexer.TokenType
+    indentation       uint
+    indentationCount  uint
+    currentSpaceCount uint
 }
 
 func NewIndentationMatcher(openBlockSymbol, whiteSpace byte, openBlock, closeBlock lexer.TokenType) *IndentationMatcher {
-    return &IndentationMatcher{openBlockSymbol, whiteSpace, openBlock, closeBlock, false, false, 0, 0}
+    return &IndentationMatcher{openBlockSymbol, whiteSpace, openBlock, closeBlock, 0, 0, 0}
 }
 
 // TODO handle not ok cases
@@ -35,65 +33,74 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
             pos++
         }
 
-        if eol.IsEOL(c) {
-            i.handleOpenBlock = true
+        posBefore := pos
 
-            return pos
+        for ; ok && IsEOL(c); c, ok = t.Get(pos) {
+		    pos++
+	    }
+
+        if pos == posBefore {
+            return 0
         }
 
-        return 0
-    }
+        posBefore = pos
 
-    if !i.isEndOfLine {
-        i.isEndOfLine = eol.IsEOL(c)
+        for ; ok && c == ' '; c, ok = t.Get(pos) {
+            pos++
+        }
 
-        return 0
+        i.currentSpaceCount = pos - posBefore
+
+        return pos
     }
 
     pos := uint(0)
+
+    for ; ok && IsEOL(c); c, ok = t.Get(pos) {
+		pos++
+	}
+
+    posBefore := pos
 
     for ; ok && c == ' '; c, ok = t.Get(pos) {
         pos++
     }
 
-    i.handleOpenBlock = false
-    i.isEndOfLine = false
+    i.currentSpaceCount = pos - posBefore
 
     return pos
 }
 
 func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
-    if i.handleOpenBlock {
+    if c, _ := t.Get(0); c == i.openBlockSymbol {
         i.indentationCount++
 
-        openBlock, _ := t.GetRange(t.Position, 1)
+        openBlock, _ := t.GetRange(t.Position, length)
 
         t.Emit(lexer.Token{
-            Type:  i.openBlock,
-            Value: openBlock,
-            Range: primitives.Range{Start: t.Position, Length: 1},
-        },
+                Type:  i.openBlock,
+                Value: openBlock,
+                Range: primitives.Range{Start: t.Position, Length: length},
+            },
         )
 
         return
     }
 
-    c, _ := t.Get(length)
-
-    if eol.IsEOL(c) {
-        return
-    }
-
     if i.indentation == 0 {
+        if i.currentSpaceCount == 0 {
+            return
+        }
+
         i.indentation = length
     }
 
-    if length%i.indentation != 0 {
+    if i.currentSpaceCount % i.indentation != 0 {
         // TODO Error inconsistent indentation
         panic("Inconsistent indentation")
     }
 
-    level := length / i.indentation
+    level := i.currentSpaceCount / i.indentation
 
     if level > i.indentationCount {
         // TODO Error indented without a new block
@@ -109,4 +116,10 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
             Range: primitives.Range{Start: t.Position, Length: length},
         })
     }
+}
+
+func IsEOL(c byte) bool {
+	// Do not inline
+	// This is used to keep the EOL chars in sync with the comment matcher
+	return c == '\n' || c == '\r'
 }
