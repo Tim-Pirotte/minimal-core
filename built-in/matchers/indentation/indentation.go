@@ -97,11 +97,10 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         i.indentationCount++
 
         t.Emit(lexer.Token{
-                Type:  i.openBlock,
-                Value: value,
-                Range: primitives.Range{Start: t.Position, Length: length},
-            },
-        )
+            Type:  i.openBlock,
+            Value: value,
+            Range: primitives.Range{Start: t.Position, Length: length},
+        })
 
         isOpenBlock = true
     }
