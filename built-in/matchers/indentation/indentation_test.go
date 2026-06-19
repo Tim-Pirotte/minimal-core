@@ -79,3 +79,25 @@ e
 
 	lexer.CheckTokens(t, l, expected, source)
 }
+
+func TestRedundantSpace(t *testing.T) {
+	source := ":\n"+
+              "  a\n" +
+              "   \n" +
+              "  b"
+
+	l, openBlock, _, eolType := getLexer()
+
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 4, Length: 1}},
+		{Type: eolType, Value: "\n   \n  ", Range: primitives.Range{Start: 5, Length: 7}},
+		{Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 12, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestExtraIndent(t *testing.T) {
+
+}

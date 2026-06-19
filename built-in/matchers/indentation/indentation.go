@@ -60,8 +60,12 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
 
         posBefore = pos
 
-        for ; ok && c == ' '; c, ok = t.Get(pos) {
+        for ; ok && (c == ' ' || IsEOL(c)); c, ok = t.Get(pos) {
             pos++
+
+            if IsEOL(c) {
+                posBefore = pos
+            }
         }
 
         i.currentSpaceCount = pos - posBefore
@@ -70,16 +74,15 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
     }
 
     pos := uint(0)
-
-    for ; ok && IsEOL(c); c, ok = t.Get(pos) {
-		pos++
-	}
-
     posBefore := pos
 
-    for ; ok && c == ' '; c, ok = t.Get(pos) {
-        pos++
-    }
+    for ; ok && (c == ' ' || IsEOL(c)); c, ok = t.Get(pos) {
+		pos++
+
+        if IsEOL(c) {
+            posBefore = pos
+        }
+	}
 
     i.currentSpaceCount = pos - posBefore
 
@@ -119,6 +122,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
 
         if level > i.indentationCount {
             // TODO Error indented without a new block
+            // This is problematic when things like function calls are indented for clarity
             panic("Indent without a new block")
         }
     }
