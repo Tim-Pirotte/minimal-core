@@ -108,8 +108,6 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
 
         if level > i.currentIndentation {
             // TODO Error indented without a new block
-            // This is problematic when things like function calls are indented for clarity
-            // Maybe allow extra indentation when at least one line before has the correct indent
             panic("Indent without a new block")
         }
     }
