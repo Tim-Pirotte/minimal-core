@@ -16,7 +16,7 @@ func NewCommentMatcher(tt lexer.TokenType) *CommentMatcher {
 	return &CommentMatcher{tt}
 }
 
-func (n *CommentMatcher) Match(t *lexer.LexerJob) uint {
+func (c *CommentMatcher) Match(t *lexer.LexerJob) uint {
 	start, _ := t.Get(0)
 
 	if start != prefix {
@@ -25,18 +25,18 @@ func (n *CommentMatcher) Match(t *lexer.LexerJob) uint {
 
 	pos := uint(1)
 
-	for c, ok := t.Get(pos); ok && !eol.IsEOL(c); c, ok = t.Get(pos) {
+	for ch, ok := t.Get(pos); ok && !eol.IsEOL(ch); ch, ok = t.Get(pos) {
 		pos++
 	}
 
 	return pos
 }
 
-func (i *CommentMatcher) Consume(t *lexer.LexerJob, length uint) {
+func (c *CommentMatcher) Consume(t *lexer.LexerJob, length uint) {
 	comment, _ := t.GetRange(t.Position, length)
 
 	t.Emit(lexer.Token{
-		Type:  i.tokenType,
+		Type:  c.tokenType,
 		Value: comment,
 		Range: primitives.Range{Start: t.Position, Length: length}},
 	)
