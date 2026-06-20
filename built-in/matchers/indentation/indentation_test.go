@@ -6,7 +6,10 @@ import (
 	"testing"
 )
 
-func getLexer(indentChar byte) (*lexer.Lexer, lexer.TokenType, lexer.TokenType, lexer.TokenType) {
+func getLexer(
+	indentChar byte,
+	spacesPerLevel uint,
+) (*lexer.Lexer, lexer.TokenType, lexer.TokenType, lexer.TokenType) {
 	l := lexer.NewLexer()
 
 	openBlock := l.NewTokenType(
@@ -21,7 +24,15 @@ func getLexer(indentChar byte) (*lexer.Lexer, lexer.TokenType, lexer.TokenType, 
 		lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
 	)
 
-	indentationMatcher := NewIndentationMatcher(':', indentChar, openBlock, closeBlock, eolType)
+	indentationMatcher := NewIndentationMatcher(
+		':',
+		indentChar,
+		openBlock,
+		closeBlock,
+		eolType,
+		spacesPerLevel,
+	)
+
 	l.AddMatcher(indentationMatcher)
 
 	return l, openBlock, closeBlock, eolType
@@ -47,7 +58,7 @@ e
 
 1`
 
-	l, openBlock, closeBlock, eolType := getLexer(' ')
+	l, openBlock, closeBlock, eolType := getLexer(' ', 0)
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
@@ -86,7 +97,7 @@ func TestRedundantSpace(t *testing.T) {
               "   \n" +
               "  b"
 
-	l, openBlock, _, eolType := getLexer(' ')
+	l, openBlock, _, eolType := getLexer(' ', 0)
 
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
@@ -104,7 +115,7 @@ func TestExtraIndent(t *testing.T) {
               "     a\n" +
               "  )"
 
-	l, openBlock, _, eolType := getLexer(' ')
+	l, openBlock, _, eolType := getLexer(' ', 0)
 
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
@@ -125,8 +136,9 @@ func TestExtraIndentAfterBlock(t *testing.T) {
               "    a\n" +
               "   )"
 
-	l, openBlock, _, eolType := getLexer(' ')
+	l, openBlock, _, eolType := getLexer(' ', 0)
 
+	// TODO expect incorrect indentation
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
 		{Type: lexer.UNKNOWN, Value: "(", Range: primitives.Range{Start: 4, Length: 1}},
@@ -144,7 +156,7 @@ func TestDifferentSpaceChar(t *testing.T) {
               "\t:\n" +
               "\t\ta"
 
-	l, openBlock, _, _ := getLexer('\t')
+	l, openBlock, _, _ := getLexer('\t', 0)
 
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n\t", Range: primitives.Range{Start: 0, Length: 3}},
@@ -156,9 +168,30 @@ func TestDifferentSpaceChar(t *testing.T) {
 }
 
 func TestFixedIndentation(t *testing.T) {
+	source := ":\n"+
+              "  a"
 
+	l, openBlock, _, _ := getLexer(' ', 4)
+
+	// TODO expect incorrect indentation
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 3}},
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 7, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestMatchNonIndentSpace(t *testing.T) {
+	source := "a b"
 
+	l, _, _, _ := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 1, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 2, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
 }

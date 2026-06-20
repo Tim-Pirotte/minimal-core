@@ -20,6 +20,7 @@ type IndentationMatcher struct {
 func NewIndentationMatcher(
     openBlockSymbol, indentChar byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
+    spacesPerLevel uint,
 ) *IndentationMatcher {
     return &IndentationMatcher{
         openBlockSymbol,
@@ -27,7 +28,7 @@ func NewIndentationMatcher(
         openBlock,
         closeBlock,
         endOfLine,
-        0,
+        spacesPerLevel,
         0,
         0,
     }
@@ -52,14 +53,20 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
     }
 
     posBefore := pos
+    encounteredEOL := false
 
     for ; ok && (c == i.indentChar || IsEOL(c)); c, ok = t.Get(pos) {
 		pos++
 
         if IsEOL(c) {
             posBefore = pos
+            encounteredEOL = true
         }
 	}
+
+    if !encounteredEOL {
+        return 0
+    }
 
     i.spaceCount = pos - posBefore
 
