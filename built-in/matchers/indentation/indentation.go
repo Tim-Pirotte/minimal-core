@@ -45,6 +45,17 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
         0,
     }
 
+    startIndent := uint(0)
+
+    for c, ok := l.Get(startIndent); ok && c == i.indentChar; c, ok = l.Get(startIndent) {
+        startIndent++
+    }
+
+    if startIndent > 0 {
+        // TODO Error starts with indentation
+        panic("Cannot start with indentation")
+    }
+
     return m
 }
 
@@ -55,9 +66,8 @@ func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
 
     if c == i.openBlockSymbol {
         pos++
-        c, ok = l.Get(pos)
 
-        for ; ok && c == ' '; c, ok = l.Get(pos) {
+        for c, ok = l.Get(pos); ok && c == ' '; c, ok = l.Get(pos) {
             pos++
         }
 
