@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func getLexer() (*lexer.Lexer, lexer.TokenType, lexer.TokenType, lexer.TokenType) {
+func getLexer(indentChar byte) (*lexer.Lexer, lexer.TokenType, lexer.TokenType, lexer.TokenType) {
 	l := lexer.NewLexer()
 
 	openBlock := l.NewTokenType(
@@ -21,7 +21,7 @@ func getLexer() (*lexer.Lexer, lexer.TokenType, lexer.TokenType, lexer.TokenType
 		lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
 	)
 
-	indentationMatcher := NewIndentationMatcher(':', ' ', openBlock, closeBlock, eolType)
+	indentationMatcher := NewIndentationMatcher(':', indentChar, openBlock, closeBlock, eolType)
 	l.AddMatcher(indentationMatcher)
 
 	return l, openBlock, closeBlock, eolType
@@ -47,7 +47,7 @@ e
 
 1`
 
-	l, openBlock, closeBlock, eolType := getLexer()
+	l, openBlock, closeBlock, eolType := getLexer(' ')
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
@@ -86,7 +86,7 @@ func TestRedundantSpace(t *testing.T) {
               "   \n" +
               "  b"
 
-	l, openBlock, _, eolType := getLexer()
+	l, openBlock, _, eolType := getLexer(' ')
 
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
@@ -104,7 +104,7 @@ func TestExtraIndent(t *testing.T) {
               "     a\n" +
               "  )"
 
-	l, openBlock, _, eolType := getLexer()
+	l, openBlock, _, eolType := getLexer(' ')
 
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
@@ -125,7 +125,7 @@ func TestExtraIndentAfterBlock(t *testing.T) {
               "    a\n" +
               "   )"
 
-	l, openBlock, _, eolType := getLexer()
+	l, openBlock, _, eolType := getLexer(' ')
 
 	expected := []lexer.Token{
 		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
@@ -140,5 +140,25 @@ func TestExtraIndentAfterBlock(t *testing.T) {
 }
 
 func TestDifferentSpaceChar(t *testing.T) {
+	source := ":\n"+
+              "\t:\n" +
+              "\t\ta"
+
+	l, openBlock, _, _ := getLexer('\t')
+
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ":\n\t", Range: primitives.Range{Start: 0, Length: 3}},
+		{Type: openBlock, Value: ":\n\t\t", Range: primitives.Range{Start: 3, Length: 4}},
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 7, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestFixedIndentation(t *testing.T) {
+
+}
+
+func TestMatchNonIndentSpace(t *testing.T) {
 
 }

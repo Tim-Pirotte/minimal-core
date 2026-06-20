@@ -1,7 +1,5 @@
 package indentation
 
-// TODO Should this be merged with newline since it depends on the working of it
-
 import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/primitives"
@@ -9,23 +7,23 @@ import (
 
 type IndentationMatcher struct {
     openBlockSymbol         byte
-    whiteSpace              byte
+    indentChar              byte
     openBlock               lexer.TokenType
     closeBlock              lexer.TokenType
     endOfLine               lexer.TokenType
-    spacesPerIndentation    uint
-    currentIndentation      uint
-    currentSpaceCount       uint
+    spacesPerLevel          uint
+    level                   uint
+    spaceCount              uint
 }
 
 // TODO option to force a certain whitespace count?
 func NewIndentationMatcher(
-    openBlockSymbol, whiteSpace byte,
+    openBlockSymbol, indentChar byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
 ) *IndentationMatcher {
     return &IndentationMatcher{
         openBlockSymbol,
-        whiteSpace,
+        indentChar,
         openBlock,
         closeBlock,
         endOfLine,
@@ -55,7 +53,7 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
 
     posBefore := pos
 
-    for ; ok && (c == ' ' || IsEOL(c)); c, ok = t.Get(pos) {
+    for ; ok && (c == i.indentChar || IsEOL(c)); c, ok = t.Get(pos) {
 		pos++
 
         if IsEOL(c) {
@@ -63,7 +61,7 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
         }
 	}
 
-    i.currentSpaceCount = pos - posBefore
+    i.spaceCount = pos - posBefore
 
     return pos
 }
@@ -73,7 +71,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
     isOpenBlock := false
 
     if c, _ := t.Get(0); c == i.openBlockSymbol {
-        i.currentIndentation++
+        i.level++
 
         t.Emit(lexer.Token{
             Type:  i.openBlock,
@@ -86,7 +84,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
 
     level := i.getIndentLevel(isOpenBlock)
 
-    if !isOpenBlock && i.currentIndentation - level == 0 {
+    if !isOpenBlock && i.level - level == 0 {
         t.Emit(lexer.Token{
             Type: i.endOfLine,
             Value: value,
@@ -96,7 +94,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         return
     }
 
-    for range i.currentIndentation - level {
+    for range i.level - level {
         t.Emit(lexer.Token{
             Type:  i.closeBlock,
             Value: value,
@@ -104,36 +102,35 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         })
     }
 
-    i.currentIndentation = level
+    i.level = level
 }
 
 func IsEOL(c byte) bool {
-	// Do not inline
 	// This is used to keep the EOL chars in sync with the comment matcher
 	return c == '\n' || c == '\r'
 }
 
 func (i *IndentationMatcher) getIndentLevel(isOpenBlock bool) uint {
-    if i.currentSpaceCount == 0 {
+    if i.spaceCount == 0 {
         return 0
     }
 
-    if i.spacesPerIndentation == 0 {
-        i.spacesPerIndentation = i.currentSpaceCount
+    if i.spacesPerLevel == 0 {
+        i.spacesPerLevel = i.spaceCount
     }
 
-    if !isOpenBlock && i.currentSpaceCount > i.spacesPerIndentation * i.currentIndentation {
-        return i.currentIndentation
+    if !isOpenBlock && i.spaceCount > i.spacesPerLevel * i.level {
+        return i.level
     }
 
-    if i.currentSpaceCount % i.spacesPerIndentation != 0 {
+    if i.spaceCount % i.spacesPerLevel != 0 {
         // TODO Error inconsistent indentation
         panic("Inconsistent indentation")
     }
 
-    level := i.currentSpaceCount / i.spacesPerIndentation
+    level := i.spaceCount / i.spacesPerLevel
 
-    if level > i.currentIndentation {
+    if level > i.level {
         // TODO Error indented without a new block
         panic("Indent without a new block")
     }
