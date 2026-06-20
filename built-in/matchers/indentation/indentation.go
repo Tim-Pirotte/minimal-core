@@ -59,7 +59,6 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
     return m
 }
 
-// TODO handle not ok cases
 func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
     pos := uint(0)
     c, ok := l.Get(pos)
@@ -71,7 +70,11 @@ func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
             pos++
         }
 
-        if ok && !IsEOL(c) {
+        if !ok {
+            return pos
+        }
+
+        if !IsEOL(c) {
             return 0
         }
     }

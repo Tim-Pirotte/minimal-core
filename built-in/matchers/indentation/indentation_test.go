@@ -109,6 +109,26 @@ func TestRedundantSpace(t *testing.T) {
 	lexer.CheckTokens(t, l, expected, source)
 }
 
+func TestInconsistentIndentation(t *testing.T) {
+	source := ":\n"+
+              "  :\n" +
+              "     a\n" +
+			  " b"
+
+	l, openBlock, _, eolType := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
+		{Type: lexer.UNKNOWN, Value: "(", Range: primitives.Range{Start: 4, Length: 1}},
+		{Type: eolType, Value: "\n     ", Range: primitives.Range{Start: 5, Length: 6}},
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 11, Length: 1}},
+		{Type: eolType, Value: "\n  ", Range: primitives.Range{Start: 12, Length: 3}},
+		{Type: lexer.UNKNOWN, Value: ")", Range: primitives.Range{Start: 15, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
 func TestExtraIndent(t *testing.T) {
 	source := ":\n"+
               "  (\n" +
@@ -218,6 +238,71 @@ func TestNoBlocksIncorrect(t *testing.T) {
 
 	expected := []lexer.Token{
 		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestTrailingSpace(t *testing.T) {
+	source := "a "
+
+	l, _, _, _ := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 1, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestTrailingEOL(t *testing.T) {
+	source := "a\n"
+
+	l, _, _, eolType := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: eolType, Value: "\n", Range: primitives.Range{Start: 1, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestOnlyOpenBlock(t *testing.T) {
+	source := ":"
+
+	l, openBlock, closeBlock, _ := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ":", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: closeBlock, Value: ":", Range: primitives.Range{Start: 0, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestOpenBlockSpaceSuffix(t *testing.T) {
+	source := ": "
+
+	l, openBlock, closeBlock, _ := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ": ", Range: primitives.Range{Start: 0, Length: 2}},
+		{Type: closeBlock, Value: ": ", Range: primitives.Range{Start: 0, Length: 2}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestOpenBlockEOLSuffix(t *testing.T) {
+	source := ":\n"
+
+	l, openBlock, closeBlock, _ := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: openBlock, Value: ":\n", Range: primitives.Range{Start: 0, Length: 2}},
+		{Type: closeBlock, Value: ":\n", Range: primitives.Range{Start: 0, Length: 2}},
 	}
 
 	lexer.CheckTokens(t, l, expected, source)
