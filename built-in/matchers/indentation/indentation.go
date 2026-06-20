@@ -84,30 +84,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
         isOpenBlock = true
     }
 
-    level := uint(0)
-
-    if i.currentSpaceCount != 0 {
-        if i.spacesPerIndentation == 0 {
-            i.spacesPerIndentation = i.currentSpaceCount
-        }
-
-        if !isOpenBlock &&
-           i.currentSpaceCount > i.currentIndentation * i.spacesPerIndentation {
-            i.currentSpaceCount = i.currentIndentation * i.spacesPerIndentation
-        }
-
-        if i.currentSpaceCount % i.spacesPerIndentation != 0 {
-            // TODO Error inconsistent indentation
-            panic("Inconsistent indentation")
-        }
-
-        level = i.currentSpaceCount / i.spacesPerIndentation
-
-        if level > i.currentIndentation {
-            // TODO Error indented without a new block
-            panic("Indent without a new block")
-        }
-    }
+    level := i.getIndentLevel(isOpenBlock)
 
     if !isOpenBlock && i.currentIndentation - level == 0 {
         t.Emit(lexer.Token{
@@ -134,4 +111,32 @@ func IsEOL(c byte) bool {
 	// Do not inline
 	// This is used to keep the EOL chars in sync with the comment matcher
 	return c == '\n' || c == '\r'
+}
+
+func (i *IndentationMatcher) getIndentLevel(isOpenBlock bool) uint {
+    if i.currentSpaceCount == 0 {
+        return 0
+    }
+
+    if i.spacesPerIndentation == 0 {
+        i.spacesPerIndentation = i.currentSpaceCount
+    }
+
+    if !isOpenBlock && i.currentSpaceCount > i.spacesPerIndentation * i.currentIndentation {
+        return i.currentIndentation
+    }
+
+    if i.currentSpaceCount % i.spacesPerIndentation != 0 {
+        // TODO Error inconsistent indentation
+        panic("Inconsistent indentation")
+    }
+
+    level := i.currentSpaceCount / i.spacesPerIndentation
+
+    if level > i.currentIndentation {
+        // TODO Error indented without a new block
+        panic("Indent without a new block")
+    }
+
+    return level
 }
