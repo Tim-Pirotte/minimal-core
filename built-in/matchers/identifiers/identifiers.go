@@ -13,8 +13,12 @@ func NewIdentifierMatcher(tt lexer.TokenType) *IdentifierMatcher {
 	return &IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) Match(t *lexer.LexerJob) uint {
-	firstChar, ok := t.Get(0)
+func (i *IdentifierMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+	return i
+}
+
+func (i *IdentifierMatcher) Match(l *lexer.LexerJob) uint {
+	firstChar, ok := l.Get(0)
 
 	if !ok || !isAlphaOrUnicode(firstChar) {
 		return 0
@@ -22,20 +26,20 @@ func (i *IdentifierMatcher) Match(t *lexer.LexerJob) uint {
 
 	pos := uint(1)
 
-	for c, ok := t.Get(pos); ok && (isAlphaOrUnicode(c) || isDigit(c)); c, ok = t.Get(pos) {
+	for c, ok := l.Get(pos); ok && (isAlphaOrUnicode(c) || isDigit(c)); c, ok = l.Get(pos) {
 		pos++
 	}
 
 	return pos
 }
 
-func (i *IdentifierMatcher) Consume(t *lexer.LexerJob, length uint) {
-	identifier, _ := t.GetRange(t.Position, length)
+func (i *IdentifierMatcher) Consume(l *lexer.LexerJob, length uint) {
+	identifier, _ := l.GetRange(l.Position, length)
 
-	t.Emit(lexer.Token{
+	l.Emit(lexer.Token{
 		Type: i.tokenType,
 		Value: identifier,
-		Range: primitives.Range{Start: t.Position, Length: length}},
+		Range: primitives.Range{Start: l.Position, Length: length}},
 	)
 }
 

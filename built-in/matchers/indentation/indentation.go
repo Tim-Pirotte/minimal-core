@@ -16,7 +16,6 @@ type IndentationMatcher struct {
     spaceCount              uint
 }
 
-// TODO option to force a certain whitespace count?
 func NewIndentationMatcher(
     openBlockSymbol, indentChar byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
@@ -34,16 +33,20 @@ func NewIndentationMatcher(
     }
 }
 
+func (i *IndentationMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+	return i
+}
+
 // TODO handle not ok cases
-func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
+func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
     pos := uint(0)
-    c, ok := t.Get(pos)
+    c, ok := l.Get(pos)
 
     if c == i.openBlockSymbol {
         pos++
-        c, ok = t.Get(pos)
+        c, ok = l.Get(pos)
 
-        for ; ok && c == ' '; c, ok = t.Get(pos) {
+        for ; ok && c == ' '; c, ok = l.Get(pos) {
             pos++
         }
 
@@ -55,7 +58,7 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
     posBefore := pos
     encounteredEOL := false
 
-    for ; ok && (c == i.indentChar || IsEOL(c)); c, ok = t.Get(pos) {
+    for ; ok && (c == i.indentChar || IsEOL(c)); c, ok = l.Get(pos) {
 		pos++
 
         if IsEOL(c) {
@@ -73,17 +76,17 @@ func (i *IndentationMatcher) Match(t *lexer.LexerJob) uint {
     return pos
 }
 
-func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
-    value, _ := t.GetRange(t.Position, length)
+func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
+    value, _ := l.GetRange(l.Position, length)
     isOpenBlock := false
 
-    if c, _ := t.Get(0); c == i.openBlockSymbol {
+    if c, _ := l.Get(0); c == i.openBlockSymbol {
         i.level++
 
-        t.Emit(lexer.Token{
+        l.Emit(lexer.Token{
             Type:  i.openBlock,
             Value: value,
-            Range: primitives.Range{Start: t.Position, Length: length},
+            Range: primitives.Range{Start: l.Position, Length: length},
         })
 
         isOpenBlock = true
@@ -92,20 +95,20 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
     level := i.getIndentLevel(isOpenBlock)
 
     if !isOpenBlock && i.level - level == 0 {
-        t.Emit(lexer.Token{
+        l.Emit(lexer.Token{
             Type: i.endOfLine,
             Value: value,
-            Range: primitives.Range{Start: t.Position, Length: length},
+            Range: primitives.Range{Start: l.Position, Length: length},
         })
 
         return
     }
 
     for range i.level - level {
-        t.Emit(lexer.Token{
+        l.Emit(lexer.Token{
             Type:  i.closeBlock,
             Value: value,
-            Range: primitives.Range{Start: t.Position, Length: length},
+            Range: primitives.Range{Start: l.Position, Length: length},
         })
     }
 

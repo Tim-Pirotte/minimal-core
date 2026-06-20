@@ -26,7 +26,11 @@ func NewSymbolMatcher() *SymbolMatcher {
 	}
 }
 
-func (s *SymbolMatcher) AddSymbol(t *lexer.Lexer, symbol string, tokenType lexer.TokenType) {
+func (s *SymbolMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+	return s
+}
+
+func (s *SymbolMatcher) AddSymbol(l *lexer.Lexer, symbol string, tokenType lexer.TokenType) {
 	node := s.symbols
 
 	for _, char := range []byte(symbol) {
@@ -46,11 +50,11 @@ func (s *SymbolMatcher) AddSymbol(t *lexer.Lexer, symbol string, tokenType lexer
 	node.token = tokenType
 }
 
-func (s *SymbolMatcher) Match(t *lexer.LexerJob) uint {
+func (s *SymbolMatcher) Match(l *lexer.LexerJob) uint {
 	pos := uint(0)
 	length := uint(0)
 
-	char, ok := t.Get(pos)
+	char, ok := l.Get(pos)
 	node := s.symbols.children[char]
 
 	for ; node != nil; node = node.children[char] {
@@ -61,7 +65,7 @@ func (s *SymbolMatcher) Match(t *lexer.LexerJob) uint {
 			s.cachedTokenType = lexer.TokenType(node.token)
 		}
 
-		if char, ok = t.Get(pos); !ok {
+		if char, ok = l.Get(pos); !ok {
 			return length
 		}
 	}
@@ -69,12 +73,12 @@ func (s *SymbolMatcher) Match(t *lexer.LexerJob) uint {
 	return length
 }
 
-func (s *SymbolMatcher) Consume(t *lexer.LexerJob, length uint) {
-	symbol, _ := t.GetRange(t.Position, length)
+func (s *SymbolMatcher) Consume(l *lexer.LexerJob, length uint) {
+	symbol, _ := l.GetRange(l.Position, length)
 
-	t.Emit(lexer.Token{
+	l.Emit(lexer.Token{
 		Type: s.cachedTokenType,
 		Value: symbol,
-		Range: primitives.Range{Start: t.Position, Length: length}},
+		Range: primitives.Range{Start: l.Position, Length: length}},
 	)
 }

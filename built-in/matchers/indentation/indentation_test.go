@@ -195,3 +195,30 @@ func TestMatchNonIndentSpace(t *testing.T) {
 
 	lexer.CheckTokens(t, l, expected, source)
 }
+
+func TestNoBlocks(t *testing.T) {
+	source := "a\n" +
+			  " b"
+
+	l, _, _, eolType := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: eolType, Value: "\n ", Range: primitives.Range{Start: 1, Length: 2}},
+		{Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 3, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestNoBlocksIncorrect(t *testing.T) {
+	source := " a"
+
+	l, _, _, _ := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}

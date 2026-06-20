@@ -29,6 +29,10 @@ func newSpillageTestMatcher(lexer *Lexer) *spillageTestMatcher {
 	}
 }
 
+func (s *spillageTestMatcher) New(_ *LexerJob) Matcher {
+	return s
+}
+
 func (s *spillageTestMatcher) Match(t *LexerJob) uint {
 	return 1
 }

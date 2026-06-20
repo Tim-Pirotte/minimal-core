@@ -10,10 +10,14 @@ func NewSpaceMatcher() *SpaceMatcher {
 	return &SpaceMatcher{}
 }
 
-func (*SpaceMatcher) Match(t *lexer.LexerJob) uint {
+func (s *SpaceMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+	return s
+}
+
+func (*SpaceMatcher) Match(l *lexer.LexerJob) uint {
 	pos := uint(0)
 
-	for c, ok := t.Get(pos); ok && c == ' '; c, ok = t.Get(pos) {
+	for c, ok := l.Get(pos); ok && c == ' '; c, ok = l.Get(pos) {
 		pos++
 	}
 

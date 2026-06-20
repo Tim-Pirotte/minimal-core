@@ -13,22 +13,26 @@ func NewNumberMatcher(tt lexer.TokenType) *NumberMatcher {
 	return &NumberMatcher{tt}
 }
 
-func (n *NumberMatcher) Match(t *lexer.LexerJob) uint {
+func (n *NumberMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+	return n
+}
+
+func (n *NumberMatcher) Match(l *lexer.LexerJob) uint {
 	pos := uint(0)
 
-	for c, ok := t.Get(pos); ok && '0' <= c && c <= '9'; c, ok = t.Get(pos) {
+	for c, ok := l.Get(pos); ok && '0' <= c && c <= '9'; c, ok = l.Get(pos) {
 		pos++
 	}
 
 	return pos
 }
 
-func (i *NumberMatcher) Consume(t *lexer.LexerJob, length uint) {
-	number, _ := t.GetRange(t.Position, length)
+func (i *NumberMatcher) Consume(l *lexer.LexerJob, length uint) {
+	number, _ := l.GetRange(l.Position, length)
 
-	t.Emit(lexer.Token{
+	l.Emit(lexer.Token{
 		Type: i.tokenType,
 		Value: number,
-		Range: primitives.Range{Start: t.Position, Length: length}},
+		Range: primitives.Range{Start: l.Position, Length: length}},
 	)
 }

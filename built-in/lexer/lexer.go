@@ -48,6 +48,7 @@ type LexerJob struct {
 }
 
 type Matcher interface {
+	New(t *LexerJob) Matcher
 	Match(t *LexerJob) (length uint)
 	Consume(t *LexerJob, length uint)
 }
