@@ -33,8 +33,19 @@ func NewIndentationMatcher(
     }
 }
 
-func (i *IndentationMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
-	return i
+func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
+	m := &IndentationMatcher{
+        i.openBlockSymbol,
+        i.indentChar,
+        i.openBlock,
+        i.closeBlock,
+        i.endOfLine,
+        i.spacesPerLevel,
+        0,
+        0,
+    }
+
+    return m
 }
 
 // TODO handle not ok cases
