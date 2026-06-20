@@ -16,7 +16,6 @@ type IndentationMatcher struct {
     spacesPerIndentation    uint
     currentIndentation      uint
     currentSpaceCount       uint
-    correctlyIndentedBefore bool
 }
 
 // TODO option to force a certain whitespace count?
@@ -33,7 +32,6 @@ func NewIndentationMatcher(
         0,
         0,
         0,
-        false,
     }
 }
 
@@ -76,7 +74,6 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
 
     if c, _ := t.Get(0); c == i.openBlockSymbol {
         i.currentIndentation++
-        i.correctlyIndentedBefore = false
 
         t.Emit(lexer.Token{
             Type:  i.openBlock,
@@ -94,7 +91,7 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
             i.spacesPerIndentation = i.currentSpaceCount
         }
 
-        if i.correctlyIndentedBefore &&
+        if !isOpenBlock &&
            i.currentSpaceCount > i.currentIndentation * i.spacesPerIndentation {
             i.currentSpaceCount = i.currentIndentation * i.spacesPerIndentation
         }
@@ -111,8 +108,6 @@ func (i *IndentationMatcher) Consume(t *lexer.LexerJob, length uint) {
             panic("Indent without a new block")
         }
     }
-
-    i.correctlyIndentedBefore = true
 
     if !isOpenBlock && i.currentIndentation - level == 0 {
         t.Emit(lexer.Token{

@@ -138,3 +138,7 @@ func TestExtraIndentAfterBlock(t *testing.T) {
 
 	lexer.CheckTokens(t, l, expected, source)
 }
+
+func TestDifferentSpaceChar(t *testing.T) {
+
+}
