@@ -8,19 +8,11 @@ import (
 	"testing"
 )
 
-type MockOutput struct {
-	messages [][]MessagePart
-}
-
-func (m *MockOutput) Receive(messageParts []MessagePart) {
-	m.messages = append(m.messages, messageParts)
-}
-
 // TODO Add proper tests
 func TestMessenger(t *testing.T) {
 	sourceGen := logging.GetTestLogSource(io.Discard)
 	m := NewMessenger(sourceGen)
-	mock := &MockOutput{}
+	mock := &TestOutput{}
 	m.AddOutput(mock)
 
 	m.Send([]MessagePart{
@@ -71,7 +63,7 @@ func TestMessenger(t *testing.T) {
 func TestMessengerRaceConditions(t *testing.T) {
 	sourceGen := logging.GetTestLogSource(io.Discard)
 	m := NewMessenger(sourceGen)
-	mock := &MockOutput{}
+	mock := &TestOutput{}
 	m.AddOutput(mock)
 
 	const goroutines = 10

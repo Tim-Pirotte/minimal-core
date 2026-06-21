@@ -32,6 +32,14 @@ type Output interface {
 	Receive([]MessagePart)
 }
 
+type TestOutput struct {
+	messages [][]MessagePart
+}
+
+func (m *TestOutput) Receive(messageParts []MessagePart) {
+	m.messages = append(m.messages, messageParts)
+}
+
 type MessagePart interface {
 	MessagePart()
 }

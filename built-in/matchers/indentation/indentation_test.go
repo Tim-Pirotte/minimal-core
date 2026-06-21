@@ -1,9 +1,15 @@
 package indentation
 
 import (
+	"io"
+	noconfig "minimal/minimal-core/built-in/config-loaders/no-config"
+	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/lexer"
+	"minimal/minimal-core/built-in/messaging"
+	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/primitives"
 	eofstopper "minimal/minimal-core/built-in/stoppers/eof-stopper"
+	"os"
 	"testing"
 )
 
@@ -25,7 +31,15 @@ func getLexer(
 		lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
 	)
 
+	messenger := messaging.NewMessenger(logging.GetTestLogSource(io.Discard))
+	messenger.AddOutput(logrendering.NewLogRenderer(
+		logging.GetTestLogSource(io.Discard),
+		os.Stdout,
+		noconfig.NewNoConfig(),
+	))
+
 	indentationMatcher := NewIndentationMatcher(
+		messenger,
 		':',
 		indentChar,
 		openBlock,

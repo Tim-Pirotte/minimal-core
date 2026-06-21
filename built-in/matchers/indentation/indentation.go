@@ -2,10 +2,12 @@ package indentation
 
 import (
 	"minimal/minimal-core/built-in/lexer"
+	"minimal/minimal-core/built-in/messaging"
 	"minimal/minimal-core/built-in/primitives"
 )
 
 type IndentationMatcher struct {
+    messenger               *messaging.Messenger
     openBlockSymbol         byte
     indentChar              byte
     openBlock               lexer.TokenType
@@ -17,11 +19,13 @@ type IndentationMatcher struct {
 }
 
 func NewIndentationMatcher(
+    messenger *messaging.Messenger,
     openBlockSymbol, indentChar byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
     spacesPerLevel uint,
 ) *IndentationMatcher {
     return &IndentationMatcher{
+        messenger,
         openBlockSymbol,
         indentChar,
         openBlock,
@@ -35,6 +39,7 @@ func NewIndentationMatcher(
 
 func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
 	m := &IndentationMatcher{
+        i.messenger,
         i.openBlockSymbol,
         i.indentChar,
         i.openBlock,
@@ -52,8 +57,20 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
     }
 
     if startIndent > 0 {
-        // TODO Error starts with indentation
-        panic("Cannot start with indentation")
+        l.Position += startIndent
+
+        i.messenger.Send([]messaging.MessagePart{
+           &messaging.Message{
+                Severity: messaging.Error,
+                Category: "IndentationParser",
+                Message: "Source code cannot start with indentation",
+            },
+            &messaging.Message{
+                Severity: messaging.Warning,
+                Category: "IndentationParser",
+                Message: "The indentation at the start will be skipped",
+            },
+        })
     }
 
     return m
