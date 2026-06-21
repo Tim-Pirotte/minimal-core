@@ -2,26 +2,26 @@ package logrendering
 
 import (
 	"fmt"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	messaging "minimal/minimal-core/built-in/messaging"
 )
 
-func severityToString(s usermessaging.Severity) string {
+func severityToString(s messaging.Severity) string {
 	var sAsStr string
 
 	switch s {
-	case usermessaging.Verbose:
+	case messaging.Verbose:
 		sAsStr = "VERBOSE"
-	case usermessaging.Debug:
+	case messaging.Debug:
 		sAsStr = "DEBUG"
-	case usermessaging.Info:
+	case messaging.Info:
 		sAsStr = "INFO"
-	case usermessaging.Warning:
+	case messaging.Warning:
 		sAsStr = "WARNING"
-	case usermessaging.SevereWarning:
+	case messaging.SevereWarning:
 		sAsStr = "SEVERE WARNING"
-	case usermessaging.Error:
+	case messaging.Error:
 		sAsStr = "ERROR"
-	case usermessaging.Critical:
+	case messaging.Critical:
 		sAsStr = "CRITICAL"
 	default:
 		panic(fmt.Sprintf("missing string representation for the enum Severity: %d", s))

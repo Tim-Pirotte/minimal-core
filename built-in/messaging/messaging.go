@@ -1,4 +1,4 @@
-package usermessaging
+package messaging
 
 import (
 	"fmt"

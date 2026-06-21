@@ -1,13 +1,11 @@
 package logrendering
 
 import (
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"bytes"
+	messaging "minimal/minimal-core/built-in/messaging"
 )
 
-func (l *LogRenderer) OutputMessage(h usermessaging.Handle, m usermessaging.Message) {
-	b, _ := h.(*bytesBuffer)
-	bb := b.bytesBuffer
-
+func (l *LogRenderer) OutputMessage(bb *bytes.Buffer, m messaging.Message) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the message renderer")
     }
@@ -24,12 +22,12 @@ func (l *LogRenderer) OutputMessage(h usermessaging.Handle, m usermessaging.Mess
 	if l.getBoolOrDefault("general", "text_has_severity_color", false) {
 		bb.WriteString(l.getSeverityColor(m.Severity))
 	}
-	
+
 	bb.WriteString(m.Message)
 
 	if l.getBoolOrDefault("general", "text_has_severity_color", false) {
 		bb.WriteString(resetAnsi)
 	}
-	
+
 	bb.WriteString("\n")
 }

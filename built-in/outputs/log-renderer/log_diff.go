@@ -1,14 +1,12 @@
 package logrendering
 
 import (
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"bytes"
+	messaging "minimal/minimal-core/built-in/messaging"
 	"strings"
 )
 
-func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff) {
-	b, _ := h.(*bytesBuffer)
-	bb := b.bytesBuffer
-
+func (l *LogRenderer) OutputDiff(bb *bytes.Buffer, diff messaging.Diff) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the diff renderer")
     }
@@ -35,12 +33,12 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	// Lines out of focus before
 	for i, line := range diff.LinesBefore {
 		renderLineNumber(
-			bb, 
-			diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i), 
-			largestAmountOfDigits, 
+			bb,
+			diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i),
+			largestAmountOfDigits,
 			l.getStrOrDefault("diff", "out_of_focus_line_number_color", ""),
 		)
-		
+
 		bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
 		bb.WriteString(l.getStrOrDefault("diff", "line_count_separator", "|"))
 		bb.WriteString(resetAnsi)
@@ -49,16 +47,16 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 		bb.WriteString(line)
 		bb.WriteString("\n")
 	}
-	
+
 	// Lines to remove
 	for i, line := range diff.LinesToRemove {
 		renderLineNumber(
-			bb, 
-			diff.StartLineNumber + uint(i), 
-			largestAmountOfDigits, 
+			bb,
+			diff.StartLineNumber + uint(i),
+			largestAmountOfDigits,
 			l.getStrOrDefault("diff", "in_focus_line_number_color", ""),
 		)
-		
+
 		bb.WriteString(l.getStrOrDefault("diff", "remove_line_color", ""))
 		bb.WriteString(l.getStrOrDefault("diff", "remove_line_symbol", "-"))
 		bb.WriteString(resetAnsi)
@@ -71,9 +69,9 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	// Lines to add
 	for i, line := range diff.LinesToAdd {
 		renderLineNumber(
-			bb, 
-			diff.StartLineNumber + uint(i), 
-			largestAmountOfDigits, 
+			bb,
+			diff.StartLineNumber + uint(i),
+			largestAmountOfDigits,
 			l.getStrOrDefault("diff", "in_focus_line_number_color", ""),
 		)
 
@@ -89,12 +87,12 @@ func (l *LogRenderer) OutputDiff(h usermessaging.Handle, diff usermessaging.Diff
 	// Lines out of focus after
 	for i, line := range diff.LinesAfter {
 		renderLineNumber(
-			bb, 
-			diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i), 
-			largestAmountOfDigits, 
+			bb,
+			diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i),
+			largestAmountOfDigits,
 			l.getStrOrDefault("diff", "out_of_focus_line_number_color", ""),
 		)
-		
+
 		bb.WriteString(l.getStrOrDefault("general", "symbol_color", ""))
 		bb.WriteString(l.getStrOrDefault("diff", "line_count_separator", "|"))
 		bb.WriteString(resetAnsi)

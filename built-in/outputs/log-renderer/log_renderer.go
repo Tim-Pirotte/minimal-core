@@ -5,7 +5,7 @@ import (
 	"io"
 	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"minimal/minimal-core/built-in/messaging"
 )
 
 type LogRenderer struct {
@@ -15,8 +15,8 @@ type LogRenderer struct {
 }
 
 func NewLogRenderer(
-	sourceGen *logging.SourceGenerator, 
-	writer io.Writer, 
+	sourceGen *logging.SourceGenerator,
+	writer io.Writer,
 	configLoader configloader.ConfigLoader,
 ) *LogRenderer {
 	logger, _ := sourceGen.GetLogger("logRendering")
@@ -24,19 +24,24 @@ func NewLogRenderer(
 	return &LogRenderer{logger, writer, configLoader}
 }
 
-type bytesBuffer struct {
-	bytesBuffer *bytes.Buffer
-}
+func (l *LogRenderer) Output(messageParts []messaging.MessageType) {
+	bb := bytes.NewBuffer(make([]byte, 0))
 
-func (b *bytesBuffer) Handle() {}
-
-func (l *LogRenderer) CreateHandle() usermessaging.Handle {
-	return &bytesBuffer{bytes.NewBuffer(make([]byte, 0))}
-}
-
-func (l *LogRenderer) Finish(h usermessaging.Handle) {
-	b, _ := h.(*bytesBuffer)
-	bb := b.bytesBuffer
+	for _, part := range messageParts {
+		switch p := part.(type) {
+		case *messaging.Message:
+			l.OutputMessage(bb, *p)
+		case *messaging.CodeContext:
+			l.OutputContext(bb, *p)
+		case *messaging.Hint:
+			l.OutputHint(bb, *p)
+		case *messaging.Diff:
+			l.OutputDiff(bb, *p)
+		default:
+			// TODO change to proper error
+			panic("unsuported message part")
+		}
+	}
 
 	l.writer.Write([]byte(resetAnsi))
 	_, err := l.writer.Write(bb.Bytes())

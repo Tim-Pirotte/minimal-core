@@ -1,13 +1,11 @@
 package logrendering
 
 import (
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"bytes"
+	messaging "minimal/minimal-core/built-in/messaging"
 )
 
-func (l *LogRenderer) OutputHint(handle usermessaging.Handle, hint usermessaging.Hint) {
-	b, _ := handle.(*bytesBuffer)
-	bb := b.bytesBuffer
-	
+func (l *LogRenderer) OutputHint(bb *bytes.Buffer, hint messaging.Hint) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the hint renderer")
     }

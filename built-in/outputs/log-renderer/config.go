@@ -2,30 +2,30 @@ package logrendering
 
 import (
 	"fmt"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	"minimal/minimal-core/built-in/messaging"
 )
 
 const (
 	resetAnsi = "\033[0m"
 )
 
-func (l *LogRenderer) getSeverityColor(s usermessaging.Severity) string {
+func (l *LogRenderer) getSeverityColor(s messaging.Severity) string {
 	var sAsStr string
 
 	switch s {
-	case usermessaging.Verbose:
+	case messaging.Verbose:
 		sAsStr = l.getStrOrDefault("severity", "verbose_color", "")
-	case usermessaging.Debug:
+	case messaging.Debug:
 		sAsStr = l.getStrOrDefault("severity", "debug_color", "")
-	case usermessaging.Info:
+	case messaging.Info:
 		sAsStr = l.getStrOrDefault("severity", "info_color", "")
-	case usermessaging.Warning:
+	case messaging.Warning:
 		sAsStr = l.getStrOrDefault("severity", "warning_color", "")
-	case usermessaging.SevereWarning:
+	case messaging.SevereWarning:
 		sAsStr = l.getStrOrDefault("severity", "severe_warning_color", "")
-	case usermessaging.Error:
+	case messaging.Error:
 		sAsStr = l.getStrOrDefault("severity", "error_color", "")
-	case usermessaging.Critical:
+	case messaging.Critical:
 		sAsStr = l.getStrOrDefault("severity", "critical_color", "")
 	default:
 		panic(fmt.Sprintf("missing color for the enum Severity: %d", s))
