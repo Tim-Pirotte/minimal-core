@@ -98,9 +98,9 @@ func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 }
 
 func (m *Messenger) worker() {
-	for messages := range m.queue {
+	for messageParts := range m.queue {
 		for _, output := range m.outputs {
-			output.Receive(messages)
+			output.Receive(messageParts)
 		}
 	}
 
@@ -117,6 +117,6 @@ func (m *Messenger) Close() {
 	<-m.done
 }
 
-func (m *Messenger) Send(messages []MessagePart) {
-	m.queue<-messages
+func (m *Messenger) Send(messageParts []MessagePart) {
+	m.queue<-messageParts
 }

@@ -12,8 +12,8 @@ type MockOutput struct {
 	messages [][]MessagePart
 }
 
-func (m *MockOutput) Receive(messages []MessagePart) {
-	m.messages = append(m.messages, messages)
+func (m *MockOutput) Receive(messageParts []MessagePart) {
+	m.messages = append(m.messages, messageParts)
 }
 
 // TODO Add proper tests
@@ -100,8 +100,8 @@ func TestMessengerRaceConditions(t *testing.T) {
 
 	actualLength := 0
 
-	for _, message := range mock.messages {
-		actualLength += len(message)
+	for _, messageParts := range mock.messages {
+		actualLength += len(messageParts)
 	}
 
 	if actualLength != expectedTotal {
