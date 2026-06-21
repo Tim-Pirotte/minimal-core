@@ -1,55 +1,32 @@
 package usermessaging
 
 import (
+	"fmt"
 	"io"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"sync"
 	"testing"
 )
 
-type MockHandle struct{
-	messages []Message
-}
-
-func (m *MockHandle) Handle() {}
-
 type MockOutput struct {
-	sync.Mutex
-	messages []Message
-	finished bool
+	messages [][]MessageType
 }
 
-func (m *MockOutput) CreateHandle() Handle { 
-	return &MockHandle{} 
+func (m *MockOutput) Output(messages []MessageType) {
+	m.messages = append(m.messages, messages)
 }
 
-func (m *MockOutput) Finish(h Handle) { 
-	m.Lock()
-	defer m.Unlock()
-	
-	mockHandle, _ := h.(*MockHandle)
-	m.messages = append(m.messages, mockHandle.messages...)
-	m.finished = true
-}
-
-func (m *MockOutput) OutputMessage(h Handle, msg Message) {
-	mockHandle, _ := h.(*MockHandle)
-	mockHandle.messages = append(mockHandle.messages, msg)
-}
-
-func (m *MockOutput) OutputContext(h Handle, ctx CodeContext) {}
-func (m *MockOutput) OutputDiff(h Handle, d Diff)             {}
-func (m *MockOutput) OutputHint(h Handle, hi Hint)            {}
-
+// TODO Add proper tests
 func TestMessenger(t *testing.T) {
 	sourceGen := logging.GetTestLogSource(io.Discard)
 	m := NewMessenger(sourceGen)
 	mock := &MockOutput{}
 	m.AddOutput(mock)
 
-	tx := m.CreateLogTransaction()
-	m.LogMessage(tx, Message{Critical, "Category", "Hello, World!"})
-	m.CommitLogTransaction(tx)
+	m.Output([]MessageType{
+		&Message{Critical, "Category", "Hello, World!"},
+	})
+
 	m.Close()
 
 	expectedLength := 1
@@ -58,20 +35,36 @@ func TestMessenger(t *testing.T) {
 		t.Fatal("Expected length of messages to be", expectedLength, "but got", len(mock.messages))
 	}
 
+	expectedInnerLength := 1
+
+	if len(mock.messages[0]) != expectedInnerLength {
+		t.Fatal(
+			"Expected length of the message to be",
+			expectedInnerLength,
+			"but got",
+			len(mock.messages[0]),
+		)
+	}
+
+	message, ok := mock.messages[0][0].(*Message)
+
+	if !ok {
+		t.Fatal(
+			"Expected the first message to be of type *Message but got",
+			fmt.Sprintf("%T\n", mock.messages[0][0]),
+		)
+	}
+
 	expectedCategory := "Category"
 
-	if mock.messages[0].Category != expectedCategory {
-		t.Fatal("Expected category to be", expectedCategory, "but got", mock.messages[0].Category)
+	if message.Category != expectedCategory {
+		t.Fatal("Expected category to be", expectedCategory, "but got", message.Category)
 	}
 
-	expectedMessages := "Hello, World!"
+	expectedMessage := "Hello, World!"
 
-	if mock.messages[0].Message != expectedMessages {
-		t.Fatal("Expected message to be", expectedMessages, "but got", mock.messages[0].Message)
-	}
-
-	if !mock.finished {
-		t.Error("Expected transaction to be finished")
+	if message.Message != expectedMessage {
+		t.Fatal("Expected message to be", expectedMessage, "but got", message.Message)
 	}
 }
 
@@ -90,13 +83,13 @@ func TestMessengerRaceConditions(t *testing.T) {
 
 		go func(id int) {
 			defer wg.Done()
-			tx := m.CreateLogTransaction()
-			
-			for range messagesPerRoutine {
-				m.LogMessage(tx, Message{Critical, "Category", "Hello, World!"})
+			messages := make([]MessageType, messagesPerRoutine)
+
+			for i := range messagesPerRoutine {
+				messages[i] = &Message{Critical, "Category", "Hello, World!"}
 			}
-			
-			m.CommitLogTransaction(tx)
+
+			m.Output(messages)
 		}(i)
 	}
 
@@ -105,7 +98,13 @@ func TestMessengerRaceConditions(t *testing.T) {
 
 	expectedTotal := goroutines * messagesPerRoutine
 
-	if len(mock.messages) != expectedTotal {
+	actualLength := 0
+
+	for _, message := range mock.messages {
+		actualLength += len(message)
+	}
+
+	if actualLength != expectedTotal {
 		t.Errorf("Data loss detected: expected %d messages, got %d", expectedTotal, len(mock.messages))
 	}
 }

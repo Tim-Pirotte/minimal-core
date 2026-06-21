@@ -3,45 +3,92 @@ package usermessaging
 import (
 	"fmt"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	"minimal/minimal-core/built-in/primitives"
 	"reflect"
-	"sync"
 )
 
-const bufferSize = 10
+const bufferSize = 16
 
 type Messenger struct {
 	logger  logging.Logger
 	outputs []Output
-	queue   chan func()
+	queue   chan []MessageType
 	done    chan bool
-
-	mutex   sync.RWMutex
 }
 
-type Transaction struct {
-	handles map[Output]Handle
-}
+type Severity uint8
+
+const (
+	Verbose Severity = iota
+	Debug
+	Info
+	Warning
+	SevereWarning
+	Error
+	Critical
+)
 
 type Output interface {
-	CreateHandle() Handle
-	Finish(Handle)
-	OutputMessage(Handle, Message)
-	OutputContext(Handle, CodeContext)
-	OutputDiff(Handle, Diff)
-	OutputHint(Handle, Hint)
+	Output([]MessageType)
 }
 
-type Handle interface {
-	Handle()
+type MessageType interface {
+	MessageType()
 }
+
+type Message struct {
+	Severity Severity
+	Category string
+	Message  string
+}
+
+func (*Message) MessageType() {}
+
+type CodeContext struct {
+	Source          string
+	StartLineNumber uint
+	LinesBefore     []string
+	LinesInFocus    []Line
+	LinesAfter      []string
+}
+
+func (*CodeContext) MessageType() {}
+
+type Line struct {
+	Content     string
+	Annotations []Annotation
+}
+
+type Annotation struct {
+	Range    primitives.Range
+	Message  string
+	Severity Severity
+}
+
+type Diff struct {
+	StartLineNumber uint
+	LinesBefore     []string
+	LinesToRemove   []string
+	LinesToAdd      []string
+	LinesAfter      []string
+}
+
+func (*Diff) MessageType() {}
+
+type Hint struct {
+	Text              string
+	MoreInfoReference string
+}
+
+func (*Hint) MessageType() {}
 
 func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 	logger, _ := sourceGen.GetLogger("messenger")
-	
+
 	m := &Messenger{
 		logger:  logger,
 		outputs: make([]Output, 0),
-		queue:   make(chan func(), bufferSize),
+		queue:   make(chan []MessageType, bufferSize),
 		done:    make(chan bool),
 	}
 
@@ -51,17 +98,16 @@ func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 }
 
 func (m *Messenger) worker() {
-	for job := range m.queue {
-		job()
+	for messages := range m.queue {
+		for _, output := range m.outputs {
+			output.Output(messages)
+		}
 	}
 
 	close(m.done)
 }
 
 func (l *Messenger) AddOutput(outputChannel Output) {
-	l.mutex.Lock()
-    defer l.mutex.Unlock()
-
 	l.outputs = append(l.outputs, outputChannel)
 	l.logger.Debug().Str("output", fmt.Sprintf("%v", reflect.TypeOf(outputChannel))).Msg("output registered")
 }
@@ -71,48 +117,6 @@ func (m *Messenger) Close() {
 	<-m.done
 }
 
-func (l *Messenger) CreateLogTransaction() *Transaction {
-	l.mutex.RLock()
-    defer l.mutex.RUnlock()
-	
-	transaction := Transaction{make(map[Output]Handle, 0)}
-
-	for _, o := range l.outputs {
-		transaction.handles[o] = o.CreateHandle()
-	}
-
-	return &transaction
-}
-
-func (m *Messenger) CommitLogTransaction(transaction *Transaction) {
-	m.runPerOutput(transaction, func(o Output, h Handle) { o.Finish(h) })
-}
-
-func (m *Messenger) LogMessage(transaction *Transaction, message Message) {
-	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputMessage(h, message) })
-}
-
-func (m *Messenger) LogContext(transaction *Transaction, context CodeContext) {
-	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputContext(h, context) })
-}
-
-func (m *Messenger) LogDiff(transaction *Transaction, diff Diff) {
-	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputDiff(h, diff) })
-}
-
-func (m *Messenger) LogHint(transaction *Transaction, hint Hint) {
-	m.runPerOutput(transaction, func(o Output, h Handle) { o.OutputHint(h, hint) })
-}
-
-func (m *Messenger) runPerOutput(transaction *Transaction, f func(Output, Handle)) {
-	m.queue <- func() {
-		m.mutex.RLock()
-    	defer m.mutex.RUnlock()
-
-		for _, o := range m.outputs {
-			if handle, ok := transaction.handles[o]; ok {
-				f(o, handle)
-			}
-		}
-	}
+func (m *Messenger) Output(messages []MessageType) {
+	m.queue<-messages
 }
