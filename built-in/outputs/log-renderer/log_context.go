@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func (l *LogRenderer) OutputContext(bb *bytes.Buffer, ctx messaging.CodeContext) {
+func (l *LogRenderer) outputContext(bb *bytes.Buffer, ctx messaging.CodeContext) {
     if bb == nil {
         panic("an uninitialized bytes buffer was passed to the context renderer")
     }

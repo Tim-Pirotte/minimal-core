@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (l *LogRenderer) OutputDiff(bb *bytes.Buffer, diff messaging.Diff) {
+func (l *LogRenderer) outputDiff(bb *bytes.Buffer, diff messaging.Diff) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the diff renderer")
     }

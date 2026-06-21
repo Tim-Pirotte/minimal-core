@@ -24,19 +24,19 @@ func NewLogRenderer(
 	return &LogRenderer{logger, writer, configLoader}
 }
 
-func (l *LogRenderer) Output(messageParts []messaging.MessageType) {
+func (l *LogRenderer) Receive(messageParts []messaging.MessagePart) {
 	bb := bytes.NewBuffer(make([]byte, 0))
 
 	for _, part := range messageParts {
 		switch p := part.(type) {
 		case *messaging.Message:
-			l.OutputMessage(bb, *p)
+			l.outputMessage(bb, *p)
 		case *messaging.CodeContext:
-			l.OutputContext(bb, *p)
+			l.outputContext(bb, *p)
 		case *messaging.Hint:
-			l.OutputHint(bb, *p)
+			l.outputHint(bb, *p)
 		case *messaging.Diff:
-			l.OutputDiff(bb, *p)
+			l.outputDiff(bb, *p)
 		default:
 			// TODO change to proper error
 			panic("unsuported message part")

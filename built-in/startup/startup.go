@@ -7,7 +7,7 @@ import (
 	noconfig "minimal/minimal-core/built-in/config-loaders/no-config"
 	"minimal/minimal-core/built-in/config-loaders/shell"
 	logging "minimal/minimal-core/built-in/internal-logging"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
+	messaging "minimal/minimal-core/built-in/messaging"
 	"os"
 	"path"
 )
@@ -20,20 +20,20 @@ var commandsConfigPath = path.Join(".", "commands")
 type Commands struct {
 	commands map[string]func(args []string) (ok bool)
 	logger logging.Logger
-	messenger *usermessaging.Messenger
+	messenger *messaging.Messenger
 	ConfigLoader *shell.ShellConfigLoader
 	fs fs.FS
 }
 
 func NewCommands(
-	sourceGen *logging.SourceGenerator, 
-	messenger *usermessaging.Messenger,
+	sourceGen *logging.SourceGenerator,
+	messenger *messaging.Messenger,
 	configLoader *shell.ShellConfigLoader,
 ) *Commands {
 	logger, _ := sourceGen.GetLogger("startup")
 
 	return &Commands{
-		make(map[string]func(args []string) (ok bool)), 
+		make(map[string]func(args []string) (ok bool)),
 		logger,
 		messenger,
 		configLoader,
@@ -85,7 +85,7 @@ func (c *Commands) loadFromConfig(configName string) func(args []string) (ok boo
 	}
 
 	command, ok := commandAny.(string)
-	
+
 	if !ok {
 		return nil
 	}
@@ -94,7 +94,7 @@ func (c *Commands) loadFromConfig(configName string) func(args []string) (ok boo
 		c.logRunningCommand(command, true)
 		return startupFunc
 	}
-	
+
 	c.logCommandNotExists(command, configName)
 
 	return nil
@@ -119,19 +119,20 @@ func (c *Commands) logNotEnoughArgs(argsLength int) {
 		Int("actual_args", argsLength).
 		Msg("not enough arguments")
 
-	t := c.messenger.CreateLogTransaction()
+	messageParts := []messaging.MessagePart{
+		&messaging.Message{
+			Severity: messaging.Critical,
+			Category: "StartupError",
+			Message: fmt.Sprintf(
+				"Expected at least %d arguments but got %d arguments",
+				minimumExpectedArgs,
+				argsLength,
+			),
+		},
+		&messaging.Hint{Text: "mnm <commandName>", MoreInfoReference: ""},
+	}
 
-	c.messenger.LogMessage(
-		t, 
-		usermessaging.Message{
-			Severity: usermessaging.Critical, 
-			Category: "StartupError", 
-			Message: fmt.Sprintf("Expected at least %d arguments but got %d arguments", minimumExpectedArgs, argsLength)},
-	)
-
-	c.messenger.LogHint(t, usermessaging.Hint{Text: "mnm <commandName>", MoreInfoReference: ""})
-
-	c.messenger.CommitLogTransaction(t)
+	c.messenger.Send(messageParts)
 }
 
 func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {

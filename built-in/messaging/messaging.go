@@ -12,7 +12,7 @@ const bufferSize = 16
 type Messenger struct {
 	logger  logging.Logger
 	outputs []Output
-	queue   chan []MessageType
+	queue   chan []MessagePart
 	done    chan bool
 }
 
@@ -29,11 +29,11 @@ const (
 )
 
 type Output interface {
-	Output([]MessageType)
+	Receive([]MessagePart)
 }
 
-type MessageType interface {
-	MessageType()
+type MessagePart interface {
+	MessagePart()
 }
 
 type Message struct {
@@ -42,7 +42,7 @@ type Message struct {
 	Message  string
 }
 
-func (*Message) MessageType() {}
+func (*Message) MessagePart() {}
 
 type CodeContext struct {
 	Source          string
@@ -52,7 +52,7 @@ type CodeContext struct {
 	LinesAfter      []string
 }
 
-func (*CodeContext) MessageType() {}
+func (*CodeContext) MessagePart() {}
 
 type Line struct {
 	Content     string
@@ -73,14 +73,14 @@ type Diff struct {
 	LinesAfter      []string
 }
 
-func (*Diff) MessageType() {}
+func (*Diff) MessagePart() {}
 
 type Hint struct {
 	Text              string
 	MoreInfoReference string
 }
 
-func (*Hint) MessageType() {}
+func (*Hint) MessagePart() {}
 
 func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 	logger, _ := sourceGen.GetLogger("messenger")
@@ -88,7 +88,7 @@ func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 	m := &Messenger{
 		logger:  logger,
 		outputs: make([]Output, 0),
-		queue:   make(chan []MessageType, bufferSize),
+		queue:   make(chan []MessagePart, bufferSize),
 		done:    make(chan bool),
 	}
 
@@ -100,7 +100,7 @@ func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 func (m *Messenger) worker() {
 	for messages := range m.queue {
 		for _, output := range m.outputs {
-			output.Output(messages)
+			output.Receive(messages)
 		}
 	}
 
@@ -117,6 +117,6 @@ func (m *Messenger) Close() {
 	<-m.done
 }
 
-func (m *Messenger) Output(messages []MessageType) {
+func (m *Messenger) Send(messages []MessagePart) {
 	m.queue<-messages
 }

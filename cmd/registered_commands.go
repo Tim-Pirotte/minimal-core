@@ -3,17 +3,17 @@ package main
 import (
 	"minimal/minimal-core/built-in/commands/templates"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	messaging "minimal/minimal-core/built-in/messaging"
 	"minimal/minimal-core/built-in/startup"
 	"minimal/minimal-core/built-in/stores/directory"
 	"minimal/minimal-core/built-in/ui"
 	"minimal/minimal-core/built-in/user-interfaces/tui"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
 )
 
 func registerCommands(
-	commands *startup.Commands, 
-	sourceGen *logging.SourceGenerator, 
-	messenger *usermessaging.Messenger,
+	commands *startup.Commands,
+	sourceGen *logging.SourceGenerator,
+	messenger *messaging.Messenger,
 	ui ui.UI,
 ) {
 	logger, _ := sourceGen.GetLogger("commandRegistry")

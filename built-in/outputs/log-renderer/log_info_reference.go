@@ -5,7 +5,7 @@ import (
 	messaging "minimal/minimal-core/built-in/messaging"
 )
 
-func (l *LogRenderer) OutputHint(bb *bytes.Buffer, hint messaging.Hint) {
+func (l *LogRenderer) outputHint(bb *bytes.Buffer, hint messaging.Hint) {
 	if bb == nil {
         panic("an uninitialized bytes buffer was passed to the hint renderer")
     }

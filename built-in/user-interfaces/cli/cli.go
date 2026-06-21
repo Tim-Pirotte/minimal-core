@@ -6,8 +6,8 @@ import (
 	"io"
 	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	messaging "minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,9 +23,9 @@ type CLI struct {
 }
 
 func NewCli(
-	sourceGen *logging.SourceGenerator, 
-	messenger *usermessaging.Messenger, 
-	reader io.Reader, 
+	sourceGen *logging.SourceGenerator,
+	messenger *messaging.Messenger,
+	reader io.Reader,
 	writer io.Writer,
 	configLoader configloader.ConfigLoader,
 ) *CLI {
@@ -47,22 +47,22 @@ func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok boo
 	}
 
 	sb.WriteByte('/')
-	
+
 	if !defaultTrue {
 		sb.WriteByte('N')
 	} else {
 		sb.WriteByte('n')
 	}
-	
+
 	sb.WriteByte(')')
 
 	q := sb.String()
-	
+
 	for {
 		c.outputWriter.WriteString(q)
-		
+
 		text, err := c.inputReader.ReadString('\n')
-		
+
 		if err != nil {
 			c.logger.Error().Err(err).Msg("bool read")
 			return false, false

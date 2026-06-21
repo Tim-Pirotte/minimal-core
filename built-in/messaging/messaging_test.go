@@ -9,10 +9,10 @@ import (
 )
 
 type MockOutput struct {
-	messages [][]MessageType
+	messages [][]MessagePart
 }
 
-func (m *MockOutput) Output(messages []MessageType) {
+func (m *MockOutput) Receive(messages []MessagePart) {
 	m.messages = append(m.messages, messages)
 }
 
@@ -23,7 +23,7 @@ func TestMessenger(t *testing.T) {
 	mock := &MockOutput{}
 	m.AddOutput(mock)
 
-	m.Output([]MessageType{
+	m.Send([]MessagePart{
 		&Message{Critical, "Category", "Hello, World!"},
 	})
 
@@ -83,13 +83,13 @@ func TestMessengerRaceConditions(t *testing.T) {
 
 		go func(id int) {
 			defer wg.Done()
-			messages := make([]MessageType, messagesPerRoutine)
+			messages := make([]MessagePart, messagesPerRoutine)
 
 			for i := range messagesPerRoutine {
 				messages[i] = &Message{Critical, "Category", "Hello, World!"}
 			}
 
-			m.Output(messages)
+			m.Send(messages)
 		}(i)
 	}
 

@@ -5,10 +5,10 @@ import (
 	"minimal/minimal-core/built-in/config-loaders/shell"
 	"minimal/minimal-core/built-in/config-loaders/toml"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	messaging "minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/startup"
 	"minimal/minimal-core/built-in/user-interfaces/cli"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -23,7 +23,7 @@ func run() int {
 
 	configLoader := shell.NewShellConfigLoader(toml.NewConfigLoader(sourceGen))
 
-	messenger := usermessaging.NewMessenger(sourceGen)
+	messenger := messaging.NewMessenger(sourceGen)
 	defer messenger.Close()
 
 	logRenderer := logrendering.NewLogRenderer(sourceGen, os.Stdout, configLoader)
