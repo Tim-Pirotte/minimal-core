@@ -3,6 +3,7 @@ package indentation
 import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/primitives"
+	eofstopper "minimal/minimal-core/built-in/stoppers/eof-stopper"
 	"testing"
 )
 
@@ -306,4 +307,32 @@ func TestOpenBlockEOLSuffix(t *testing.T) {
 	}
 
 	lexer.CheckTokens(t, l, expected, source)
+}
+
+func TestEOLPrefix(t *testing.T) {
+	source := "\na"
+
+	l, _, _, eolType := getLexer(' ', 0)
+
+	expected := []lexer.Token{
+		{Type: eolType, Value: "\n", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 1, Length: 1}},
+	}
+
+	lexer.CheckTokens(t, l, expected, source)
+}
+
+func FuzzIndent(f *testing.F) {
+	f.Add("")
+	f.Add("\n")
+	f.Add(" ")
+	f.Add(":\n a")
+	f.Add(":\n :\n  a\nb")
+	f.Add("a\n b")
+
+	l, _, _, _ := getLexer(' ', 0)
+
+	f.Fuzz(func(t *testing.T, source string) {
+		l.Lex(source, eofstopper.NewEOFStopper(), 1)
+	})
 }
