@@ -16,7 +16,7 @@ func TestMessenger(t *testing.T) {
 	m.AddOutput(mock)
 
 	m.Send([]MessagePart{
-		&Message{Critical, "Category", "Hello, World!"},
+		&Message{Critical, "Hello, World!"},
 	})
 
 	m.Close()
@@ -47,12 +47,6 @@ func TestMessenger(t *testing.T) {
 		)
 	}
 
-	expectedCategory := "Category"
-
-	if message.Category != expectedCategory {
-		t.Fatal("Expected category to be", expectedCategory, "but got", message.Category)
-	}
-
 	expectedMessage := "Hello, World!"
 
 	if message.Message != expectedMessage {
@@ -78,7 +72,7 @@ func TestMessengerRaceConditions(t *testing.T) {
 			messages := make([]MessagePart, messagesPerRoutine)
 
 			for i := range messagesPerRoutine {
-				messages[i] = &Message{Critical, "Category", "Hello, World!"}
+				messages[i] = &Message{Critical, "Hello, World!"}
 			}
 
 			m.Send(messages)

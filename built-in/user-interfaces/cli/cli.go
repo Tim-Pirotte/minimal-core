@@ -29,8 +29,8 @@ func NewCli(
 	writer io.Writer,
 	configLoader configloader.ConfigLoader,
 ) *CLI {
-	messenger.AddOutput(logrendering.NewLogRenderer(sourceGen, os.Stdout, configLoader))
-	logger, _ := sourceGen.GetLogger("cli")
+	messenger.AddOutput(logrendering.NewLogRenderer(sourceGen, os.Stdout))
+	logger, _ := sourceGen.GetLogger("CLI")
 
 	return &CLI{*logging.NewRingBuffer(RingBufferSize), bufio.NewReader(reader), bufio.NewWriter(writer), logger}
 }

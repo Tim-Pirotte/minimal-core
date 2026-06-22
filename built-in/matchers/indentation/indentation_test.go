@@ -2,7 +2,6 @@ package indentation
 
 import (
 	"io"
-	noconfig "minimal/minimal-core/built-in/config-loaders/no-config"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
@@ -32,11 +31,7 @@ func getLexer(
 	)
 
 	messenger := messaging.NewMessenger(logging.GetTestLogSource(io.Discard))
-	messenger.AddOutput(logrendering.NewLogRenderer(
-		logging.GetTestLogSource(io.Discard),
-		os.Stdout,
-		noconfig.NewNoConfig(),
-	))
+	messenger.AddOutput(logrendering.NewLogRenderer(logging.GetTestLogSource(io.Discard), os.Stdout))
 
 	indentationMatcher := NewIndentationMatcher(
 		messenger,

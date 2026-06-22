@@ -19,8 +19,8 @@ type TOMLConfig struct {
 }
 
 func NewConfigLoader(srcGen *logging.SourceGenerator) *TOMLConfig {
-	logger, _ := srcGen.GetLogger("tomlConfigLoader")
-	
+	logger, _ := srcGen.GetLogger("TOMLConfigLoader")
+
 	return &TOMLConfig{"", nil, logger}
 }
 
@@ -43,10 +43,10 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 	}
 
 	sectionContent, ok := t.cache[source][section]
-	
+
 	if !ok {
 		t.logSectionNotInConfig(source, section, field)
-		
+
 		return nil, false
 	}
 
@@ -54,7 +54,7 @@ func (t *TOMLConfig) Get(source, section, field string) (value any, ok bool) {
 
 	if !ok {
 		t.logFieldNotInSection(source, section, field)
-	
+
 		return nil, false
 	}
 

@@ -20,8 +20,8 @@ type DirectoryStore struct {
 }
 
 func NewDirectoryStore(sourceGen *logging.SourceGenerator) *DirectoryStore {
-	logger, _ := sourceGen.GetLogger("directoryStore")
-	
+	logger, _ := sourceGen.GetLogger("DirectoryStore")
+
 	return &DirectoryStore{logger}
 }
 
@@ -63,7 +63,7 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string,
 	}
 
 	err := os.CopyFS(targetPath, os.DirFS(sourcePath))
-    
+
 	switch err.(type) {
 	case nil:
 	case *fs.PathError:
@@ -77,7 +77,7 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string,
 			Str("source_path", sourcePath).
 			Str("target_path", targetPath).
 			Msg("unforseen error loading template")
-	
+
 		return false
 	}
 
@@ -97,7 +97,7 @@ func (d *DirectoryStore) getSourcePath(name string) (string, bool) {
 
 func (d *DirectoryStore) checkPath(path, reference string) {
 	_, err := os.Stat(path)
-	
+
 	if err != nil {
 		d.logger.Error().
 			Str("path", path).
@@ -109,7 +109,7 @@ func (d *DirectoryStore) checkPath(path, reference string) {
 func (d *DirectoryStore) StoreTemplate(name, location, args []string) (ok bool) {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.SetOutput(io.Discard) // TODO log error
-	
+
 	var symbolicLink bool
 	fs.BoolVar(&symbolicLink, "ln", false, "")
 

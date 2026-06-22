@@ -12,7 +12,7 @@ func resetInit() {
 
 func TestRingBuffer(t *testing.T) {
 	resetInit()
-	
+
 	rb := NewRingBuffer(10)
 
 	firstInput := "Hello, "
@@ -24,7 +24,7 @@ func TestRingBuffer(t *testing.T) {
 	}
 
 	var firstOutput bytes.Buffer
-	
+
 	_, err = rb.WriteTo(&firstOutput)
 
 	if err != nil {
@@ -46,7 +46,7 @@ func TestRingBuffer(t *testing.T) {
 	}
 
 	var secondOutput bytes.Buffer
-	
+
 	_, err = rb.WriteTo(&secondOutput)
 
 	if err != nil {
@@ -74,7 +74,7 @@ func TestEmptyBuffer(t *testing.T) {
 	}
 
 	var firstOutput bytes.Buffer
-	
+
 	_, err = rb.WriteTo(&firstOutput)
 
 	if err != nil {
@@ -96,7 +96,7 @@ func TestEmptyBuffer(t *testing.T) {
 	}
 
 	var secondOutput bytes.Buffer
-	
+
 	_, err = rb.WriteTo(&secondOutput)
 
 	if err != nil {
@@ -143,7 +143,7 @@ func TestLogger(t *testing.T) {
 	}
 
 	thirdExpected := "\"level\":\"info\""
-	
+
 	if !strings.Contains(actual, thirdExpected) {
 		t.Error("Expected", thirdExpected, "in", actual)
 	}
@@ -187,8 +187,8 @@ func TestMultipleSources(t *testing.T) {
 	ringBuffer := NewRingBuffer(500)
 	rootSource := Init(ringBuffer)
 
-	firstLogger, firstSource := rootSource.GetLogger("firstLevel")
-	secondLogger, _ := firstSource.GetLogger("secondLevel")
+	firstLogger, firstSource := rootSource.GetLogger("FirstLevel")
+	secondLogger, _ := firstSource.GetLogger("SecondLevel")
 
 	firstLogger.Info().Msg("Hello, world!")
 	secondLogger.Info().Msg("Hello, world!")
@@ -202,13 +202,13 @@ func TestMultipleSources(t *testing.T) {
 
 	actual := buf.String()
 
-	firstExpected := "\"source\":[\"firstLevel\",\"secondLevel\"]"
+	firstExpected := "\"source\":[\"FirstLevel\",\"SecondLevel\"]"
 
 	if !strings.Contains(actual, firstExpected) {
 		t.Error("Expected", firstExpected, "in", actual)
 	}
 
-	secondExpected := "\"source\":[\"firstLevel\"]"
+	secondExpected := "\"source\":[\"FirstLevel\"]"
 
 	if !strings.Contains(actual, secondExpected) {
 		t.Error("Expected", secondExpected, "in", actual)
@@ -221,8 +221,8 @@ func TestDuplicateSources(t *testing.T) {
 	ringBuffer := NewRingBuffer(500)
 	rootSource := Init(ringBuffer)
 
-	firstLogger, _ := rootSource.GetLogger("duplicate")
-	secondLogger, _ := rootSource.GetLogger("duplicate")
+	firstLogger, _ := rootSource.GetLogger("Duplicate")
+	secondLogger, _ := rootSource.GetLogger("Duplicate")
 
 	firstLogger.Info().Msg("Hello, world!")
 	secondLogger.Info().Msg("Hello, world!")
@@ -236,13 +236,13 @@ func TestDuplicateSources(t *testing.T) {
 
 	actual := buf.String()
 
-	firstExpected := "\"source\":[\"duplicate\"]"
+	firstExpected := "\"source\":[\"Duplicate\"]"
 
 	if !strings.Contains(actual, firstExpected) {
 		t.Error("Expected", firstExpected, "in", actual)
 	}
 
-	secondExpected := "\"source\":[\"duplicate#1\"]"
+	secondExpected := "\"source\":[\"Duplicate#1\"]"
 
 	if !strings.Contains(actual, secondExpected) {
 		t.Error("Expected", secondExpected, "in", actual)

@@ -19,7 +19,7 @@ func NewLexerDebugger(
 	sourceGen *logging.SourceGenerator,
 	output io.Writer,
 ) *LexerDebugger {
-	logger, _ := sourceGen.GetLogger("tokenListDisplay")
+	logger, _ := sourceGen.GetLogger("TokenListDisplay")
 
 	return &LexerDebugger{lexer, logger, output}
 }

@@ -14,12 +14,12 @@ import (
 type LogRenderer struct {
     logger logging.Logger
     writer io.Writer
-    config Config
+    Config Config
 }
 
 type Config struct {
-    SymbolColor   string
     ResetAnsi     string
+    SymbolColor   string
     Severity      SeverityConfig
     Context       ContextConfig
     Diff          DiffConfig
@@ -71,10 +71,58 @@ type InfoReferenceConfig struct {
     MoreInfoColor   string
 }
 
-func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer, config Config) *LogRenderer {
-    logger, _ := sourceGen.GetLogger("logRendering")
+func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer) *LogRenderer {
+    logger, _ := sourceGen.GetLogger("LogRendering")
 
-    return &LogRenderer{logger, writer, config}
+    return &LogRenderer{
+        logger,
+        writer,
+        Config{
+            ResetAnsi: "\033[0m",
+            SymbolColor: "\u001b[38;2;255;255;255m",
+            Severity: SeverityConfig{
+                VerboseColor: "\u001b[38;2;115;115;115m",
+                DebugColor: "\u001b[38;2;75;177;229m",
+                InfoColor: "\u001b[38;2;177;73;230m",
+                WarningColor: "\u001b[38;2;236;236;73m",
+                SevereWarningColor: "\u001b[38;2;246;152;58m",
+                ErrorColor: "\u001b[38;2;234;46;46m",
+                CriticalColor: "\u001b[38;2;163;21;21m",
+            },
+            Context: ContextConfig{
+                SourceContextPadding: 1,
+                SourceStart: "[",
+                SourceEnd: "]",
+                SourceLineSeparator: ":",
+                WindowTop: "╭──",
+                WindowBottom: "╰──",
+                LineCountSeparator: "│",
+                SourceColor: "\u001b[38;2;93;209;93m",
+                StartLineColor: "\u001b[38;2;242;205;205m",
+                Annotation: "─",
+                AnnotationLineStart: "•",
+                AnnotationCommentStart: "∘",
+                OutOfFocusLineNumberColor: "\u001b[38;2;115;115;115m",
+                InFocusLineNumberColor: "\u001b[38;2;75;177;229m",
+            },
+            Diff: DiffConfig{
+                WindowTop: "╭──",
+                WindowBottom: "╰──",
+                OutOfFocusLineNumberColor: "\u001b[38;2;115;115;115m",
+                InFocusLineNumberColor: "\u001b[38;2;75;177;229m",
+                LineCountSeparator: "│",
+                RemoveLinePrefix: "-",
+                RemoveLineColor: "\u001b[38;2;234;46;46m",
+                AddLinePrefix: "+",
+                AddLineColor: "\u001b[38;2;93;209;93m",
+            },
+            InfoReference: InfoReferenceConfig{
+                HintPrefixColor: "\u001b[38;2;75;0;229m",
+                HintColor: "\u001b[38;2;75;177;229m",
+                MoreInfoColor: "\u001b[38;2;75;0;229m",
+            },
+        },
+    }
 }
 
 func (l *LogRenderer) Receive(messageParts []messaging.MessagePart) {
@@ -96,7 +144,7 @@ func (l *LogRenderer) Receive(messageParts []messaging.MessagePart) {
         }
     }
 
-    l.writer.Write([]byte(l.config.ResetAnsi))
+    l.writer.Write([]byte(l.Config.ResetAnsi))
     _, err := l.writer.Write(bb.Bytes())
 
     if err != nil {
@@ -134,19 +182,19 @@ func (l *LogRenderer) getSeverityColor(s messaging.Severity) string {
 
 	switch s {
 	case messaging.Verbose:
-		sAsStr = l.config.Severity.VerboseColor
+		sAsStr = l.Config.Severity.VerboseColor
 	case messaging.Debug:
-		sAsStr = l.config.Severity.DebugColor
+		sAsStr = l.Config.Severity.DebugColor
 	case messaging.Info:
-		sAsStr = l.config.Severity.InfoColor
+		sAsStr = l.Config.Severity.InfoColor
 	case messaging.Warning:
-		sAsStr = l.config.Severity.WarningColor
+		sAsStr = l.Config.Severity.WarningColor
 	case messaging.SevereWarning:
-		sAsStr = l.config.Severity.SevereWarningColor
+		sAsStr = l.Config.Severity.SevereWarningColor
 	case messaging.Error:
-		sAsStr = l.config.Severity.ErrorColor
+		sAsStr = l.Config.Severity.ErrorColor
 	case messaging.Critical:
-		sAsStr = l.config.Severity.CriticalColor
+		sAsStr = l.Config.Severity.CriticalColor
 	default:
 		panic(fmt.Sprintf("missing color for the enum Severity: %d", s))
 	}
@@ -156,41 +204,39 @@ func (l *LogRenderer) getSeverityColor(s messaging.Severity) string {
 
 func (l *LogRenderer) renderMessage(bb *bytes.Buffer, m messaging.Message) {
 	bb.WriteString(l.getSeverityColor(m.Severity))
-	bb.WriteString(stringifySeverity(m.Severity))
-	bb.WriteString(l.config.ResetAnsi)
-	bb.WriteString(" ")
-	bb.WriteString(m.Category)
-	bb.WriteString(l.config.SymbolColor)
-	bb.WriteString(": ") // TODO make configurable
-	bb.WriteString(l.config.ResetAnsi)
+	fmt.Fprintf(bb, "%14s", stringifySeverity(m.Severity))
+	bb.WriteString(l.Config.ResetAnsi)
+	bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(": ") // TODO make configurable
+	bb.WriteString(l.Config.ResetAnsi)
 	bb.WriteString(m.Message)
 	bb.WriteString("\n")
 }
 
 func (l *LogRenderer) renderHint(bb *bytes.Buffer, hint messaging.Hint) {
 	if hint.Text != "" {
-		bb.WriteString(l.config.InfoReference.HintPrefixColor)
+		bb.WriteString(l.Config.InfoReference.HintPrefixColor)
 		bb.WriteString("Hint")
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.ResetAnsi)
 
-		bb.WriteString(l.config.SymbolColor)
+		bb.WriteString(l.Config.SymbolColor)
 		bb.WriteString(": ") // TODO Make configurable
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.ResetAnsi)
 
-		bb.WriteString(l.config.InfoReference.HintColor)
+		bb.WriteString(l.Config.InfoReference.HintColor)
 		bb.WriteString(hint.Text)
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.ResetAnsi)
 		bb.WriteString("\n")
 	}
 
 	if hint.MoreInfoReference != "" {
-		bb.WriteString(l.config.InfoReference.MoreInfoColor)
+		bb.WriteString(l.Config.InfoReference.MoreInfoColor)
 		bb.WriteString("More info about this")
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.ResetAnsi)
 
-		bb.WriteString(l.config.SymbolColor)
+		bb.WriteString(l.Config.SymbolColor)
 		bb.WriteString(": ")
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.ResetAnsi)
 
 		bb.WriteString(hint.MoreInfoReference)
 		bb.WriteString("\n")
@@ -207,35 +253,35 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
     }
 
     // Header
-    bb.WriteString(l.config.SymbolColor)
-    bb.WriteString(l.config.Context.SourceStart)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(l.Config.Context.SourceStart)
+    bb.WriteString(l.Config.ResetAnsi)
 
-    bb.WriteString(l.config.Context.SourceColor)
+    bb.WriteString(l.Config.Context.SourceColor)
     bb.WriteString(ctx.Source)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.ResetAnsi)
 
-    bb.WriteString(l.config.SymbolColor)
-    bb.WriteString(l.config.Context.SourceLineSeparator)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(l.Config.Context.SourceLineSeparator)
+    bb.WriteString(l.Config.ResetAnsi)
 
-    bb.WriteString(l.config.Context.StartLineColor)
+    bb.WriteString(l.Config.Context.StartLineColor)
     bb.WriteString(strconv.FormatUint(uint64(ctx.StartLineNumber), 10))
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.ResetAnsi)
 
-    bb.WriteString(l.config.SymbolColor)
-    bb.WriteString(l.config.Context.SourceEnd)
-    bb.WriteString(l.config.ResetAnsi)
-    bb.WriteString(strings.Repeat("\n", l.config.Context.SourceContextPadding + 1))
+    bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(l.Config.Context.SourceEnd)
+    bb.WriteString(l.Config.ResetAnsi)
+    bb.WriteString(strings.Repeat("\n", l.Config.Context.SourceContextPadding + 1))
 
     largestAmountOfDigits := countDigits(ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) - 1 + uint(len(ctx.LinesAfter)))
     leftPadding := strings.Repeat(" ", largestAmountOfDigits + 1)
 
     // Window top
     bb.WriteString(leftPadding)
-    bb.WriteString(l.config.SymbolColor)
-    bb.WriteString(l.config.Context.WindowTop)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(l.Config.Context.WindowTop)
+    bb.WriteString(l.Config.ResetAnsi)
     bb.WriteString("\n")
 
     // Lines out of focus before
@@ -246,7 +292,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
             bb,
             lineNumber,
             largestAmountOfDigits,
-            l.config.Context.OutOfFocusLineNumberColor,
+            l.Config.Context.OutOfFocusLineNumberColor,
         )
 
         bb.WriteString(line)
@@ -261,7 +307,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
             bb,
             lineNumber,
             largestAmountOfDigits,
-            l.config.Context.InFocusLineNumberColor,
+            l.Config.Context.InFocusLineNumberColor,
         )
 
         bb.WriteString(line.Content)
@@ -278,7 +324,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
             l.renderAnnotationPrefix(
                 bb,
                 leftPadding,
-                l.config.Context.AnnotationLineStart,
+                l.Config.Context.AnnotationLineStart,
             )
         }
 
@@ -288,7 +334,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
                 l.renderAnnotationPrefix(
                     bb,
                     leftPadding,
-                    l.config.Context.AnnotationLineStart,
+                    l.Config.Context.AnnotationLineStart,
                 )
 
                 currentLineEnd = 0
@@ -296,8 +342,8 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
 
             bb.WriteString(strings.Repeat(" ", int(annotation.Range.Start - currentLineEnd)))
             bb.WriteString(l.getSeverityColor(annotation.Severity))
-            bb.WriteString(strings.Repeat(l.config.Context.Annotation, int(annotation.Range.Length)))
-            bb.WriteString(l.config.ResetAnsi)
+            bb.WriteString(strings.Repeat(l.Config.Context.Annotation, int(annotation.Range.Length)))
+            bb.WriteString(l.Config.ResetAnsi)
 
             currentLineEnd = annotation.Range.Start + annotation.Range.Length
         }
@@ -308,7 +354,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
             l.renderAnnotationPrefix(
                 bb,
                 leftPadding,
-                l.config.Context.AnnotationCommentStart,
+                l.Config.Context.AnnotationCommentStart,
             )
         }
 
@@ -321,7 +367,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
                 l.renderAnnotationPrefix(
                     bb,
                     leftPadding,
-                    l.config.Context.AnnotationCommentStart,
+                    l.Config.Context.AnnotationCommentStart,
                 )
 
                 currentLineEnd = 0
@@ -344,7 +390,7 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
             bb,
             lineNumber,
             largestAmountOfDigits,
-            l.config.Context.OutOfFocusLineNumberColor,
+            l.Config.Context.OutOfFocusLineNumberColor,
         )
 
         bb.WriteString(line)
@@ -353,25 +399,25 @@ func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext)
 
     // Window bottom
     bb.WriteString(leftPadding)
-    bb.WriteString(l.config.SymbolColor)
-    bb.WriteString(l.config.Context.WindowBottom)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(l.Config.Context.WindowBottom)
+    bb.WriteString(l.Config.ResetAnsi)
     bb.WriteString("\n")
 }
 
 func (l *LogRenderer) renderAnnotationPrefix(bb *bytes.Buffer, leftPadding, prefixSymbol string) {
     bb.WriteString(leftPadding)
-    bb.WriteString(l.config.SymbolColor)
+    bb.WriteString(l.Config.SymbolColor)
     bb.WriteString(prefixSymbol)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.ResetAnsi)
     bb.WriteString(" ")
 }
 
 func (l *LogRenderer) renderLinePrefix(bb *bytes.Buffer, lineNumber uint, largestAmountOfDigits int, color string) {
     l.renderLineNumber(bb, lineNumber, largestAmountOfDigits, color)
-    bb.WriteString(l.config.SymbolColor)
-    bb.WriteString(l.config.Context.LineCountSeparator)
-    bb.WriteString(l.config.ResetAnsi)
+    bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(l.Config.Context.LineCountSeparator)
+    bb.WriteString(l.Config.ResetAnsi)
     bb.WriteString(" ")
 }
 
@@ -393,9 +439,9 @@ func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
 	// Window top
 	bb.WriteString(leftPadding)
 
-	bb.WriteString(l.config.SymbolColor)
-	bb.WriteString(l.config.Diff.WindowTop)
-	bb.WriteString(l.config.ResetAnsi)
+	bb.WriteString(l.Config.SymbolColor)
+	bb.WriteString(l.Config.Diff.WindowTop)
+	bb.WriteString(l.Config.ResetAnsi)
 
 	bb.WriteString("\n")
 
@@ -405,12 +451,12 @@ func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
 			bb,
 			diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i),
 			largestAmountOfDigits,
-			l.config.Diff.OutOfFocusLineNumberColor,
+			l.Config.Diff.OutOfFocusLineNumberColor,
 		)
 
-		bb.WriteString(l.config.SymbolColor)
-		bb.WriteString(l.config.Diff.LineCountSeparator)
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.SymbolColor)
+		bb.WriteString(l.Config.Diff.LineCountSeparator)
+		bb.WriteString(l.Config.ResetAnsi)
 
 		bb.WriteString(" ")
 		bb.WriteString(line)
@@ -423,12 +469,12 @@ func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
 			bb,
 			diff.StartLineNumber + uint(i),
 			largestAmountOfDigits,
-			l.config.Diff.InFocusLineNumberColor,
+			l.Config.Diff.InFocusLineNumberColor,
 		)
 
-		bb.WriteString(l.config.Diff.RemoveLineColor)
-		bb.WriteString(l.config.Diff.RemoveLinePrefix)
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.Diff.RemoveLineColor)
+		bb.WriteString(l.Config.Diff.RemoveLinePrefix)
+		bb.WriteString(l.Config.ResetAnsi)
 
 		bb.WriteString(" ")
 		bb.WriteString(line)
@@ -441,12 +487,12 @@ func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
 			bb,
 			diff.StartLineNumber + uint(i),
 			largestAmountOfDigits,
-			l.config.Diff.InFocusLineNumberColor,
+			l.Config.Diff.InFocusLineNumberColor,
 		)
 
-		bb.WriteString(l.config.Diff.AddLineColor)
-		bb.WriteString(l.config.Diff.AddLinePrefix)
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.Diff.AddLineColor)
+		bb.WriteString(l.Config.Diff.AddLinePrefix)
+		bb.WriteString(l.Config.ResetAnsi)
 
 		bb.WriteString(" ")
 		bb.WriteString(line)
@@ -459,12 +505,12 @@ func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
 			bb,
 			diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i),
 			largestAmountOfDigits,
-			l.config.Diff.OutOfFocusLineNumberColor,
+			l.Config.Diff.OutOfFocusLineNumberColor,
 		)
 
-		bb.WriteString(l.config.SymbolColor)
-		bb.WriteString(l.config.Diff.LineCountSeparator)
-		bb.WriteString(l.config.ResetAnsi)
+		bb.WriteString(l.Config.SymbolColor)
+		bb.WriteString(l.Config.Diff.LineCountSeparator)
+		bb.WriteString(l.Config.ResetAnsi)
 
 		bb.WriteString(" ")
 		bb.WriteString(line)
@@ -474,9 +520,9 @@ func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
 	// Window bottom
 	bb.WriteString(leftPadding)
 
-	bb.WriteString(l.config.SymbolColor)
-	bb.WriteString(l.config.Diff.WindowBottom)
-	bb.WriteString(l.config.ResetAnsi)
+	bb.WriteString(l.Config.SymbolColor)
+	bb.WriteString(l.Config.Diff.WindowBottom)
+	bb.WriteString(l.Config.ResetAnsi)
 
 	bb.WriteString("\n")
 }
@@ -507,6 +553,6 @@ func (l *LogRenderer) renderLineNumber(
 	bb.WriteString(strings.Repeat(" ", largestAmountOfDigits-len(lineNumberAsStr)))
 	bb.WriteString(color)
 	bb.WriteString(lineNumberAsStr)
-	bb.WriteString(l.config.ResetAnsi)
+	bb.WriteString(l.Config.ResetAnsi)
 	bb.WriteString(" ")
 }

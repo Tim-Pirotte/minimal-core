@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	logging "minimal/minimal-core/built-in/internal-logging"
+	messaging "minimal/minimal-core/built-in/messaging"
 	"minimal/minimal-core/built-in/ui"
-	usermessaging "minimal/minimal-core/built-in/user-messaging"
 	"strconv"
 	"strings"
 )
@@ -14,7 +14,7 @@ var ErrDuplicateTemplateStore = errors.New("template store with this name and pr
 
 type ProjectCreator struct {
 	logger          logging.Logger
-	messenger       *usermessaging.Messenger
+	messenger       *messaging.Messenger
 	ui              ui.UI
 	stores          []templateStore
 }
@@ -36,9 +36,9 @@ type MutableTemplateStore interface {
 	RemoveTemplate(name string, args []string) (ok bool)
 }
 
-func NewProjectCreator(sourceGen *logging.SourceGenerator, messenger *usermessaging.Messenger, ui ui.UI) *ProjectCreator {
-	logger, _ := sourceGen.GetLogger("templates")
-	
+func NewProjectCreator(sourceGen *logging.SourceGenerator, messenger *messaging.Messenger, ui ui.UI) *ProjectCreator {
+	logger, _ := sourceGen.GetLogger("Templates")
+
 	return &ProjectCreator{logger, messenger, ui, make([]templateStore, 0)}
 }
 
@@ -50,7 +50,7 @@ func (p *ProjectCreator) RegisterTemplateStore(store TemplateStore, name string,
 			return ErrDuplicateTemplateStore
 		}
 	}
-	
+
 	p.stores = append(p.stores, templateStore{store, name, priority})
 	p.logTemplateRegistered(name)
 
@@ -93,7 +93,7 @@ func (p *ProjectCreator) getNewProjectArgs(args []string) newProjectArgs {
 
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		
+
 		switch arg {
 		case "-destination", "-d":
 			if i + 1 < len(args) {
@@ -108,7 +108,7 @@ func (p *ProjectCreator) getNewProjectArgs(args []string) newProjectArgs {
 			if i + 2 < len(args) {
 				key := args[i+1]
                 val := args[i+2]
-                
+
 				fields[key] = val
 
 				i += 2
@@ -131,7 +131,7 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 	switch len(availableSources) {
 	case 0:
 		p.logNoSourcesForLoading(templateName)
-		
+
 		return false
 	case 1:
 		selectedStore = availableSources[0]
@@ -145,7 +145,7 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 
 	if ok := selectedStore.LoadTemplate(templateName, projectName, destination, fields); !ok {
 		p.logger.Error().Str("template_name", templateName).Str("store_name", selectedStore.name).Msg("failure during template load")
-		
+
 		return false
 	}
 
@@ -200,7 +200,7 @@ func (p *ProjectCreator) askUserForStore(stores []templateStore) (templateStore,
 				return s, true
 			}
 		}
-		
+
 		return templateStore{}, false
 	}
 }
@@ -227,7 +227,7 @@ func (p *ProjectCreator) StoreTemplateCLI(args []string) bool {
 
 	if ok := p.StoreTemplate(templateName, source, loadProjectArgs.fields); !ok {
 		p.logger.Error().Str("template_name", templateName).Str("source_location", source).Msg("failure during template store")
-		
+
 		return false
 	}
 
@@ -242,16 +242,16 @@ type storeProjectArgs struct {
 func (p *ProjectCreator) getStoreProjectArgs(args []string) storeProjectArgs {
 	fields := map[string]string{}
 	positionalArgStart := uint(0)
-	
+
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		
+
 		switch arg {
 		case "-field", "-f":
 			if i + 2 < len(args) {
 				key := args[i+1]
                 val := args[i+2]
-                
+
 				fields[key] = val
 
 				i += 2
@@ -276,7 +276,7 @@ func (p *ProjectCreator) StoreTemplate(templateName, source string, fields map[s
 			availableStores = append(availableStores, mutableStore)
 		}
 	}
-	
+
 	switch len(availableStores) {
 	case 0:
 		p.logNoSourcesForStoring()
@@ -310,14 +310,14 @@ func (p *ProjectCreator) logIncorrectLoadArguments(actual int) {
 		Int("expected_args_2", 2).
 		Int("actual_args", actual).
 		Msg("incorrect amount of arguments for load")
-	
+
 	t := p.messenger.CreateLogTransaction()
-	
+
 	p.messenger.LogMessage(
-		t, 
+		t,
 		usermessaging.Message{
-			Severity: usermessaging.Critical, 
-			Category: "TemplateError", 
+			Severity: usermessaging.Critical,
+			Category: "TemplateError",
 			Message: fmt.Sprintf("Expected 1 or 2 arguments but got %d arguments", actual),
 		})
 
@@ -331,10 +331,10 @@ func (p *ProjectCreator) logMissingArgumentAfterDestination(args []string) {
 	t := p.messenger.CreateLogTransaction()
 
 	p.messenger.LogMessage(
-		t, 
+		t,
 		usermessaging.Message{
-			Severity: usermessaging.Error, 
-			Category: "TemplateError", 
+			Severity: usermessaging.Error,
+			Category: "TemplateError",
 			Message: "Missing argument after the destination flag",
 		},
 	)
@@ -349,10 +349,10 @@ func (p *ProjectCreator) logMissingArgumentsAfterField(args []string) {
 	t := p.messenger.CreateLogTransaction()
 
 	p.messenger.LogMessage(
-		t, 
+		t,
 		usermessaging.Message{
-			Severity: usermessaging.Error, 
-			Category: "TemplateError", 
+			Severity: usermessaging.Error,
+			Category: "TemplateError",
 			Message: "Missing key and/or value after field flag",
 		},
 	)
@@ -366,10 +366,10 @@ func (p *ProjectCreator) logNoSourcesForLoading(templateName string) {
 	t := p.messenger.CreateLogTransaction()
 
 	p.messenger.LogMessage(
-		t, 
+		t,
 		usermessaging.Message{
-			Severity: usermessaging.Critical, 
-			Category: "TemplateError", 
+			Severity: usermessaging.Critical,
+			Category: "TemplateError",
 			Message: "No available sources to load the template from",
 		},
 	)
@@ -382,14 +382,14 @@ func (p *ProjectCreator) logNoSourcesForLoading(templateName string) {
 		if i != 0 {
 			hint.WriteString(", ")
 		}
-		
+
 		hint.WriteString(s.name)
 	}
 
 	p.messenger.LogHint(
-		t, 
+		t,
 		usermessaging.Hint{
-			Text: hint.String(), 
+			Text: hint.String(),
 			MoreInfoReference: "",
 		},
 	)
@@ -403,14 +403,14 @@ func (p *ProjectCreator) logIncorrectStoreArguments(actual int) {
 		Int("expected_args_2", 2).
 		Int("actual_args", actual).
 		Msg("incorrect amount of arguments for store")
-	
+
 	t := p.messenger.CreateLogTransaction()
-	
+
 	p.messenger.LogMessage(
-		t, 
+		t,
 		usermessaging.Message{
-			Severity: usermessaging.Critical, 
-			Category: "TemplateError", 
+			Severity: usermessaging.Critical,
+			Category: "TemplateError",
 			Message: fmt.Sprintf("Expected 1 or 2 arguments but got %d arguments", actual),
 		})
 
@@ -425,10 +425,10 @@ func (p *ProjectCreator) logNoSourcesForStoring() {
 	t := p.messenger.CreateLogTransaction()
 
 	p.messenger.LogMessage(
-		t, 
+		t,
 		usermessaging.Message{
-			Severity: usermessaging.Critical, 
-			Category: "TemplateError", 
+			Severity: usermessaging.Critical,
+			Category: "TemplateError",
 			Message: "No available stores to save the template in",
 		},
 	)
@@ -439,12 +439,12 @@ func (p *ProjectCreator) logNoSourcesForStoring() {
 func (p *ProjectCreator) messageCLIHelpText(t *usermessaging.Transaction) {
 	// TODO move the explaination of the complete command to the info reference.
 	p.messenger.LogHint(
-		t, 
+		t,
 		usermessaging.Hint{
-			Text: 
+			Text:
 				"'mnm new' followed by a project name or a template name and a project name. " +
 				"A destination can be set using -d or -destination followed by a path." +
-				"Fields passed to template stores can be set using -f or -field followed by a key and a value.", 
+				"Fields passed to template stores can be set using -f or -field followed by a key and a value.",
 			MoreInfoReference: "",
 		},
 	)

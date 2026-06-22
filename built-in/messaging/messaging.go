@@ -46,7 +46,6 @@ type MessagePart interface {
 
 type Message struct {
 	Severity Severity
-	Category string
 	Message  string
 }
 
@@ -91,7 +90,7 @@ type Hint struct {
 func (*Hint) MessagePart() {}
 
 func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
-	logger, _ := sourceGen.GetLogger("messenger")
+	logger, _ := sourceGen.GetLogger("Messenger")
 
 	m := &Messenger{
 		logger:  logger,

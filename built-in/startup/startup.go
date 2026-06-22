@@ -30,7 +30,7 @@ func NewCommands(
 	messenger *messaging.Messenger,
 	configLoader *shell.ShellConfigLoader,
 ) *Commands {
-	logger, _ := sourceGen.GetLogger("startup")
+	logger, _ := sourceGen.GetLogger("Startup")
 
 	return &Commands{
 		make(map[string]func(args []string) (ok bool)),
@@ -122,7 +122,6 @@ func (c *Commands) logNotEnoughArgs(argsLength int) {
 	messageParts := []messaging.MessagePart{
 		&messaging.Message{
 			Severity: messaging.Critical,
-			Category: "StartupError",
 			Message: fmt.Sprintf(
 				"Expected at least %d arguments but got %d arguments",
 				minimumExpectedArgs,

@@ -16,7 +16,7 @@ func registerCommands(
 	messenger *messaging.Messenger,
 	ui ui.UI,
 ) {
-	logger, _ := sourceGen.GetLogger("commandRegistry")
+	logger, _ := sourceGen.GetLogger("CommandRegistry")
 
 	projectCreator := templates.NewProjectCreator(sourceGen, messenger, ui)
 	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(sourceGen), "directory", 1)

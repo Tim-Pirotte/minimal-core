@@ -62,12 +62,10 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
         i.messenger.Send([]messaging.MessagePart{
            &messaging.Message{
                 Severity: messaging.Error,
-                Category: "IndentationParser",
                 Message: "Source code cannot start with indentation",
             },
             &messaging.Message{
                 Severity: messaging.Warning,
-                Category: "IndentationParser",
                 Message: "The indentation at the start will be skipped",
             },
         })
