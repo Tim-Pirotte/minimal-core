@@ -152,6 +152,33 @@ func (l *LogRenderer) Receive(messageParts []messaging.MessagePart) {
     }
 }
 
+func (c *Config) RemoveColor() {
+    c.ResetAnsi = ""
+    c.SymbolColor = ""
+
+    c.Severity.VerboseColor = ""
+    c.Severity.DebugColor = ""
+    c.Severity.InfoColor = ""
+    c.Severity.WarningColor = ""
+    c.Severity.SevereWarningColor = ""
+    c.Severity.ErrorColor = ""
+    c.Severity.CriticalColor = ""
+
+    c.Context.SourceColor = ""
+    c.Context.StartLineColor = ""
+    c.Context.OutOfFocusLineNumberColor = ""
+    c.Context.InFocusLineNumberColor = ""
+
+    c.Diff.OutOfFocusLineNumberColor = ""
+    c.Diff.InFocusLineNumberColor = ""
+    c.Diff.RemoveLineColor = ""
+    c.Diff.AddLineColor = ""
+
+    c.InfoReference.HintPrefixColor = ""
+    c.InfoReference.HintColor = ""
+    c.InfoReference.MoreInfoColor = ""
+}
+
 func stringifySeverity(s messaging.Severity) string {
 	var sAsStr string
 

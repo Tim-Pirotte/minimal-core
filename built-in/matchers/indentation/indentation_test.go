@@ -31,7 +31,9 @@ func getLexer(
 	)
 
 	messenger := messaging.NewMessenger(logging.GetTestLogSource(io.Discard))
-	messenger.AddOutput(logrendering.NewLogRenderer(logging.GetTestLogSource(io.Discard), os.Stdout))
+	logrenderer := logrendering.NewLogRenderer(logging.GetTestLogSource(io.Discard), os.Stdout)
+	logrenderer.Config.RemoveColor()
+	messenger.AddOutput(logrenderer)
 
 	indentationMatcher := NewIndentationMatcher(
 		messenger,
