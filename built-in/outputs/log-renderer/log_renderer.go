@@ -152,7 +152,7 @@ func (l *LogRenderer) Receive(messageParts []messaging.MessagePart) {
     }
 }
 
-func (c *Config) RemoveColor() {
+func (c *Config) RemoveANSI() {
     c.ResetAnsi = ""
     c.SymbolColor = ""
 
@@ -177,6 +177,19 @@ func (c *Config) RemoveColor() {
     c.InfoReference.HintPrefixColor = ""
     c.InfoReference.HintColor = ""
     c.InfoReference.MoreInfoColor = ""
+}
+
+func (c *Config) RemoveUnicode() {
+    c.Context.WindowTop = ""
+    c.Context.WindowBottom = ""
+    c.Context.LineCountSeparator = "|"
+    c.Context.Annotation = "-"
+    c.Context.AnnotationLineStart = "*"
+    c.Context.AnnotationCommentStart = "o"
+
+    c.Diff.WindowTop = ""
+    c.Diff.WindowBottom = ""
+    c.Diff.LineCountSeparator = "|"
 }
 
 func stringifySeverity(s messaging.Severity) string {
