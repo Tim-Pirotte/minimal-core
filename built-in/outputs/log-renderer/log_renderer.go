@@ -6,9 +6,6 @@ import (
 	"io"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/messaging"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 type LogRenderer struct {
@@ -125,24 +122,9 @@ func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer) *LogRe
     }
 }
 
-func (l *LogRenderer) Receive(messageParts []messaging.MessagePart) {
+func (l *LogRenderer) Receive(message messaging.Message) {
     bb := bytes.NewBuffer(make([]byte, 0))
-
-    for _, part := range messageParts {
-        switch p := part.(type) {
-        case *messaging.Message:
-            l.renderMessage(bb, *p)
-        case *messaging.CodeContext:
-            l.renderContext(bb, *p)
-        case *messaging.Hint:
-            l.renderHint(bb, *p)
-        case *messaging.Diff:
-            l.renderDiff(bb, *p)
-        default:
-            // TODO change to proper error
-            panic("unsuported message part")
-        }
-    }
+    l.renderMessage(bb, message)
 
     l.writer.Write([]byte(l.Config.ResetAnsi))
     _, err := l.writer.Write(bb.Bytes())
@@ -253,346 +235,346 @@ func (l *LogRenderer) renderMessage(bb *bytes.Buffer, m messaging.Message) {
 	bb.WriteString("\n")
 }
 
-func (l *LogRenderer) renderHint(bb *bytes.Buffer, hint messaging.Hint) {
-	if hint.Text != "" {
-		bb.WriteString(l.Config.InfoReference.HintPrefixColor)
-		bb.WriteString("Hint")
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(l.Config.SymbolColor)
-		bb.WriteString(": ") // TODO Make configurable
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(l.Config.InfoReference.HintColor)
-		bb.WriteString(hint.Text)
-		bb.WriteString(l.Config.ResetAnsi)
-		bb.WriteString("\n")
-	}
-
-	if hint.MoreInfoReference != "" {
-		bb.WriteString(l.Config.InfoReference.MoreInfoColor)
-		bb.WriteString("More info about this")
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(l.Config.SymbolColor)
-		bb.WriteString(": ")
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(hint.MoreInfoReference)
-		bb.WriteString("\n")
-	}
-}
-
-func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext) {
-    if bb == nil {
-        panic("an uninitialized bytes buffer was passed to the context renderer")
-    }
-
-    if ctx.StartLineNumber < uint(len(ctx.LinesBefore)) {
-        panic("lines before the lines in focus can be negative")
-    }
-
-    // Header
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(l.Config.Context.SourceStart)
-    bb.WriteString(l.Config.ResetAnsi)
-
-    bb.WriteString(l.Config.Context.SourceColor)
-    bb.WriteString(ctx.Source)
-    bb.WriteString(l.Config.ResetAnsi)
-
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(l.Config.Context.SourceLineSeparator)
-    bb.WriteString(l.Config.ResetAnsi)
-
-    bb.WriteString(l.Config.Context.StartLineColor)
-    bb.WriteString(strconv.FormatUint(uint64(ctx.StartLineNumber), 10))
-    bb.WriteString(l.Config.ResetAnsi)
-
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(l.Config.Context.SourceEnd)
-    bb.WriteString(l.Config.ResetAnsi)
-    bb.WriteString(strings.Repeat("\n", l.Config.Context.SourceContextPadding + 1))
-
-    largestAmountOfDigits := countDigits(ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) - 1 + uint(len(ctx.LinesAfter)))
-    leftPadding := strings.Repeat(" ", largestAmountOfDigits + 1)
-
-    // Window top
-    bb.WriteString(leftPadding)
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(l.Config.Context.WindowTop)
-    bb.WriteString(l.Config.ResetAnsi)
-    bb.WriteString("\n")
-
-    // Lines out of focus before
-    for i, line := range ctx.LinesBefore {
-        lineNumber := ctx.StartLineNumber - uint(len(ctx.LinesBefore)) + uint(i)
-
-        l.renderLinePrefix(
-            bb,
-            lineNumber,
-            largestAmountOfDigits,
-            l.Config.Context.OutOfFocusLineNumberColor,
-        )
-
-        bb.WriteString(line)
-        bb.WriteString("\n")
-    }
-
-    // Lines in focus
-    for i, line := range ctx.LinesInFocus {
-        lineNumber := ctx.StartLineNumber + uint(i)
-
-        l.renderLinePrefix(
-            bb,
-            lineNumber,
-            largestAmountOfDigits,
-            l.Config.Context.InFocusLineNumberColor,
-        )
-
-        bb.WriteString(line.Content)
-        bb.WriteString("\n")
-
-        sort.Slice(line.Annotations, func(i, j int) bool {
-            return line.Annotations[i].Range.Start < line.Annotations[j].Range.Start
-        })
-
-        // Annotation lines
-        currentLineEnd := uint(0)
-
-        if len(line.Annotations) > 0 {
-            l.renderAnnotationPrefix(
-                bb,
-                leftPadding,
-                l.Config.Context.AnnotationLineStart,
-            )
-        }
-
-        for _, annotation := range line.Annotations {
-            if annotation.Range.Start < currentLineEnd {
-                bb.WriteString("\n")
-                l.renderAnnotationPrefix(
-                    bb,
-                    leftPadding,
-                    l.Config.Context.AnnotationLineStart,
-                )
-
-                currentLineEnd = 0
-            }
-
-            bb.WriteString(strings.Repeat(" ", int(annotation.Range.Start - currentLineEnd)))
-            bb.WriteString(l.getSeverityColor(annotation.Severity))
-            bb.WriteString(strings.Repeat(l.Config.Context.Annotation, int(annotation.Range.Length)))
-            bb.WriteString(l.Config.ResetAnsi)
-
-            currentLineEnd = annotation.Range.Start + annotation.Range.Length
-        }
-
-        bb.WriteString("\n")
-
-        if len(line.Annotations) > 0 {
-            l.renderAnnotationPrefix(
-                bb,
-                leftPadding,
-                l.Config.Context.AnnotationCommentStart,
-            )
-        }
-
-        // Annotation comments
-        currentLineEnd = 0
-
-        for _, annotation := range line.Annotations {
-            if annotation.Range.Start < currentLineEnd {
-                bb.WriteString("\n")
-                l.renderAnnotationPrefix(
-                    bb,
-                    leftPadding,
-                    l.Config.Context.AnnotationCommentStart,
-                )
-
-                currentLineEnd = 0
-            }
-
-            bb.WriteString(strings.Repeat(" ", int(annotation.Range.Start - currentLineEnd)))
-            bb.WriteString(annotation.Message)
-
-            currentLineEnd = annotation.Range.Start + annotation.Range.Length
-        }
-
-        bb.WriteString("\n")
-    }
-
-    // Lines after
-    for i, line := range ctx.LinesAfter {
-        lineNumber := ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) + uint(i)
-
-        l.renderLinePrefix(
-            bb,
-            lineNumber,
-            largestAmountOfDigits,
-            l.Config.Context.OutOfFocusLineNumberColor,
-        )
-
-        bb.WriteString(line)
-        bb.WriteString("\n")
-    }
-
-    // Window bottom
-    bb.WriteString(leftPadding)
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(l.Config.Context.WindowBottom)
-    bb.WriteString(l.Config.ResetAnsi)
-    bb.WriteString("\n")
-}
-
-func (l *LogRenderer) renderAnnotationPrefix(bb *bytes.Buffer, leftPadding, prefixSymbol string) {
-    bb.WriteString(leftPadding)
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(prefixSymbol)
-    bb.WriteString(l.Config.ResetAnsi)
-    bb.WriteString(" ")
-}
-
-func (l *LogRenderer) renderLinePrefix(bb *bytes.Buffer, lineNumber uint, largestAmountOfDigits int, color string) {
-    l.renderLineNumber(bb, lineNumber, largestAmountOfDigits, color)
-    bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(l.Config.Context.LineCountSeparator)
-    bb.WriteString(l.Config.ResetAnsi)
-    bb.WriteString(" ")
-}
-
-func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
-	if bb == nil {
-        panic("an uninitialized bytes buffer was passed to the diff renderer")
-    }
-
-	if diff.StartLineNumber < uint(len(diff.LinesBefore)) {
-        panic("lines before the lines in focus can be negative")
-    }
-
-	largestAmountOfDigits := countDigits(
-		diff.StartLineNumber + uint(max(len(diff.LinesToAdd) + len(diff.LinesToRemove))) - 1 + uint(len(diff.LinesAfter)),
-	)
-
-	leftPadding := strings.Repeat(" ", largestAmountOfDigits + 1)
-
-	// Window top
-	bb.WriteString(leftPadding)
-
-	bb.WriteString(l.Config.SymbolColor)
-	bb.WriteString(l.Config.Diff.WindowTop)
-	bb.WriteString(l.Config.ResetAnsi)
-
-	bb.WriteString("\n")
-
-	// Lines out of focus before
-	for i, line := range diff.LinesBefore {
-		l.renderLineNumber(
-			bb,
-			diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i),
-			largestAmountOfDigits,
-			l.Config.Diff.OutOfFocusLineNumberColor,
-		)
-
-		bb.WriteString(l.Config.SymbolColor)
-		bb.WriteString(l.Config.Diff.LineCountSeparator)
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(" ")
-		bb.WriteString(line)
-		bb.WriteString("\n")
-	}
-
-	// Lines to remove
-	for i, line := range diff.LinesToRemove {
-		l.renderLineNumber(
-			bb,
-			diff.StartLineNumber + uint(i),
-			largestAmountOfDigits,
-			l.Config.Diff.InFocusLineNumberColor,
-		)
-
-		bb.WriteString(l.Config.Diff.RemoveLineColor)
-		bb.WriteString(l.Config.Diff.RemoveLinePrefix)
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(" ")
-		bb.WriteString(line)
-		bb.WriteString("\n")
-	}
-
-	// Lines to add
-	for i, line := range diff.LinesToAdd {
-		l.renderLineNumber(
-			bb,
-			diff.StartLineNumber + uint(i),
-			largestAmountOfDigits,
-			l.Config.Diff.InFocusLineNumberColor,
-		)
-
-		bb.WriteString(l.Config.Diff.AddLineColor)
-		bb.WriteString(l.Config.Diff.AddLinePrefix)
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(" ")
-		bb.WriteString(line)
-		bb.WriteString("\n")
-	}
-
-	// Lines out of focus after
-	for i, line := range diff.LinesAfter {
-		l.renderLineNumber(
-			bb,
-			diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i),
-			largestAmountOfDigits,
-			l.Config.Diff.OutOfFocusLineNumberColor,
-		)
-
-		bb.WriteString(l.Config.SymbolColor)
-		bb.WriteString(l.Config.Diff.LineCountSeparator)
-		bb.WriteString(l.Config.ResetAnsi)
-
-		bb.WriteString(" ")
-		bb.WriteString(line)
-		bb.WriteString("\n")
-	}
-
-	// Window bottom
-	bb.WriteString(leftPadding)
-
-	bb.WriteString(l.Config.SymbolColor)
-	bb.WriteString(l.Config.Diff.WindowBottom)
-	bb.WriteString(l.Config.ResetAnsi)
-
-	bb.WriteString("\n")
-}
-
-func countDigits(number uint) int {
-	if number == 0 {
-		return 1
-	}
-
-	count := 0
-
-	for number > 0 {
-		number /= 10
-		count++
-	}
-
-	return count
-}
-
-func (l *LogRenderer) renderLineNumber(
-	bb *bytes.Buffer,
-	lineNumber uint,
-	largestAmountOfDigits int,
-	color string,
-) {
-	lineNumberAsStr := strconv.FormatUint(uint64(lineNumber), 10)
-
-	bb.WriteString(strings.Repeat(" ", largestAmountOfDigits-len(lineNumberAsStr)))
-	bb.WriteString(color)
-	bb.WriteString(lineNumberAsStr)
-	bb.WriteString(l.Config.ResetAnsi)
-	bb.WriteString(" ")
-}
+// func (l *LogRenderer) renderHint(bb *bytes.Buffer, hint messaging.Hint) {
+// 	if hint.Text != "" {
+// 		bb.WriteString(l.Config.InfoReference.HintPrefixColor)
+// 		bb.WriteString("Hint")
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(l.Config.SymbolColor)
+// 		bb.WriteString(": ") // TODO Make configurable
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(l.Config.InfoReference.HintColor)
+// 		bb.WriteString(hint.Text)
+// 		bb.WriteString(l.Config.ResetAnsi)
+// 		bb.WriteString("\n")
+// 	}
+
+// 	if hint.MoreInfoReference != "" {
+// 		bb.WriteString(l.Config.InfoReference.MoreInfoColor)
+// 		bb.WriteString("More info about this")
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(l.Config.SymbolColor)
+// 		bb.WriteString(": ")
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(hint.MoreInfoReference)
+// 		bb.WriteString("\n")
+// 	}
+// }
+
+// func (l *LogRenderer) renderContext(bb *bytes.Buffer, ctx messaging.CodeContext) {
+//     if bb == nil {
+//         panic("an uninitialized bytes buffer was passed to the context renderer")
+//     }
+
+//     if ctx.StartLineNumber < uint(len(ctx.LinesBefore)) {
+//         panic("lines before the lines in focus can be negative")
+//     }
+
+//     // Header
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(l.Config.Context.SourceStart)
+//     bb.WriteString(l.Config.ResetAnsi)
+
+//     bb.WriteString(l.Config.Context.SourceColor)
+//     bb.WriteString(ctx.Source)
+//     bb.WriteString(l.Config.ResetAnsi)
+
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(l.Config.Context.SourceLineSeparator)
+//     bb.WriteString(l.Config.ResetAnsi)
+
+//     bb.WriteString(l.Config.Context.StartLineColor)
+//     bb.WriteString(strconv.FormatUint(uint64(ctx.StartLineNumber), 10))
+//     bb.WriteString(l.Config.ResetAnsi)
+
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(l.Config.Context.SourceEnd)
+//     bb.WriteString(l.Config.ResetAnsi)
+//     bb.WriteString(strings.Repeat("\n", l.Config.Context.SourceContextPadding + 1))
+
+//     largestAmountOfDigits := countDigits(ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) - 1 + uint(len(ctx.LinesAfter)))
+//     leftPadding := strings.Repeat(" ", largestAmountOfDigits + 1)
+
+//     // Window top
+//     bb.WriteString(leftPadding)
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(l.Config.Context.WindowTop)
+//     bb.WriteString(l.Config.ResetAnsi)
+//     bb.WriteString("\n")
+
+//     // Lines out of focus before
+//     for i, line := range ctx.LinesBefore {
+//         lineNumber := ctx.StartLineNumber - uint(len(ctx.LinesBefore)) + uint(i)
+
+//         l.renderLinePrefix(
+//             bb,
+//             lineNumber,
+//             largestAmountOfDigits,
+//             l.Config.Context.OutOfFocusLineNumberColor,
+//         )
+
+//         bb.WriteString(line)
+//         bb.WriteString("\n")
+//     }
+
+//     // Lines in focus
+//     for i, line := range ctx.LinesInFocus {
+//         lineNumber := ctx.StartLineNumber + uint(i)
+
+//         l.renderLinePrefix(
+//             bb,
+//             lineNumber,
+//             largestAmountOfDigits,
+//             l.Config.Context.InFocusLineNumberColor,
+//         )
+
+//         bb.WriteString(line.Content)
+//         bb.WriteString("\n")
+
+//         sort.Slice(line.Annotations, func(i, j int) bool {
+//             return line.Annotations[i].Range.Start < line.Annotations[j].Range.Start
+//         })
+
+//         // Annotation lines
+//         currentLineEnd := uint(0)
+
+//         if len(line.Annotations) > 0 {
+//             l.renderAnnotationPrefix(
+//                 bb,
+//                 leftPadding,
+//                 l.Config.Context.AnnotationLineStart,
+//             )
+//         }
+
+//         for _, annotation := range line.Annotations {
+//             if annotation.Range.Start < currentLineEnd {
+//                 bb.WriteString("\n")
+//                 l.renderAnnotationPrefix(
+//                     bb,
+//                     leftPadding,
+//                     l.Config.Context.AnnotationLineStart,
+//                 )
+
+//                 currentLineEnd = 0
+//             }
+
+//             bb.WriteString(strings.Repeat(" ", int(annotation.Range.Start - currentLineEnd)))
+//             bb.WriteString(l.getSeverityColor(annotation.Severity))
+//             bb.WriteString(strings.Repeat(l.Config.Context.Annotation, int(annotation.Range.Length)))
+//             bb.WriteString(l.Config.ResetAnsi)
+
+//             currentLineEnd = annotation.Range.Start + annotation.Range.Length
+//         }
+
+//         bb.WriteString("\n")
+
+//         if len(line.Annotations) > 0 {
+//             l.renderAnnotationPrefix(
+//                 bb,
+//                 leftPadding,
+//                 l.Config.Context.AnnotationCommentStart,
+//             )
+//         }
+
+//         // Annotation comments
+//         currentLineEnd = 0
+
+//         for _, annotation := range line.Annotations {
+//             if annotation.Range.Start < currentLineEnd {
+//                 bb.WriteString("\n")
+//                 l.renderAnnotationPrefix(
+//                     bb,
+//                     leftPadding,
+//                     l.Config.Context.AnnotationCommentStart,
+//                 )
+
+//                 currentLineEnd = 0
+//             }
+
+//             bb.WriteString(strings.Repeat(" ", int(annotation.Range.Start - currentLineEnd)))
+//             bb.WriteString(annotation.Message)
+
+//             currentLineEnd = annotation.Range.Start + annotation.Range.Length
+//         }
+
+//         bb.WriteString("\n")
+//     }
+
+//     // Lines after
+//     for i, line := range ctx.LinesAfter {
+//         lineNumber := ctx.StartLineNumber + uint(len(ctx.LinesInFocus)) + uint(i)
+
+//         l.renderLinePrefix(
+//             bb,
+//             lineNumber,
+//             largestAmountOfDigits,
+//             l.Config.Context.OutOfFocusLineNumberColor,
+//         )
+
+//         bb.WriteString(line)
+//         bb.WriteString("\n")
+//     }
+
+//     // Window bottom
+//     bb.WriteString(leftPadding)
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(l.Config.Context.WindowBottom)
+//     bb.WriteString(l.Config.ResetAnsi)
+//     bb.WriteString("\n")
+// }
+
+// func (l *LogRenderer) renderAnnotationPrefix(bb *bytes.Buffer, leftPadding, prefixSymbol string) {
+//     bb.WriteString(leftPadding)
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(prefixSymbol)
+//     bb.WriteString(l.Config.ResetAnsi)
+//     bb.WriteString(" ")
+// }
+
+// func (l *LogRenderer) renderLinePrefix(bb *bytes.Buffer, lineNumber uint, largestAmountOfDigits int, color string) {
+//     l.renderLineNumber(bb, lineNumber, largestAmountOfDigits, color)
+//     bb.WriteString(l.Config.SymbolColor)
+//     bb.WriteString(l.Config.Context.LineCountSeparator)
+//     bb.WriteString(l.Config.ResetAnsi)
+//     bb.WriteString(" ")
+// }
+
+// func (l *LogRenderer) renderDiff(bb *bytes.Buffer, diff messaging.Diff) {
+// 	if bb == nil {
+//         panic("an uninitialized bytes buffer was passed to the diff renderer")
+//     }
+
+// 	if diff.StartLineNumber < uint(len(diff.LinesBefore)) {
+//         panic("lines before the lines in focus can be negative")
+//     }
+
+// 	largestAmountOfDigits := countDigits(
+// 		diff.StartLineNumber + uint(max(len(diff.LinesToAdd) + len(diff.LinesToRemove))) - 1 + uint(len(diff.LinesAfter)),
+// 	)
+
+// 	leftPadding := strings.Repeat(" ", largestAmountOfDigits + 1)
+
+// 	// Window top
+// 	bb.WriteString(leftPadding)
+
+// 	bb.WriteString(l.Config.SymbolColor)
+// 	bb.WriteString(l.Config.Diff.WindowTop)
+// 	bb.WriteString(l.Config.ResetAnsi)
+
+// 	bb.WriteString("\n")
+
+// 	// Lines out of focus before
+// 	for i, line := range diff.LinesBefore {
+// 		l.renderLineNumber(
+// 			bb,
+// 			diff.StartLineNumber - uint(len(diff.LinesBefore)) + uint(i),
+// 			largestAmountOfDigits,
+// 			l.Config.Diff.OutOfFocusLineNumberColor,
+// 		)
+
+// 		bb.WriteString(l.Config.SymbolColor)
+// 		bb.WriteString(l.Config.Diff.LineCountSeparator)
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(" ")
+// 		bb.WriteString(line)
+// 		bb.WriteString("\n")
+// 	}
+
+// 	// Lines to remove
+// 	for i, line := range diff.LinesToRemove {
+// 		l.renderLineNumber(
+// 			bb,
+// 			diff.StartLineNumber + uint(i),
+// 			largestAmountOfDigits,
+// 			l.Config.Diff.InFocusLineNumberColor,
+// 		)
+
+// 		bb.WriteString(l.Config.Diff.RemoveLineColor)
+// 		bb.WriteString(l.Config.Diff.RemoveLinePrefix)
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(" ")
+// 		bb.WriteString(line)
+// 		bb.WriteString("\n")
+// 	}
+
+// 	// Lines to add
+// 	for i, line := range diff.LinesToAdd {
+// 		l.renderLineNumber(
+// 			bb,
+// 			diff.StartLineNumber + uint(i),
+// 			largestAmountOfDigits,
+// 			l.Config.Diff.InFocusLineNumberColor,
+// 		)
+
+// 		bb.WriteString(l.Config.Diff.AddLineColor)
+// 		bb.WriteString(l.Config.Diff.AddLinePrefix)
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(" ")
+// 		bb.WriteString(line)
+// 		bb.WriteString("\n")
+// 	}
+
+// 	// Lines out of focus after
+// 	for i, line := range diff.LinesAfter {
+// 		l.renderLineNumber(
+// 			bb,
+// 			diff.StartLineNumber + uint(len(diff.LinesToAdd)) + uint(i),
+// 			largestAmountOfDigits,
+// 			l.Config.Diff.OutOfFocusLineNumberColor,
+// 		)
+
+// 		bb.WriteString(l.Config.SymbolColor)
+// 		bb.WriteString(l.Config.Diff.LineCountSeparator)
+// 		bb.WriteString(l.Config.ResetAnsi)
+
+// 		bb.WriteString(" ")
+// 		bb.WriteString(line)
+// 		bb.WriteString("\n")
+// 	}
+
+// 	// Window bottom
+// 	bb.WriteString(leftPadding)
+
+// 	bb.WriteString(l.Config.SymbolColor)
+// 	bb.WriteString(l.Config.Diff.WindowBottom)
+// 	bb.WriteString(l.Config.ResetAnsi)
+
+// 	bb.WriteString("\n")
+// }
+
+// func countDigits(number uint) int {
+// 	if number == 0 {
+// 		return 1
+// 	}
+
+// 	count := 0
+
+// 	for number > 0 {
+// 		number /= 10
+// 		count++
+// 	}
+
+// 	return count
+// }
+
+// func (l *LogRenderer) renderLineNumber(
+// 	bb *bytes.Buffer,
+// 	lineNumber uint,
+// 	largestAmountOfDigits int,
+// 	color string,
+// ) {
+// 	lineNumberAsStr := strconv.FormatUint(uint64(lineNumber), 10)
+
+// 	bb.WriteString(strings.Repeat(" ", largestAmountOfDigits-len(lineNumberAsStr)))
+// 	bb.WriteString(color)
+// 	bb.WriteString(lineNumberAsStr)
+// 	bb.WriteString(l.Config.ResetAnsi)
+// 	bb.WriteString(" ")
+// }

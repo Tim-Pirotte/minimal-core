@@ -59,19 +59,14 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
     if startIndent > 0 {
         l.Position += startIndent
 
-        // TODO complete
-        i.messenger.Send([]messaging.MessagePart{
-           &messaging.Message{
-                Severity: messaging.Error,
-                Message: "Source code cannot start with indentation",
-            },
-            &messaging.CodeContext{
+        context, _ := l.GetNextN(startIndent)
 
-            },
-            &messaging.Message{
-                Severity: messaging.Warning,
-                Message: "The indentation at the start will be skipped",
-            },
+        i.messenger.Send(messaging.Message{
+            Reference: "TODO",
+            Message: "Source code cannot start with indentation",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: context}},
+            Notes: []string{"The indentation at the start will be skipped"},
         })
     }
 
@@ -120,7 +115,7 @@ func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
-    value, _ := l.GetRange(l.Position, length)
+    value, _ := l.GetNextN(length)
     isOpenBlock := false
 
     if c, _ := l.Get(0); c == i.openBlockSymbol {

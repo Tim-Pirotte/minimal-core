@@ -34,7 +34,7 @@ func (i *IdentifierMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (i *IdentifierMatcher) Consume(l *lexer.LexerJob, length uint) {
-	identifier, _ := l.GetRange(l.Position, length)
+	identifier, _ := l.GetNextN(length)
 
 	l.Emit(lexer.Token{
 		Type: i.tokenType,

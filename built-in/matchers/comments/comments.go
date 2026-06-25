@@ -37,7 +37,7 @@ func (c *CommentMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (c *CommentMatcher) Consume(l *lexer.LexerJob, length uint) {
-	comment, _ := l.GetRange(l.Position, length)
+	comment, _ := l.GetNextN(length)
 
 	l.Emit(lexer.Token{
 		Type:  c.tokenType,

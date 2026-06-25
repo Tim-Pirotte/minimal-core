@@ -74,7 +74,7 @@ func (s *SymbolMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (s *SymbolMatcher) Consume(l *lexer.LexerJob, length uint) {
-	symbol, _ := l.GetRange(l.Position, length)
+	symbol, _ := l.GetNextN(length)
 
 	l.Emit(lexer.Token{
 		Type: s.cachedTokenType,

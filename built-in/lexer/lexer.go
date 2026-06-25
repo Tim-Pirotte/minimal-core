@@ -68,28 +68,28 @@ func NewLexer() *Lexer {
 	}
 }
 
-func (t *Lexer) AddMatcher(matcher Matcher) {
-	t.matchers = append(t.matchers, matcher)
+func (l *Lexer) AddMatcher(matcher Matcher) {
+	l.matchers = append(l.matchers, matcher)
 }
 
-func (t *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
-	t.lastTokenType++
-	t.tokenTypesMetadata[t.lastTokenType] = metadata
+func (l *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
+	l.lastTokenType++
+	l.tokenTypesMetadata[l.lastTokenType] = metadata
 
-	return t.lastTokenType
+	return l.lastTokenType
 }
 
-func (t *Lexer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
-	v, ok := t.tokenTypesMetadata[tokenType]
+func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
+	v, ok := l.tokenTypesMetadata[tokenType]
 
 	return v, ok
 }
 
-func (t *Lexer) Lex(source string, stopper Stopper, minSafePeek uint) *LexerJob {
+func (l *Lexer) Lex(source string, stopper Stopper, minSafePeek uint) *LexerJob {
 	capacity := minSafePeek
 
 	job := &LexerJob{
-		make([]Matcher, len(t.matchers)),
+		make([]Matcher, len(l.matchers)),
 		source,
 		0,
 		make([]Token, capacity),
@@ -101,7 +101,7 @@ func (t *Lexer) Lex(source string, stopper Stopper, minSafePeek uint) *LexerJob 
 		false,
 	}
 
-	for i, matcher := range t.matchers {
+	for i, matcher := range l.matchers {
 		job.matchers[i] = matcher.New(job)
 	}
 
@@ -110,77 +110,77 @@ func (t *Lexer) Lex(source string, stopper Stopper, minSafePeek uint) *LexerJob 
 	return job
 }
 
-func (t *LexerJob) Get(i uint) (byte, bool) {
-	offset := t.Position + i
+func (l *LexerJob) Get(i uint) (byte, bool) {
+	offset := l.Position + i
 
-	if offset >= uint(len(t.Data)) {
+	if offset >= uint(len(l.Data)) {
 		return 0, false
 	}
 
-	return t.Data[offset], true
+	return l.Data[offset], true
 }
 
-func (t *LexerJob) GetRange(start, length uint) (string, bool) {
-	if start + length > uint(len(t.Data)) {
+func (l *LexerJob) GetNextN(length uint) (string, bool) {
+	if l.Position + length > uint(len(l.Data)) {
 		return "", false
 	}
 
-	return t.Data[start:start + length], true
+	return l.Data[l.Position:l.Position + length], true
 }
 
-func (t *LexerJob) Emit(token Token) {
-	if t.write - t.read == uint(len(t.buffer)) {
-		t.spillage = append(t.spillage, token)
+func (l *LexerJob) Emit(token Token) {
+	if l.write - l.read == uint(len(l.buffer)) {
+		l.spillage = append(l.spillage, token)
 
 		return
 	}
 
-	t.buffer[t.write % uint(len(t.buffer))] = token
-	t.write++
+	l.buffer[l.write % uint(len(l.buffer))] = token
+	l.write++
 }
 
-func (t *LexerJob) Peek(n uint) Token {
-	if n >= t.minSafePeek {
+func (l *LexerJob) Peek(n uint) Token {
+	if n >= l.minSafePeek {
 		panic("attempt to peek more tokens in advance than expected")
 	}
 
-	read := t.read + n
+	read := l.read + n
 
-	if read >= t.write {
-		return Token{END, "", primitives.Range{Start: uint(len(t.Data)), Length: 0}}
+	if read >= l.write {
+		return Token{END, "", primitives.Range{Start: uint(len(l.Data)), Length: 0}}
 	}
 
-	return t.buffer[read % uint(len(t.buffer))]
+	return l.buffer[read % uint(len(l.buffer))]
 }
 
-func (t *LexerJob) Advance() {
-	t.read++
+func (l *LexerJob) Advance() {
+	l.read++
 
-	if t.read + t.minSafePeek >= t.write {
-		t.fillTokenBuffer()
+	if l.read + l.minSafePeek >= l.write {
+		l.fillTokenBuffer()
 	}
 }
 
-func (t *LexerJob) fillTokenBuffer() {
-	if len(t.spillage) > 0 {
-        nEmpty := uint(len(t.buffer)) - (t.write - t.read)
-		nSpillage := uint(len(t.spillage))
+func (l *LexerJob) fillTokenBuffer() {
+	if len(l.spillage) > 0 {
+        nEmpty := uint(len(l.buffer)) - (l.write - l.read)
+		nSpillage := uint(len(l.spillage))
 
         nFill := min(nEmpty, nSpillage)
 
         for i := range nFill {
-            t.buffer[t.write % uint(len(t.buffer))] = t.spillage[i]
-            t.write++
+            l.buffer[l.write % uint(len(l.buffer))] = l.spillage[i]
+            l.write++
         }
 
-        t.spillage = t.spillage[nFill:]
+        l.spillage = l.spillage[nFill:]
     }
 
 	// TODO separate bounds check from end function and
 	// check if we can put the end condition higher up
-	for t.write - t.read != uint(len(t.buffer)) && !t.endReached {
-		if t.stopper.End(t) {
-			t.endReached = true
+	for l.write - l.read != uint(len(l.buffer)) && !l.endReached {
+		if l.stopper.End(l) {
+			l.endReached = true
 
 			return
 		}
@@ -188,8 +188,8 @@ func (t *LexerJob) fillTokenBuffer() {
 		largestLength := uint(0)
 		var matcherWithLargestLength Matcher = nil
 
-		for _, matcher := range t.matchers {
-			length := matcher.Match(t)
+		for _, matcher := range l.matchers {
+			length := matcher.Match(l)
 
 			if length > largestLength {
 				largestLength = length
@@ -198,16 +198,16 @@ func (t *LexerJob) fillTokenBuffer() {
 		}
 
 		if matcherWithLargestLength != nil {
-			matcherWithLargestLength.Consume(t, largestLength)
-			t.Position += largestLength
+			matcherWithLargestLength.Consume(l, largestLength)
+			l.Position += largestLength
 		} else {
-			t.Emit(Token{
+			l.Emit(Token{
 				Type: UNKNOWN,
-				Value: t.Data[t.Position:t.Position + 1],
-				Range: primitives.Range{Start: t.Position, Length: 1},
+				Value: l.Data[l.Position:l.Position + 1],
+				Range: primitives.Range{Start: l.Position, Length: 1},
 			})
 
-			t.Position++
+			l.Position++
 		}
 	}
 }

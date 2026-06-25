@@ -38,18 +38,18 @@ type Message struct {
 }
 
 type Span struct {
-	content string
-	note    string
+	Content string
+	Note    string
 }
 
 type Suggestion struct {
-	suggestion string
-	replacements []Replacement
+	Suggestion string
+	Replacements []Replacement
 }
 
 type Replacement struct {
-	from Span
-	to   Span
+	From Span
+	To   Span
 }
 
 type Output interface {

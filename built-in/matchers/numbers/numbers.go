@@ -28,7 +28,7 @@ func (n *NumberMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (i *NumberMatcher) Consume(l *lexer.LexerJob, length uint) {
-	number, _ := l.GetRange(l.Position, length)
+	number, _ := l.GetNextN(length)
 
 	l.Emit(lexer.Token{
 		Type: i.tokenType,
