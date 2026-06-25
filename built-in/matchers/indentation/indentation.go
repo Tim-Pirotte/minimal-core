@@ -60,14 +60,7 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
         l.Position += startIndent
 
         context, _ := l.GetNextN(startIndent)
-
-        i.messenger.Send(messaging.Message{
-            Reference: "TODO",
-            Message: "Source code cannot start with indentation",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: context}},
-            Notes: []string{"The indentation at the start will be skipped"},
-        })
+        i.messenger.Send(getCannotStartWithIndentMessage(context))
     }
 
     return m
@@ -130,7 +123,7 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
         isOpenBlock = true
     }
 
-    level := i.getIndentLevel(isOpenBlock)
+    level := i.getIndentLevel(l, isOpenBlock)
 
     if !isOpenBlock && i.level - level == 0 {
         l.Emit(lexer.Token{
@@ -158,7 +151,7 @@ func IsEOL(c byte) bool {
 	return c == '\n' || c == '\r'
 }
 
-func (i *IndentationMatcher) getIndentLevel(isOpenBlock bool) uint {
+func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool) uint {
     if i.spaceCount == 0 {
         return 0
     }
@@ -173,7 +166,17 @@ func (i *IndentationMatcher) getIndentLevel(isOpenBlock bool) uint {
 
     if i.spaceCount % i.spacesPerLevel != 0 {
         // TODO Error inconsistent indentation
-        panic("Inconsistent indentation")
+        context, _ := l.GetNextN(i.spaceCount)
+
+        i.messenger.Send(messaging.Message{
+            Reference: "TODO",
+            Message: "Indentation is inconsistent",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: context}},
+            Notes: []string{"The indentation at the start will be skipped"},
+        })
+
+        // TODO what after this?
     }
 
     level := i.spaceCount / i.spacesPerLevel
@@ -184,4 +187,14 @@ func (i *IndentationMatcher) getIndentLevel(isOpenBlock bool) uint {
     }
 
     return level
+}
+
+func getCannotStartWithIndentMessage(context string) messaging.Message {
+    return messaging.Message{
+        Reference: "TODO",
+        Message: "Source code cannot start with indentation",
+        Severity: messaging.Error,
+        Context: []messaging.Span{{Content: context}},
+        Notes: []string{"The indentation at the start will be skipped"},
+    }
 }

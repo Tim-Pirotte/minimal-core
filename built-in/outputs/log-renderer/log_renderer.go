@@ -122,11 +122,89 @@ func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer) *LogRe
     }
 }
 
-func (l *LogRenderer) Receive(message messaging.Message) {
+func (l *LogRenderer) Receive(m messaging.Message) {
     bb := bytes.NewBuffer(make([]byte, 0))
-    l.renderMessage(bb, message)
 
-    l.writer.Write([]byte(l.Config.ResetAnsi))
+	bb.WriteString(l.Config.ResetAnsi)
+
+    bb.WriteString(l.getSeverityColor(m.Severity))
+	fmt.Fprintf(bb, "%14s", stringifySeverity(m.Severity))
+	bb.WriteString(l.Config.ResetAnsi)
+	bb.WriteString(l.Config.SymbolColor)
+    bb.WriteString(": ") // TODO make configurable
+	bb.WriteString(l.Config.ResetAnsi)
+	bb.WriteString(m.Message)
+	bb.WriteString("\n")
+
+    // TODO add proper output
+    for _, span := range m.Context {
+        bb.WriteString("\"")
+        bb.WriteString(span.Content)
+        bb.WriteString("\"")
+
+        if span.Note != "" {
+            bb.WriteString("(")
+            bb.WriteString(span.Note)
+            bb.WriteString(")")
+        }
+
+        bb.WriteString("\n")
+    }
+
+    for _, span := range m.AdditionalContext {
+        bb.WriteString("Additional: ")
+        bb.WriteString("\"")
+        bb.WriteString(span.Content)
+        bb.WriteString("\"")
+
+        if span.Note != "" {
+            bb.WriteString("(")
+            bb.WriteString(span.Note)
+            bb.WriteString(")")
+        }
+
+        bb.WriteString("\n")
+    }
+
+    for _, suggestion := range m.Suggestions {
+        bb.WriteString("Suggestion: ")
+        bb.WriteString(suggestion.Suggestion)
+
+        for _, replacement := range suggestion.Replacements {
+            bb.WriteString("- ")
+            bb.WriteString("\"")
+            bb.WriteString(replacement.From.Content)
+            bb.WriteString("\"")
+
+            if replacement.From.Note != "" {
+                bb.WriteString("(")
+                bb.WriteString(replacement.From.Note)
+                bb.WriteString(")")
+            }
+
+            bb.WriteString(" ")
+
+            bb.WriteString("+ ")
+            bb.WriteString("\"")
+            bb.WriteString(replacement.To.Content)
+            bb.WriteString("\"")
+
+            if replacement.To.Note != "" {
+                bb.WriteString("(")
+                bb.WriteString(replacement.To.Note)
+                bb.WriteString(")")
+            }
+
+            bb.WriteString("\n")
+        }
+    }
+
+    for _, note := range m.Notes {
+        bb.WriteString("Note: ")
+        bb.WriteString(note)
+        bb.WriteString("\n")
+    }
+
     _, err := l.writer.Write(bb.Bytes())
 
     if err != nil {
@@ -222,17 +300,6 @@ func (l *LogRenderer) getSeverityColor(s messaging.Severity) string {
 	}
 
 	return sAsStr
-}
-
-func (l *LogRenderer) renderMessage(bb *bytes.Buffer, m messaging.Message) {
-	bb.WriteString(l.getSeverityColor(m.Severity))
-	fmt.Fprintf(bb, "%14s", stringifySeverity(m.Severity))
-	bb.WriteString(l.Config.ResetAnsi)
-	bb.WriteString(l.Config.SymbolColor)
-    bb.WriteString(": ") // TODO make configurable
-	bb.WriteString(l.Config.ResetAnsi)
-	bb.WriteString(m.Message)
-	bb.WriteString("\n")
 }
 
 // func (l *LogRenderer) renderHint(bb *bytes.Buffer, hint messaging.Hint) {
