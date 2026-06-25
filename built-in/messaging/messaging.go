@@ -3,7 +3,6 @@ package messaging
 import (
 	"fmt"
 	logging "minimal/minimal-core/built-in/internal-logging"
-	"minimal/minimal-core/built-in/primitives"
 	"reflect"
 )
 
@@ -12,7 +11,7 @@ const bufferSize = 16
 type Messenger struct {
 	logger  logging.Logger
 	outputs []Output
-	queue   chan []MessagePart
+	queue   chan Message
 	done    chan bool
 }
 
@@ -28,66 +27,42 @@ const (
 	Critical
 )
 
+type Message struct {
+	Reference         string
+	Message           string
+	Severity          Severity
+	Context           []Span
+	AdditionalContext []Span
+	Suggestions       []Suggestion
+	Notes             []string
+}
+
+type Span struct {
+	content string
+	note    string
+}
+
+type Suggestion struct {
+	suggestion string
+	replacements []Replacement
+}
+
+type Replacement struct {
+	from Span
+	to   Span
+}
+
 type Output interface {
-	Receive([]MessagePart)
+	Receive(Message)
 }
 
 type TestOutput struct {
-	messages [][]MessagePart
+	messages []Message
 }
 
-func (m *TestOutput) Receive(messageParts []MessagePart) {
-	m.messages = append(m.messages, messageParts)
+func (m *TestOutput) Receive(message Message) {
+	m.messages = append(m.messages, message)
 }
-
-type MessagePart interface {
-	MessagePart()
-}
-
-type Message struct {
-	Severity Severity
-	Message  string
-}
-
-func (*Message) MessagePart() {}
-
-type CodeContext struct {
-	Source          string
-	StartLineNumber uint
-	LinesBefore     []string
-	LinesInFocus    []Line
-	LinesAfter      []string
-}
-
-func (*CodeContext) MessagePart() {}
-
-type Line struct {
-	Content     string
-	Annotations []Annotation
-}
-
-type Annotation struct {
-	Range    primitives.Range
-	Message  string
-	Severity Severity
-}
-
-type Diff struct {
-	StartLineNumber uint
-	LinesBefore     []string
-	LinesToRemove   []string
-	LinesToAdd      []string
-	LinesAfter      []string
-}
-
-func (*Diff) MessagePart() {}
-
-type Hint struct {
-	Text              string
-	MoreInfoReference string
-}
-
-func (*Hint) MessagePart() {}
 
 func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 	logger, _ := sourceGen.GetLogger("Messenger")
@@ -95,7 +70,7 @@ func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 	m := &Messenger{
 		logger:  logger,
 		outputs: make([]Output, 0),
-		queue:   make(chan []MessagePart, bufferSize),
+		queue:   make(chan Message, bufferSize),
 		done:    make(chan bool),
 	}
 
@@ -105,9 +80,9 @@ func NewMessenger(sourceGen *logging.SourceGenerator) *Messenger {
 }
 
 func (m *Messenger) worker() {
-	for messageParts := range m.queue {
+	for message := range m.queue {
 		for _, output := range m.outputs {
-			output.Receive(messageParts)
+			output.Receive(message)
 		}
 	}
 
@@ -124,6 +99,6 @@ func (m *Messenger) Close() {
 	<-m.done
 }
 
-func (m *Messenger) Send(messageParts []MessagePart) {
-	m.queue<-messageParts
+func (m *Messenger) Send(message Message) {
+	m.queue<-message
 }
