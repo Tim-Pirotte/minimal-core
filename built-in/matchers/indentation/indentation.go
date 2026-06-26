@@ -123,7 +123,7 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
         isOpenBlock = true
     }
 
-    level := i.getIndentLevel(l, isOpenBlock)
+    level := i.getIndentLevel(l, isOpenBlock, length)
 
     if !isOpenBlock && i.level - level == 0 {
         l.Emit(lexer.Token{
@@ -151,7 +151,7 @@ func IsEOL(c byte) bool {
 	return c == '\n' || c == '\r'
 }
 
-func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool) uint {
+func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool, length uint) uint {
     if i.spaceCount == 0 {
         return 0
     }
@@ -165,18 +165,18 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool)
     }
 
     if i.spaceCount % i.spacesPerLevel != 0 {
-        // TODO Error inconsistent indentation
-        context, _ := l.GetNextN(i.spaceCount)
+        context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
+        // TODO Show the place at which the indentation was decided
         i.messenger.Send(messaging.Message{
             Reference: "TODO",
             Message: "Indentation is inconsistent",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: context}},
-            Notes: []string{"The indentation at the start will be skipped"},
+            Notes: []string{"The indentation will be set to the current level"},
         })
 
-        // TODO what after this?
+        return i.level
     }
 
     level := i.spaceCount / i.spacesPerLevel
