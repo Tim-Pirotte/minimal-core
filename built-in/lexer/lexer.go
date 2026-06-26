@@ -272,6 +272,6 @@ func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 
 	if !ok {
 		lexerDebugger.DisplayTokensDiff(actual, expected)
-		fmt.Println("")
+		fmt.Println()
 	}
 }

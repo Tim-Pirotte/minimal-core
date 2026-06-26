@@ -57,10 +57,10 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
     }
 
     if startIndent > 0 {
-        l.Position += startIndent
-
         context, _ := l.GetNextN(startIndent)
         i.messenger.Send(getCannotStartWithIndentMessage(context))
+
+        l.Position += startIndent
     }
 
     return m

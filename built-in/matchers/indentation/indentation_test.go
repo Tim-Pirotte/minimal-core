@@ -250,7 +250,7 @@ func TestNoBlocksIncorrect(t *testing.T) {
     l, _, _, _ := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 1, Length: 1}},
     }
 
     lexer.CheckTokens(t, l, expected, source)
