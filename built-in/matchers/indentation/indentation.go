@@ -4,6 +4,8 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
 	"minimal/minimal-core/built-in/primitives"
+	"strconv"
+	"strings"
 )
 
 type IndentationMatcher struct {
@@ -13,7 +15,8 @@ type IndentationMatcher struct {
     openBlock               lexer.TokenType
     closeBlock              lexer.TokenType
     endOfLine               lexer.TokenType
-    spacesPerLevel          uint
+    // Is a string so we can show where the number was derived from in error messages
+    spacesPerLevel          string
     level                   uint
     spaceCount              uint
 }
@@ -31,7 +34,7 @@ func NewIndentationMatcher(
         openBlock,
         closeBlock,
         endOfLine,
-        spacesPerLevel,
+        strings.Repeat(" ", int(spacesPerLevel)),
         0,
         0,
     }
@@ -156,30 +159,45 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool,
         return 0
     }
 
-    if i.spacesPerLevel == 0 {
-        i.spacesPerLevel = i.spaceCount
+    if len(i.spacesPerLevel) == 0 {
+        i.spacesPerLevel = l.Data[l.Position + length - i.spaceCount:l.Position + length]
     }
 
-    if !isOpenBlock && i.spaceCount > i.spacesPerLevel * i.level {
+    if !isOpenBlock && i.spaceCount > uint(len(i.spacesPerLevel)) * i.level {
         return i.level
     }
 
-    if i.spaceCount % i.spacesPerLevel != 0 {
+    if i.spaceCount % uint(len(i.spacesPerLevel)) != 0 {
         context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
-        // TODO Show the place at which the indentation was decided
-        i.messenger.Send(messaging.Message{
+        message := messaging.Message{
             Reference: "TODO",
             Message: "Indentation is inconsistent",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: context}},
-            Notes: []string{"The indentation will be set to the current level"},
-        })
+            AdditionalContext: []messaging.Span{},
+            Notes: []string{
+                "The indentation must be a multiple of " + strconv.Itoa(len(i.spacesPerLevel)),
+                "The indentation of the incorrect line is " + strconv.Itoa(int(i.spaceCount)),
+                "The indentation will be set to the current level",
+            },
+        }
+
+        if primitives.IsSubString(l.Data, i.spacesPerLevel) {
+            message.AdditionalContext = append(message.AdditionalContext, messaging.Span{
+                Content: i.spacesPerLevel,
+                Note: "The indentation was derived here",
+            })
+        } else {
+            message.Notes = append([]string{"The indentation was manually set"}, message.Notes...)
+        }
+
+        i.messenger.Send(message)
 
         return i.level
     }
 
-    level := i.spaceCount / i.spacesPerLevel
+    level := i.spaceCount / uint(len(i.spacesPerLevel))
 
     if level > i.level {
         // TODO Error indented without a new block

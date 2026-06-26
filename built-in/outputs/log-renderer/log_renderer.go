@@ -143,7 +143,7 @@ func (l *LogRenderer) Receive(m messaging.Message) {
         bb.WriteString("\"")
 
         if span.Note != "" {
-            bb.WriteString("(")
+            bb.WriteString(" (")
             bb.WriteString(span.Note)
             bb.WriteString(")")
         }
@@ -158,7 +158,7 @@ func (l *LogRenderer) Receive(m messaging.Message) {
         bb.WriteString("\"")
 
         if span.Note != "" {
-            bb.WriteString("(")
+            bb.WriteString(" (")
             bb.WriteString(span.Note)
             bb.WriteString(")")
         }
@@ -177,7 +177,7 @@ func (l *LogRenderer) Receive(m messaging.Message) {
             bb.WriteString("\"")
 
             if replacement.From.Note != "" {
-                bb.WriteString("(")
+                bb.WriteString(" (")
                 bb.WriteString(replacement.From.Note)
                 bb.WriteString(")")
             }
@@ -190,7 +190,7 @@ func (l *LogRenderer) Receive(m messaging.Message) {
             bb.WriteString("\"")
 
             if replacement.To.Note != "" {
-                bb.WriteString("(")
+                bb.WriteString(" (")
                 bb.WriteString(replacement.To.Note)
                 bb.WriteString(")")
             }
@@ -204,6 +204,8 @@ func (l *LogRenderer) Receive(m messaging.Message) {
         bb.WriteString(note)
         bb.WriteString("\n")
     }
+
+    bb.WriteString("\n")
 
     _, err := l.writer.Write(bb.Bytes())
 
