@@ -4,6 +4,7 @@ import (
 	"fmt"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	"reflect"
+	"testing"
 )
 
 const bufferSize = 16
@@ -101,4 +102,11 @@ func (m *Messenger) Close() {
 
 func (m *Messenger) Send(message Message) {
 	m.queue<-message
+}
+
+func (to *TestOutput) CheckMessages(t *testing.T, expected []Message) {
+	// TODO make this more sophisticated
+	if !reflect.DeepEqual(to.messages, expected) {
+		t.Error("Expected:\n", expected, "\nGot:\n", to.messages)
+	}
 }
