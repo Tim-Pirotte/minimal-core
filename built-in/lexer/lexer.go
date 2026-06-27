@@ -120,12 +120,8 @@ func (l *LexerJob) Get(i uint) (byte, bool) {
 	return l.Data[offset], true
 }
 
-func (l *LexerJob) GetNextN(length uint) (string, bool) {
-	if l.Position + length > uint(len(l.Data)) {
-		return "", false
-	}
-
-	return l.Data[l.Position:l.Position + length], true
+func (l *LexerJob) GetNextN(length uint) string {
+	return l.Data[l.Position:l.Position + length]
 }
 
 func (l *LexerJob) Emit(token Token) {

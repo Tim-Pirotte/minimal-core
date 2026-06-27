@@ -60,8 +60,7 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
     }
 
     if startIndent > 0 {
-        context, _ := l.GetNextN(startIndent)
-        i.messenger.Send(getCannotStartWithIndentMessage(context))
+        i.sendPrefixIndentErr(l, startIndent)
 
         l.Position += startIndent
     }
@@ -111,7 +110,6 @@ func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
-    value, _ := l.GetNextN(length)
     isOpenBlock := false
 
     if c, _ := l.Get(0); c == i.openBlockSymbol {
@@ -119,7 +117,7 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
 
         l.Emit(lexer.Token{
             Type:  i.openBlock,
-            Value: value,
+            Value: l.GetNextN(length),
             Range: primitives.Range{Start: l.Position, Length: length},
         })
 
@@ -131,7 +129,7 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
     if !isOpenBlock && i.level - level == 0 {
         l.Emit(lexer.Token{
             Type: i.endOfLine,
-            Value: value,
+            Value: l.GetNextN(length),
             Range: primitives.Range{Start: l.Position, Length: length},
         })
 
@@ -141,7 +139,7 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
     for range i.level - level {
         l.Emit(lexer.Token{
             Type:  i.closeBlock,
-            Value: value,
+            Value: l.GetNextN(length),
             Range: primitives.Range{Start: l.Position, Length: length},
         })
     }
@@ -168,31 +166,7 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool,
     }
 
     if i.spaceCount % uint(len(i.spacesPerLevel)) != 0 {
-        context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
-
-        message := messaging.Message{
-            Reference: "TODO",
-            Message: "Indentation is inconsistent",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: context}},
-            AdditionalContext: []messaging.Span{},
-            Notes: []string{
-                "The indentation must be a multiple of " + strconv.Itoa(len(i.spacesPerLevel)),
-                "The indentation of the incorrect line is " + strconv.Itoa(int(i.spaceCount)),
-                "The indentation will be set to the current level",
-            },
-        }
-
-        if primitives.IsSubString(l.Data, i.spacesPerLevel) {
-            message.AdditionalContext = append(message.AdditionalContext, messaging.Span{
-                Content: i.spacesPerLevel,
-                Note: "The indentation was derived here",
-            })
-        } else {
-            message.Notes = append([]string{"The indentation was manually set"}, message.Notes...)
-        }
-
-        i.messenger.Send(message)
+        i.sendInconsistentIndentErr(l, length)
 
         return i.level
     }
@@ -223,12 +197,40 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool,
     return level
 }
 
-func getCannotStartWithIndentMessage(context string) messaging.Message {
-    return messaging.Message{
+func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.LexerJob, startIndent uint) {
+    i.messenger.Send(messaging.Message{
         Reference: "TODO",
         Message: "Source code cannot start with indentation",
         Severity: messaging.Error,
-        Context: []messaging.Span{{Content: context}},
+        Context: []messaging.Span{{Content: l.GetNextN(startIndent)}},
         Notes: []string{"The indentation at the start will be skipped"},
+    })
+}
+
+func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.LexerJob, length uint) {
+    context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
+
+    message := messaging.Message{
+        Reference: "TODO",
+        Message: "Indentation is inconsistent",
+        Severity: messaging.Error,
+        Context: []messaging.Span{{Content: context}},
+        AdditionalContext: []messaging.Span{},
+        Notes: []string{
+            "The indentation must be a multiple of " + strconv.Itoa(len(i.spacesPerLevel)),
+            "The indentation of the incorrect line is " + strconv.Itoa(int(i.spaceCount)),
+            "The indentation will be set to the current level",
+        },
     }
+
+    if primitives.IsSubString(l.Data, i.spacesPerLevel) {
+        message.AdditionalContext = append(message.AdditionalContext, messaging.Span{
+            Content: i.spacesPerLevel,
+            Note: "The indentation was derived here",
+        })
+    } else {
+        message.Notes = append([]string{"The indentation was manually set"}, message.Notes...)
+    }
+
+    i.messenger.Send(message)
 }
