@@ -200,8 +200,24 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool,
     level := i.spaceCount / uint(len(i.spacesPerLevel))
 
     if level > i.level {
-        // TODO Error indented without a new block
-        panic("Indent without a new block")
+        context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
+
+        i.messenger.Send(messaging.Message{
+            Reference: "TODO",
+            Message: "Got more indentation than expected",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: context}},
+            AdditionalContext: []messaging.Span{},
+            Notes: []string{
+                "The indentation of the incorrect line is " + strconv.Itoa(int(i.spaceCount)),
+                "The largest expected indentation is " + strconv.Itoa(int(i.level) * len(i.spacesPerLevel)),
+                "The indentation will be set to the current level",
+            },
+        })
+
+        // TODO add more info reference
+
+        return i.level
     }
 
     return level

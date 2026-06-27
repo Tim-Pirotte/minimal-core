@@ -184,6 +184,24 @@ func TestExtraIndentAfterBlock(t *testing.T) {
     lexer.CheckTokens(t, l, expected, source)
 }
 
+func TestTooMuchIndent(t *testing.T) {
+    // TODO check the errors
+    source := ":\n"+
+              "  :\n" +
+              "      a"
+
+    l, openBlock, _, _ := getLexer(' ', 0)
+
+    // TODO expect incorrect indentation
+    expected := []lexer.Token{
+        {Type: openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
+        {Type: openBlock, Value: ":\n      ", Range: primitives.Range{Start: 4, Length: 8}},
+        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 12, Length: 1}},
+    }
+
+    lexer.CheckTokens(t, l, expected, source)
+}
+
 func TestDifferentSpaceChar(t *testing.T) {
     source := ":\n"+
               "\t:\n" +
