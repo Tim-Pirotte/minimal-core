@@ -1,4 +1,4 @@
-package main
+package setup
 
 import (
 	"minimal/minimal-core/built-in/commands/templates"
@@ -10,7 +10,7 @@ import (
 	"minimal/minimal-core/built-in/user-interfaces/tui"
 )
 
-func registerCommands(
+func RegisterCommands(
 	commands *startup.Commands,
 	sourceGen *logging.SourceGenerator,
 	messenger *messaging.Messenger,
