@@ -5,9 +5,9 @@ import (
 	"io"
 	"math"
 	logging "minimal/minimal-core/built-in/internal-logging"
-	"minimal/minimal-core/built-in/primitives"
 	"os"
 	"testing"
+	"unsafe"
 )
 
 type TokenType uint
@@ -20,7 +20,6 @@ const (
 type Token struct {
 	Type  TokenType
 	Value string
-	Range primitives.Range
 }
 
 type TokenTypeMetadata struct {
@@ -143,7 +142,8 @@ func (l *LexerJob) Peek(n uint) Token {
 	read := l.read + n
 
 	if read >= l.write {
-		return Token{END, "", primitives.Range{Start: uint(len(l.Data)), Length: 0}}
+		// TODO test this for off by one errors
+		return Token{END, l.Data[len(l.Data):]}
 	}
 
 	return l.buffer[read % uint(len(l.buffer))]
@@ -197,11 +197,7 @@ func (l *LexerJob) fillTokenBuffer() {
 			matcherWithLargestLength.Consume(l, largestLength)
 			l.Position += largestLength
 		} else {
-			l.Emit(Token{
-				Type: UNKNOWN,
-				Value: l.Data[l.Position:l.Position + 1],
-				Range: primitives.Range{Start: l.Position, Length: 1},
-			})
+			l.Emit(Token{Type: UNKNOWN, Value: l.GetNextN(1)})
 
 			l.Position++
 		}
@@ -228,7 +224,7 @@ func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 	lexerDebugger := NewLexerDebugger(lexer, sourceGen, os.Stdout)
 
 	if len(expected) != len(actual) {
-		lexerDebugger.DisplayTokensDiff(actual, expected)
+		lexerDebugger.DisplayTokensDiff(text, actual, expected)
 		fmt.Println("")
 		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
 	}
@@ -238,8 +234,8 @@ func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 	for i := range len(expected) {
 		if actual[i].Type != expected[i].Type {
 			t.Error(
-				"\nExpected\n", lexerDebugger.StringifyToken(expected[i]),
-				"\nbut got\n", lexerDebugger.StringifyToken(actual[i]), "(incorrect type)",
+				"\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
+				"\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect type)",
 			)
 
 			ok = false
@@ -247,17 +243,17 @@ func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 			break
 		} else if actual[i].Value != expected[i].Value {
 			t.Error(
-				"\nExpected\n", lexerDebugger.StringifyToken(expected[i]),
-				"\nbut got\n", lexerDebugger.StringifyToken(actual[i]), "(incorrect value)",
+				"\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
+				"\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect value)",
 			)
 
 			ok = false
 
 			break
-		} else if actual[i].Range != expected[i].Range {
+		} else if unsafe.StringData(actual[i].Value) != unsafe.StringData(expected[i].Value) {
 			t.Error(
-				"\nExpected\n", lexerDebugger.StringifyToken(expected[i]),
-				"\nbut got\n", lexerDebugger.StringifyToken(actual[i]), "(incorrect range)",
+				"\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
+				"\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect string address)",
 			)
 
 			ok = false
@@ -267,7 +263,7 @@ func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 	}
 
 	if !ok {
-		lexerDebugger.DisplayTokensDiff(actual, expected)
+		lexerDebugger.DisplayTokensDiff(text, actual, expected)
 		fmt.Println()
 	}
 }

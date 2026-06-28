@@ -2,7 +2,6 @@ package identifiers
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/primitives"
 	"strings"
 	"testing"
 )
@@ -20,73 +19,85 @@ func getLexer() (*lexer.Lexer, lexer.TokenType) {
 }
 
 func TestIdentifier(t *testing.T) {
+	source := "identifier1"
+
 	l, identifierType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
+		{Type: identifierType, Value: source[:11]},
 	}
 
-	lexer.CheckTokens(t, l, expected, "identifier1")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestMultipleIdentifiers(t *testing.T) {
+	source := "identifier1 identifier2"
+
 	l, identifierType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: identifierType, Value: "identifier1", Range: primitives.Range{Start: 0, Length: 11}},
-		{Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 11, Length: 1}},
-		{Type: identifierType, Value: "identifier2", Range: primitives.Range{Start: 12, Length: 11}},
+		{Type: identifierType, Value: source[:11]},
+		{Type: lexer.UNKNOWN, Value: source[11:12]},
+		{Type: identifierType, Value: source[12:23]},
 	}
 
-	lexer.CheckTokens(t, l, expected, "identifier1 identifier2")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestUnicode(t *testing.T) {
+	source := "👾"
+
 	l, identifierType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: identifierType, Value: "👾", Range: primitives.Range{Start: 0, Length: 4}},
+		{Type: identifierType, Value: source},
 	}
 
-	lexer.CheckTokens(t, l, expected, "👾")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestZeroWidthJoiner(t *testing.T) {
+	source := "🐻‍❄️"
+
 	l, identifierType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: identifierType, Value: "🐻‍❄️", Range: primitives.Range{Start: 0, Length: 13}},
+		{Type: identifierType, Value: source},
 	}
 
-	lexer.CheckTokens(t, l, expected, "🐻‍❄️")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestStartingWithNumber(t *testing.T) {
+	source := "1identifier"
+
 	l, identifierType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 0, Length: 1}},
-		{Type: identifierType, Value: "identifier", Range: primitives.Range{Start: 1, Length: 10}},
+		{Type: lexer.UNKNOWN, Value: source[:1]},
+		{Type: identifierType, Value: source[1:11]},
 	}
 
-	lexer.CheckTokens(t, l, expected, "1identifier")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestBounds(t *testing.T) {
+	source := "`az{@AZ[\u007f\u0080\U0010ffff"
+
 	l, identifierType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: lexer.UNKNOWN, Value: "`", Range: primitives.Range{Start: 0, Length: 1}},
-		{Type: identifierType, Value: "az", Range: primitives.Range{Start: 1, Length: 2}},
-		{Type: lexer.UNKNOWN, Value: "{", Range: primitives.Range{Start: 3, Length: 1}},
-		{Type: lexer.UNKNOWN, Value: "@", Range: primitives.Range{Start: 4, Length: 1}},
-		{Type: identifierType, Value: "AZ", Range: primitives.Range{Start: 5, Length: 2}},
-		{Type: lexer.UNKNOWN, Value: "[", Range: primitives.Range{Start: 7, Length: 1}},
-		{Type: lexer.UNKNOWN, Value: "\u007f", Range: primitives.Range{Start: 8, Length: 1}},
-		{Type: identifierType, Value: "\u0080\U0010ffff", Range: primitives.Range{Start: 9, Length: 6}},
+		{Type: lexer.UNKNOWN, Value: source[:1]},
+		{Type: identifierType, Value: source[1:3]},
+		{Type: lexer.UNKNOWN, Value: source[3:4]},
+		{Type: lexer.UNKNOWN, Value: source[4:5]},
+		{Type: identifierType, Value: source[5:7]},
+		{Type: lexer.UNKNOWN, Value: source[7:8]},
+		{Type: lexer.UNKNOWN, Value: source[8:9]},
+		{Type: identifierType, Value: source[9:15]},
 	}
 
-	lexer.CheckTokens(t, l, expected, "`az{@AZ[\u007f\u0080\U0010ffff")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func FuzzLexIdentifier(f *testing.F) {
@@ -113,13 +124,7 @@ func FuzzLexIdentifier(f *testing.F) {
 			return
 		}
 
-		expected := []lexer.Token{
-			{
-				Type: identifierType,
-				Value: input,
-				Range: primitives.Range{Start: 0, Length: uint(len(input))},
-			},
-		}
+		expected := []lexer.Token{{Type: identifierType, Value: input}}
 
 		lexer.CheckTokens(t, l, expected, input)
 	})

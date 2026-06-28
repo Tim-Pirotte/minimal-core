@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"minimal/minimal-core/built-in/primitives"
 	"testing"
 )
 
@@ -11,12 +10,14 @@ func TestLexEmpty(t *testing.T) {
 }
 
 func TestLexUnknown(t *testing.T) {
+	source := "a"
+
 	l := NewLexer()
 	expected := []Token{
-		{Type: UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
+		{Type: UNKNOWN, Value: source},
 	}
 
-	CheckTokens(t, l, expected, "a")
+	CheckTokens(t, l, expected, source)
 }
 
 type spillageTestMatcher struct {
@@ -39,24 +40,26 @@ func (s *spillageTestMatcher) Match(t *LexerJob) uint {
 
 func (s *spillageTestMatcher) Consume(t *LexerJob, length uint) {
 	for range 5 {
-		t.Emit(Token{s.tokenType, "", primitives.Range{}})
+		t.Emit(Token{s.tokenType, t.Data[:0]})
 	}
 }
 
 func TestSpillage(t *testing.T) {
+	source := "a"
+
 	l := NewLexer()
 	s := newSpillageTestMatcher(l)
 	l.AddMatcher(s)
 
 	expected := []Token{
-		{s.tokenType, "", primitives.Range{}},
-		{s.tokenType, "", primitives.Range{}},
-		{s.tokenType, "", primitives.Range{}},
-		{s.tokenType, "", primitives.Range{}},
-		{s.tokenType, "", primitives.Range{}},
+		{s.tokenType, source[:0]},
+		{s.tokenType, source[:0]},
+		{s.tokenType, source[:0]},
+		{s.tokenType, source[:0]},
+		{s.tokenType, source[:0]},
 	}
 
-	CheckTokens(t, l, expected, "a")
+	CheckTokens(t, l, expected, source)
 }
 
 func Benchmark(b *testing.B) {

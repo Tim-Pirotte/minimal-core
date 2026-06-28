@@ -118,7 +118,6 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
         l.Emit(lexer.Token{
             Type:  i.openBlock,
             Value: l.GetNextN(length),
-            Range: primitives.Range{Start: l.Position, Length: length},
         })
 
         isOpenBlock = true
@@ -130,7 +129,6 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
         l.Emit(lexer.Token{
             Type: i.endOfLine,
             Value: l.GetNextN(length),
-            Range: primitives.Range{Start: l.Position, Length: length},
         })
 
         return
@@ -140,7 +138,6 @@ func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
         l.Emit(lexer.Token{
             Type:  i.closeBlock,
             Value: l.GetNextN(length),
-            Range: primitives.Range{Start: l.Position, Length: length},
         })
     }
 

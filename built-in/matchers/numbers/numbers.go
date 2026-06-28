@@ -2,7 +2,6 @@ package numbers
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/primitives"
 )
 
 type NumberMatcher struct {
@@ -28,9 +27,5 @@ func (n *NumberMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (i *NumberMatcher) Consume(l *lexer.LexerJob, length uint) {
-	l.Emit(lexer.Token{
-		Type: i.tokenType,
-		Value: l.GetNextN(length),
-		Range: primitives.Range{Start: l.Position, Length: length}},
-	)
+	l.Emit(lexer.Token{Type: i.tokenType, Value: l.GetNextN(length)})
 }

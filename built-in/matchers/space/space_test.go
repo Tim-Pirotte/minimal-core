@@ -2,19 +2,20 @@ package whitespace
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/primitives"
 	"testing"
 )
 
 func TestLexSpace(t *testing.T) {
+	source := " \t        a            "
+
 	l := lexer.NewLexer()
 	identifierMatcher := NewSpaceMatcher()
 	l.AddMatcher(identifierMatcher)
 
 	expected := []lexer.Token{
-		{Type: lexer.UNKNOWN, Value: "\t", Range: primitives.Range{Start: 1, Length: 1}},
-		{Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 10, Length: 1}},
+		{Type: lexer.UNKNOWN, Value: source[1:2]},
+		{Type: lexer.UNKNOWN, Value: source[10:11]},
 	}
 
-	lexer.CheckTokens(t, l, expected, " \t        a            ")
+	lexer.CheckTokens(t, l, expected, source)
 }

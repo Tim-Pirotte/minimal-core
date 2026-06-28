@@ -2,7 +2,6 @@ package numbers
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/primitives"
 	"testing"
 )
 
@@ -19,27 +18,31 @@ func getLexer() (*lexer.Lexer, lexer.TokenType) {
 }
 
 func TestNumber(t *testing.T) {
+	source := "0123456789"
+
 	l, numberType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: numberType, Value: "0123456789", Range: primitives.Range{Start: 0, Length: 10}},
+		{Type: numberType, Value: source},
 	}
 
-	lexer.CheckTokens(t, l, expected, "0123456789")
+	lexer.CheckTokens(t, l, expected, source)
 }
 
 func TestMixed(t *testing.T) {
+	source := "/0:12345 6789"
+
 	l, numberType := getLexer()
 
 	expected := []lexer.Token{
-		{Type: lexer.UNKNOWN, Value: "/", Range: primitives.Range{Start: 0, Length: 1}},
-		{Type: numberType, Value: "0", Range: primitives.Range{Start: 1, Length: 1}},
-		{Type: lexer.UNKNOWN, Value: ":", Range: primitives.Range{Start: 2, Length: 1}},
-		{Type: numberType, Value: "12345", Range: primitives.Range{Start: 3, Length: 5}},
-		{Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 8, Length: 1}},
-		{Type: numberType, Value: "6789", Range: primitives.Range{Start: 9, Length: 4}},
+		{Type: lexer.UNKNOWN, Value: source[:1]},
+		{Type: numberType, Value: source[1:2]},
+		{Type: lexer.UNKNOWN, Value: source[2:3]},
+		{Type: numberType, Value: source[3:8]},
+		{Type: lexer.UNKNOWN, Value: source[8:9]},
+		{Type: numberType, Value: source[9:13]},
 	}
 
 	// / and : are next to 0 and 9 respectively in the ASCII table
-	lexer.CheckTokens(t, l, expected, "/0:12345 6789")
+	lexer.CheckTokens(t, l, expected, source)
 }

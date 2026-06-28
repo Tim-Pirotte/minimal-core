@@ -6,7 +6,6 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
-	"minimal/minimal-core/built-in/primitives"
 	eofstopper "minimal/minimal-core/built-in/stoppers/eof-stopper"
 	"os"
 	"testing"
@@ -83,31 +82,31 @@ e
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: l.eolType, Value: "\n", Range: primitives.Range{Start: 1, Length: 1}},
-        {Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 2, Length: 1}},
-        {Type: l.eolType, Value: "\n\n", Range: primitives.Range{Start: 3, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "c", Range: primitives.Range{Start: 5, Length: 1}},
-        {Type: l.openBlock, Value: ":\n   ", Range: primitives.Range{Start: 6, Length: 5}},
-        {Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 11, Length: 1}},
-        {Type: l.openBlock, Value: ":\n      ", Range: primitives.Range{Start: 12, Length: 8}},
-        {Type: lexer.UNKNOWN, Value: "$", Range: primitives.Range{Start: 20, Length: 1}},
-        {Type: l.closeBlock, Value: "\n\n\n   ", Range: primitives.Range{Start: 21, Length: 6}},
-        {Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 27, Length: 1}},
-        {Type: l.closeBlock, Value: "\n\n", Range: primitives.Range{Start: 28, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "d", Range: primitives.Range{Start: 30, Length: 1}},
-        {Type: l.openBlock, Value: ":\n", Range: primitives.Range{Start: 31, Length: 2}},
-        {Type: l.closeBlock, Value: ":\n", Range: primitives.Range{Start: 31, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "e", Range: primitives.Range{Start: 33, Length: 1}},
-        {Type: l.eolType, Value: "\n\n", Range: primitives.Range{Start: 34, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 36, Length: 1}},
-        {Type: l.openBlock, Value: ":\n   ", Range: primitives.Range{Start: 37, Length: 5}},
-        {Type: lexer.UNKNOWN, Value: "2", Range: primitives.Range{Start: 42, Length: 1}},
-        {Type: l.openBlock, Value: ":\n      ", Range: primitives.Range{Start: 43, Length: 8}},
-        {Type: lexer.UNKNOWN, Value: "3", Range: primitives.Range{Start: 51, Length: 1}},
-        {Type: l.closeBlock, Value: "\n\n", Range: primitives.Range{Start: 52, Length: 2}},
-        {Type: l.closeBlock, Value: "\n\n", Range: primitives.Range{Start: 52, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "1", Range: primitives.Range{Start: 54, Length: 1}},
+        {Type: lexer.UNKNOWN, Value: source[:1]},
+        {Type: l.eolType, Value: source[1:2]},
+        {Type: lexer.UNKNOWN, Value: source[2:3]},
+        {Type: l.eolType, Value: source[3:5]},
+        {Type: lexer.UNKNOWN, Value: source[5:6]},
+        {Type: l.openBlock, Value: source[6:11]},
+        {Type: lexer.UNKNOWN, Value: source[11:12]},
+        {Type: l.openBlock, Value: source[12:20]},
+        {Type: lexer.UNKNOWN, Value: source[20:21]},
+        {Type: l.closeBlock, Value: source[21:27]},
+        {Type: lexer.UNKNOWN, Value: source[27:28]},
+        {Type: l.closeBlock, Value: source[28:30]},
+        {Type: lexer.UNKNOWN, Value: source[30:31]},
+        {Type: l.openBlock, Value: source[31:33]},
+        {Type: l.closeBlock, Value: source[31:33]},
+        {Type: lexer.UNKNOWN, Value: source[33:34]},
+        {Type: l.eolType, Value: source[34:36]},
+        {Type: lexer.UNKNOWN, Value: source[36:37]},
+        {Type: l.openBlock, Value: source[37:42]},
+        {Type: lexer.UNKNOWN, Value: source[42:43]},
+        {Type: l.openBlock, Value: source[43:51]},
+        {Type: lexer.UNKNOWN, Value: source[51:52]},
+        {Type: l.closeBlock, Value: source[52:54]},
+        {Type: l.closeBlock, Value: source[52:54]},
+        {Type: lexer.UNKNOWN, Value: source[54:55]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -122,10 +121,10 @@ func TestRedundantSpace(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 4, Length: 1}},
-        {Type: l.eolType, Value: "\n   \n  ", Range: primitives.Range{Start: 5, Length: 7}},
-        {Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 12, Length: 1}},
+        {Type: l.openBlock, Value: source[:4]},
+        {Type: lexer.UNKNOWN, Value: source[4:5]},
+        {Type: l.eolType, Value: source[5:12]},
+        {Type: lexer.UNKNOWN, Value: source[12:13]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -140,11 +139,11 @@ func TestInconsistentIndentation(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: l.openBlock, Value: ":\n     ", Range: primitives.Range{Start: 4, Length: 7}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 11, Length: 1}},
-        {Type: l.eolType, Value: "\n ", Range: primitives.Range{Start: 12, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 14, Length: 1}},
+        {Type: l.openBlock, Value: source[:4]},
+        {Type: l.openBlock, Value: source[4:11]},
+        {Type: lexer.UNKNOWN, Value: source[11:12]},
+        {Type: l.eolType, Value: source[12:14]},
+        {Type: lexer.UNKNOWN, Value: source[14:15]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -196,12 +195,12 @@ func TestExtraIndent(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: "(", Range: primitives.Range{Start: 4, Length: 1}},
-        {Type: l.eolType, Value: "\n     ", Range: primitives.Range{Start: 5, Length: 6}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 11, Length: 1}},
-        {Type: l.eolType, Value: "\n  ", Range: primitives.Range{Start: 12, Length: 3}},
-        {Type: lexer.UNKNOWN, Value: ")", Range: primitives.Range{Start: 15, Length: 1}},
+        {Type: l.openBlock, Value: source[:4]},
+        {Type: lexer.UNKNOWN, Value: source[4:5]},
+        {Type: l.eolType, Value: source[5:11]},
+        {Type: lexer.UNKNOWN, Value: source[11:12]},
+        {Type: l.eolType, Value: source[12:15]},
+        {Type: lexer.UNKNOWN, Value: source[15:16]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -215,9 +214,9 @@ func TestTooMuchIndent(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: l.openBlock, Value: ":\n      ", Range: primitives.Range{Start: 4, Length: 8}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 12, Length: 1}},
+        {Type: l.openBlock, Value: source[:4]},
+        {Type: l.openBlock, Value: source[4:12]},
+        {Type: lexer.UNKNOWN, Value: source[12:13]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -246,9 +245,9 @@ func TestDifferentSpaceChar(t *testing.T) {
     l := getLexer('\t', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n\t", Range: primitives.Range{Start: 0, Length: 3}},
-        {Type: l.openBlock, Value: ":\n\t\t", Range: primitives.Range{Start: 3, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 7, Length: 1}},
+        {Type: l.openBlock, Value: source[:3]},
+        {Type: l.openBlock, Value: source[3:7]},
+        {Type: lexer.UNKNOWN, Value: source[7:8]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -261,8 +260,8 @@ func TestFixedIndentation(t *testing.T) {
     l := getLexer(' ', 4)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 4, Length: 1}},
+        {Type: l.openBlock, Value: source[:4]},
+        {Type: lexer.UNKNOWN, Value: source[4:5]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -290,9 +289,9 @@ func TestMatchNonIndentSpace(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 1, Length: 1}},
-        {Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 2, Length: 1}},
+        {Type: lexer.UNKNOWN, Value: source[:1]},
+        {Type: lexer.UNKNOWN, Value: source[1:2]},
+        {Type: lexer.UNKNOWN, Value: source[2:3]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -305,9 +304,9 @@ func TestNoBlocks(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: l.eolType, Value: "\n ", Range: primitives.Range{Start: 1, Length: 2}},
-        {Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 3, Length: 1}},
+        {Type: lexer.UNKNOWN, Value: source[:1]},
+        {Type: l.eolType, Value: source[1:3]},
+        {Type: lexer.UNKNOWN, Value: source[3:4]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -318,9 +317,7 @@ func TestNoBlocksIncorrect(t *testing.T) {
 
     l := getLexer(' ', 0)
 
-    expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 1, Length: 1}},
-    }
+    expected := []lexer.Token{{Type: lexer.UNKNOWN, Value: source[1:]}}
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
@@ -341,8 +338,8 @@ func TestTrailingSpace(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: lexer.UNKNOWN, Value: " ", Range: primitives.Range{Start: 1, Length: 1}},
+        {Type: lexer.UNKNOWN, Value: source[:1]},
+        {Type: lexer.UNKNOWN, Value: source[1:2]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -354,8 +351,8 @@ func TestTrailingEOL(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: l.eolType, Value: "\n", Range: primitives.Range{Start: 1, Length: 1}},
+        {Type: lexer.UNKNOWN, Value: source[:1]},
+        {Type: l.eolType, Value: source[1:2]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -367,8 +364,8 @@ func TestOnlyOpenBlock(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: l.closeBlock, Value: ":", Range: primitives.Range{Start: 0, Length: 1}},
+        {Type: l.openBlock, Value: source},
+        {Type: l.closeBlock, Value: source},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -380,8 +377,8 @@ func TestOpenBlockSpaceSuffix(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ": ", Range: primitives.Range{Start: 0, Length: 2}},
-        {Type: l.closeBlock, Value: ": ", Range: primitives.Range{Start: 0, Length: 2}},
+        {Type: l.openBlock, Value: source},
+        {Type: l.closeBlock, Value: source},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -393,8 +390,8 @@ func TestOpenBlockEOLSuffix(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n", Range: primitives.Range{Start: 0, Length: 2}},
-        {Type: l.closeBlock, Value: ":\n", Range: primitives.Range{Start: 0, Length: 2}},
+        {Type: l.openBlock, Value: source},
+        {Type: l.closeBlock, Value: source},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
@@ -406,8 +403,8 @@ func TestEOLPrefix(t *testing.T) {
     l := getLexer(' ', 0)
 
     expected := []lexer.Token{
-        {Type: l.eolType, Value: "\n", Range: primitives.Range{Start: 0, Length: 1}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 1, Length: 1}},
+        {Type: l.eolType, Value: source[:1]},
+        {Type: lexer.UNKNOWN, Value: source[1:2]},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)

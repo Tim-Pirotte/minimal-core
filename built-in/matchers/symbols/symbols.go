@@ -3,7 +3,6 @@ package symbols
 import (
 	"fmt"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/primitives"
 )
 
 const byteValueCount = 256
@@ -74,9 +73,5 @@ func (s *SymbolMatcher) Match(l *lexer.LexerJob) uint {
 }
 
 func (s *SymbolMatcher) Consume(l *lexer.LexerJob, length uint) {
-	l.Emit(lexer.Token{
-		Type: s.cachedTokenType,
-		Value: l.GetNextN(length),
-		Range: primitives.Range{Start: l.Position, Length: length}},
-	)
+	l.Emit(lexer.Token{Type: s.cachedTokenType, Value: l.GetNextN(length)})
 }
