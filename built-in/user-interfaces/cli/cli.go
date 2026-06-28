@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	configloader "minimal/minimal-core/built-in/config-loader"
 	logging "minimal/minimal-core/built-in/internal-logging"
 	messaging "minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
@@ -27,7 +26,6 @@ func NewCli(
 	messenger *messaging.Messenger,
 	reader io.Reader,
 	writer io.Writer,
-	configLoader configloader.ConfigLoader,
 ) *CLI {
 	messenger.AddOutput(logrendering.NewLogRenderer(sourceGen, os.Stdout))
 	logger, _ := sourceGen.GetLogger("CLI")

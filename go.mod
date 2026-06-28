@@ -3,7 +3,6 @@ module minimal/minimal-core
 go 1.26.0
 
 require (
-	github.com/BurntSushi/toml v1.6.0
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/rivo/tview v0.42.0
 	github.com/rs/zerolog v1.34.0
