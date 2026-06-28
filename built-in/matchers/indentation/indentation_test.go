@@ -17,6 +17,7 @@ type testLexer struct {
     openBlock  lexer.TokenType
     closeBlock lexer.TokenType
     eolType    lexer.TokenType
+    messenger  *messaging.Messenger
     output     *messaging.TestOutput
 }
 
@@ -36,7 +37,6 @@ func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
     )
 
     messenger := messaging.NewMessenger(logging.GetTestLogSource(io.Discard))
-
     logrenderer := logrendering.NewLogRenderer(logging.GetTestLogSource(io.Discard), os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
@@ -57,7 +57,7 @@ func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
 
     l.AddMatcher(indentationMatcher)
 
-    return testLexer{l, openBlock, closeBlock, eolType, testOutput}
+    return testLexer{l, openBlock, closeBlock, eolType, messenger, testOutput}
 }
 
 func TestIndentation(t *testing.T) {
@@ -141,14 +141,50 @@ func TestInconsistentIndentation(t *testing.T) {
 
     expected := []lexer.Token{
         {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: "(", Range: primitives.Range{Start: 4, Length: 1}},
-        {Type: l.eolType, Value: "\n     ", Range: primitives.Range{Start: 5, Length: 6}},
+        {Type: l.openBlock, Value: ":\n     ", Range: primitives.Range{Start: 4, Length: 7}},
         {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 11, Length: 1}},
-        {Type: l.eolType, Value: "\n  ", Range: primitives.Range{Start: 12, Length: 3}},
-        {Type: lexer.UNKNOWN, Value: ")", Range: primitives.Range{Start: 15, Length: 1}},
+        {Type: l.eolType, Value: "\n ", Range: primitives.Range{Start: 12, Length: 2}},
+        {Type: lexer.UNKNOWN, Value: "b", Range: primitives.Range{Start: 14, Length: 1}},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Reference: "TODO",
+            Message: "Indentation is inconsistent",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[6:11]}},
+            AdditionalContext: []messaging.Span{
+                {
+                    Content: source[2:4],
+                    Note: "The indentation was derived here",
+                },
+            },
+            Notes: []string{
+                "The indentation must be a multiple of 2",
+                "The indentation of the incorrect line is 5",
+                "The indentation will be set to the current level",
+            },
+        },
+        {
+            Reference: "TODO",
+            Message: "Indentation is inconsistent",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[13:14]}},
+            AdditionalContext: []messaging.Span{
+                {
+                    Content: source[2:4],
+                    Note: "The indentation was derived here",
+                },
+            },
+            Notes: []string{
+                "The indentation must be a multiple of 2",
+                "The indentation of the incorrect line is 1",
+                "The indentation will be set to the current level",
+            },
+        },
+    })
 }
 
 func TestExtraIndent(t *testing.T) {
@@ -171,37 +207,13 @@ func TestExtraIndent(t *testing.T) {
     lexer.CheckTokens(t, l.l, expected, source)
 }
 
-func TestExtraIndentAfterBlock(t *testing.T) {
-    // TODO check the errors
-    source := ":\n"+
-              "  :\n" +
-              "    a\n" +
-              "   )"
-
-    l := getLexer(' ', 0)
-
-    // TODO expect incorrect indentation
-    expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: "(", Range: primitives.Range{Start: 4, Length: 1}},
-        {Type: l.eolType, Value: "\n    ", Range: primitives.Range{Start: 5, Length: 5}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 10, Length: 1}},
-        {Type: l.eolType, Value: "\n   ", Range: primitives.Range{Start: 11, Length: 4}},
-        {Type: lexer.UNKNOWN, Value: ")", Range: primitives.Range{Start: 15, Length: 1}},
-    }
-
-    lexer.CheckTokens(t, l.l, expected, source)
-}
-
 func TestTooMuchIndent(t *testing.T) {
-    // TODO check the errors
     source := ":\n"+
               "  :\n" +
               "      a"
 
     l := getLexer(' ', 0)
 
-    // TODO expect incorrect indentation
     expected := []lexer.Token{
         {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
         {Type: l.openBlock, Value: ":\n      ", Range: primitives.Range{Start: 4, Length: 8}},
@@ -209,6 +221,21 @@ func TestTooMuchIndent(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Reference: "TODO",
+            Message: "Got more indentation than expected",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[6:12]}},
+            AdditionalContext: []messaging.Span{},
+            Notes: []string{
+                "The indentation of the incorrect line is 6",
+                "The largest expected indentation is 4",
+                "The indentation will be set to the current level",
+            },
+        },
+    })
 }
 
 func TestDifferentSpaceChar(t *testing.T) {
@@ -233,13 +260,28 @@ func TestFixedIndentation(t *testing.T) {
 
     l := getLexer(' ', 4)
 
-    // TODO expect incorrect indentation
     expected := []lexer.Token{
-        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 3}},
-        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 7, Length: 1}},
+        {Type: l.openBlock, Value: ":\n  ", Range: primitives.Range{Start: 0, Length: 4}},
+        {Type: lexer.UNKNOWN, Value: "a", Range: primitives.Range{Start: 4, Length: 1}},
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Reference: "TODO",
+            Message: "Indentation is inconsistent",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[2:4]}},
+            AdditionalContext: []messaging.Span{},
+            Notes: []string{
+                "The indentation was manually set",
+                "The indentation must be a multiple of 4",
+                "The indentation of the incorrect line is 2",
+                "The indentation will be set to the current level",
+            },
+        },
+    })
 }
 
 func TestMatchNonIndentSpace(t *testing.T) {
@@ -281,6 +323,16 @@ func TestNoBlocksIncorrect(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Reference: "TODO",
+            Message: "Source code cannot start with indentation",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[:1]}},
+            Notes: []string{"The indentation at the start will be skipped"},
+        },
+    })
 }
 
 func TestTrailingSpace(t *testing.T) {
