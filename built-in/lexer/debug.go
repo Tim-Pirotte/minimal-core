@@ -4,31 +4,32 @@ import (
 	"fmt"
 	"io"
 	"minimal/minimal-core/built-in/diff"
-	logging "minimal/minimal-core/built-in/internal-logging"
+	"minimal/minimal-core/built-in/messaging"
 	"minimal/minimal-core/built-in/primitives"
 	"strconv"
 )
 
 type LexerDebugger struct {
     lexer     *Lexer
-    logger    logging.Logger
     output    io.Writer
+    messenger *messaging.Messenger
 }
 
 func NewLexerDebugger(
     lexer *Lexer,
-    sourceGen *logging.SourceGenerator,
     output io.Writer,
+    messenger *messaging.Messenger,
 ) *LexerDebugger {
-    logger, _ := sourceGen.GetLogger("TokenListDisplay")
-
-    return &LexerDebugger{lexer, logger, output}
+    return &LexerDebugger{lexer, output, messenger}
 }
 
-func (t *LexerDebugger) DisplayTokens(source string, tokens []Token) {
+func (l *LexerDebugger) DisplayTokens(source string, tokens []Token) {
     for _, token := range tokens {
-        if _, err := io.WriteString(t.output, t.StringifyToken(source, token)+"\n"); err != nil {
-            t.logger.Error().Err(err).Msg("failed writing to output")
+        if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
+            l.messenger.Send(messaging.Message{
+                Reference: "TODO",
+                Message: "Lexer debugger output write failed",
+            })
 
             return
         }
@@ -41,7 +42,7 @@ func compareTokens(a, b Token) bool {
 
 // Prints a diff of tokens to a writer. Tokens are considered the same if there types and values are equal.
 // The range is deliberately ignored since a small change can change all the following ranges.
-func (t *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) {
+func (l *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) {
     tokenDiff := diff.GetDiff(before, after, compareTokens)
 
     for _, diffPart := range tokenDiff {
@@ -56,16 +57,19 @@ func (t *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) 
 
         fmt.Print(prefix)
 
-        if _, err := io.WriteString(t.output, t.StringifyToken(source, diffPart.Value)+"\n"); err != nil {
-            t.logger.Error().Err(err).Msg("failed writing to output")
+        if _, err := io.WriteString(l.output, l.StringifyToken(source, diffPart.Value)+"\n"); err != nil {
+            l.messenger.Send(messaging.Message{
+                Reference: "TODO",
+                Message: "Lexer debugger output write failed",
+            })
 
             return
         }
     }
 }
 
-func (t *LexerDebugger) StringifyToken(source string, token Token) string {
-    tokenTypeMetadata, ok := t.lexer.GetTokenTypeMetadata(token.Type)
+func (l *LexerDebugger) StringifyToken(source string, token Token) string {
+    tokenTypeMetadata, ok := l.lexer.GetTokenTypeMetadata(token.Type)
     name := tokenTypeMetadata.DebugName
 
     if !ok {

@@ -2,9 +2,8 @@ package lexer
 
 import (
 	"fmt"
-	"io"
 	"math"
-	logging "minimal/minimal-core/built-in/internal-logging"
+	"minimal/minimal-core/built-in/messaging"
 	"os"
 	"testing"
 	"unsafe"
@@ -220,8 +219,8 @@ func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
 		lexerJob.Advance()
 	}
 
-	sourceGen := logging.GetTestLogSource(io.Discard)
-	lexerDebugger := NewLexerDebugger(lexer, sourceGen, os.Stdout)
+	// TODO What with this messenger?
+	lexerDebugger := NewLexerDebugger(lexer, os.Stdout, messaging.NewMessenger())
 
 	if len(expected) != len(actual) {
 		lexerDebugger.DisplayTokensDiff(text, actual, expected)

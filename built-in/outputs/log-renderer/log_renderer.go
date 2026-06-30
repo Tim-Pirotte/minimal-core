@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/messaging"
 )
 
 type LogRenderer struct {
-    logger logging.Logger
     writer io.Writer
     Config Config
 }
@@ -68,11 +66,8 @@ type InfoReferenceConfig struct {
     MoreInfoColor   string
 }
 
-func NewLogRenderer(sourceGen *logging.SourceGenerator, writer io.Writer) *LogRenderer {
-    logger, _ := sourceGen.GetLogger("LogRendering")
-
+func NewLogRenderer(writer io.Writer) *LogRenderer {
     return &LogRenderer{
-        logger,
         writer,
         Config{
             ResetAnsi: "\033[0m",
@@ -210,7 +205,7 @@ func (l *LogRenderer) Receive(m messaging.Message) {
     _, err := l.writer.Write(bb.Bytes())
 
     if err != nil {
-        l.logger.Error().Err(err).Msg("unsuccessfull write")
+        // TODO what here?
     }
 }
 

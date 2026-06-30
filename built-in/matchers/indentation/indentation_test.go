@@ -1,8 +1,6 @@
 package indentation
 
 import (
-	"io"
-	logging "minimal/minimal-core/built-in/internal-logging"
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
@@ -35,8 +33,8 @@ func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
         lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
     )
 
-    messenger := messaging.NewMessenger(logging.GetTestLogSource(io.Discard))
-    logrenderer := logrendering.NewLogRenderer(logging.GetTestLogSource(io.Discard), os.Stdout)
+    messenger := messaging.NewMessenger()
+    logrenderer := logrendering.NewLogRenderer(os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
     messenger.AddOutput(logrenderer)

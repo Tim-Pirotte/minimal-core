@@ -4,137 +4,114 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	logging "minimal/minimal-core/built-in/internal-logging"
 	messaging "minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
 const RingBufferSize = 4096
 
 type CLI struct {
-	loggingBuffer logging.RingBuffer
-	inputReader   *bufio.Reader
-	outputWriter  *bufio.Writer
-	logger        logging.Logger
+    messenger     *messaging.Messenger
+    inputReader   *bufio.Reader
+    outputWriter  *bufio.Writer
 }
 
 func NewCli(
-	sourceGen *logging.SourceGenerator,
-	messenger *messaging.Messenger,
-	reader io.Reader,
-	writer io.Writer,
+    messenger *messaging.Messenger,
+    reader io.Reader,
+    writer io.Writer,
 ) *CLI {
-	messenger.AddOutput(logrendering.NewLogRenderer(sourceGen, os.Stdout))
-	logger, _ := sourceGen.GetLogger("CLI")
+    messenger.AddOutput(logrendering.NewLogRenderer(os.Stdout))
 
-	return &CLI{*logging.NewRingBuffer(RingBufferSize), bufio.NewReader(reader), bufio.NewWriter(writer), logger}
+    return &CLI{messenger, bufio.NewReader(reader), bufio.NewWriter(writer)}
 }
 
 func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok bool) {
-	sb := strings.Builder{}
-	sb.WriteString(question)
-	sb.WriteByte('(')
+    sb := strings.Builder{}
+    sb.WriteString(question)
+    sb.WriteByte('(')
 
-	if defaultTrue {
-		sb.WriteByte('Y')
-	} else {
-		sb.WriteByte('y')
-	}
+    if defaultTrue {
+        sb.WriteByte('Y')
+    } else {
+        sb.WriteByte('y')
+    }
 
-	sb.WriteByte('/')
+    sb.WriteByte('/')
 
-	if !defaultTrue {
-		sb.WriteByte('N')
-	} else {
-		sb.WriteByte('n')
-	}
+    if !defaultTrue {
+        sb.WriteByte('N')
+    } else {
+        sb.WriteByte('n')
+    }
 
-	sb.WriteByte(')')
+    sb.WriteByte(')')
 
-	q := sb.String()
+    q := sb.String()
 
-	for {
-		c.outputWriter.WriteString(q)
+    for {
+        c.outputWriter.WriteString(q)
 
-		text, err := c.inputReader.ReadString('\n')
+        text, err := c.inputReader.ReadString('\n')
 
-		if err != nil {
-			c.logger.Error().Err(err).Msg("bool read")
-			return false, false
-		}
+        if err != nil {
+            c.messenger.Send(messaging.Message{
+                Reference: "TODO",
+                Message: "Could not read a string from the provided input",
+                Severity: messaging.Error,
+            })
 
-		input := strings.TrimSpace(strings.ToLower(text))
+            return false, false
+        }
 
-		switch input {
-		case "":
-			return defaultTrue, true
-		case "y", "yes", "true", "1":
-			return true, true
-		case "n", "no", "false", "0":
-			return false, true
-		default:
-			fmt.Println("Please enter yes or no (y/n).")
-		}
-	}
+        input := strings.TrimSpace(strings.ToLower(text))
+
+        switch input {
+        case "":
+            return defaultTrue, true
+        case "y", "yes", "true", "1":
+            return true, true
+        case "n", "no", "false", "0":
+            return false, true
+        default:
+            fmt.Println("Please enter yes or no (y/n).")
+        }
+    }
 }
 
 func (c *CLI) PromptString(question, suggestion string) (answer string, ok bool) {
-	sb := strings.Builder{}
-	sb.WriteString(question)
+    sb := strings.Builder{}
+    sb.WriteString(question)
 
-	if suggestion != "" {
-		sb.WriteString("(default: ")
-		sb.WriteString(suggestion)
-		sb.WriteByte(')')
-	}
-
-	c.outputWriter.WriteString(sb.String())
-
-	text, err := c.inputReader.ReadString('\n')
-
-	if err != nil {
-		c.logger.Error().Err(err).Msg("string read")
-		return "", false
-	}
-
-	input := strings.TrimSpace(text)
-
-	if input == "" {
-		return suggestion, true
-	}
-
-	return input, true
-}
-
-func (c *CLI) HandleCrash() {
-	exportLog, ok := c.PromptBool("Would you like to export the logs for a bug report?", false)
-
-	if !(ok && exportLog) { return }
-
-	path, ok := c.PromptString("Where would you like to have this exported?", ".")
-
-	if !ok { return }
-
-	fullPath := filepath.Join(path, "crash_report.log")
-
-	f, err := os.Create(fullPath)
-
-    if err != nil {
-        c.logger.Error().Err(err).Str("path", fullPath).Msg("crash report create file failed")
-        return
+    if suggestion != "" {
+        sb.WriteString("(default: ")
+        sb.WriteString(suggestion)
+        sb.WriteByte(')')
     }
 
-	defer f.Close()
+    c.outputWriter.WriteString(sb.String())
 
-	_, err = c.loggingBuffer.WriteTo(f)
+    text, err := c.inputReader.ReadString('\n')
 
-	if err != nil {
-		c.logger.Error().Err(err).Str("path", fullPath).Msg("copying ring buffer failed")
-		return
-	}
+    if err != nil {
+        c.messenger.Send(messaging.Message{
+            Reference: "TODO",
+            Message: "Could not read a string from the provided input",
+            Severity: messaging.Error,
+        })
 
-	c.logger.Debug().Msg("exported internal logs")
+        return "", false
+    }
+
+    input := strings.TrimSpace(text)
+
+    if input == "" {
+        return suggestion, true
+    }
+
+    return input, true
 }
+
+func (c *CLI) HandleCrash() {}

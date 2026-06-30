@@ -1,17 +1,13 @@
 package startup
 
 import (
-	logging "minimal/minimal-core/built-in/internal-logging"
 	"testing"
 	"testing/fstest"
-
-	"github.com/rs/zerolog"
 )
 
 func setupTestCommands(mockFiles fstest.MapFS) *Commands {
 	return &Commands{
 		commands: make(map[string]func([]string) bool),
-		logger:   logging.Logger{Logger: zerolog.Nop()},
 		fs:       mockFiles,
 	}
 }
@@ -63,7 +59,7 @@ func TestGetEntrypointFromCommand(t *testing.T) {
 
 func TestInvalidEntrypointFromCommand(t *testing.T) {
 	c := setupTestCommands(fstest.MapFS{})
-	
+
 	fn, _ := c.GetEntrypoint([]string{"app", "not-here"})
 
 	if fn != nil {
@@ -101,7 +97,7 @@ func TestGetEntrypointFromConfig(t *testing.T) {
 
 func TestNonexistentConfig(t *testing.T) {
 	c := setupTestCommands(fstest.MapFS{})
-	
+
 	fn, _ := c.GetEntrypoint([]string{"app", "ghost.toml"})
 
 	if fn != nil {

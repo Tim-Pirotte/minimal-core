@@ -1,8 +1,7 @@
 package directory
 
 import (
-	"io"
-	logging "minimal/minimal-core/built-in/internal-logging"
+	"minimal/minimal-core/built-in/messaging"
 	"os"
 	"path/filepath"
 	"testing"
@@ -55,8 +54,7 @@ func TestLoadTemplateFromDirectory(t *testing.T) {
 		}
 	}()
 
-	sourceGen := logging.Init(io.Discard)
-	directoryStore := NewDirectoryStore(sourceGen)
+	directoryStore := NewDirectoryStore(messaging.NewMessenger())
 
 	directoryStore.LoadTemplate(templateName, "cli-app", targetPath, nil)
 
