@@ -17,9 +17,9 @@ func (i *IdentifierMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
 }
 
 func (i *IdentifierMatcher) Match(l *lexer.LexerJob) uint {
-	firstChar, ok := l.Get(0)
+	firstChar, _ := l.Get(0)
 
-	if !ok || !isAlphaOrUnicode(firstChar) {
+	if !isAlphaOrUnicode(firstChar) {
 		return 0
 	}
 
