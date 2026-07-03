@@ -2,7 +2,6 @@ package strings
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/matchers/indentation"
 	"minimal/minimal-core/built-in/messaging"
 )
 
@@ -41,7 +40,7 @@ func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
             if currentLevel != 0 {
                 currentLevel--
             } else {
-                s.sendCloseBraceErr(l)
+                s.sendCloseBraceErr(l, pos)
             }
         }
 
@@ -50,12 +49,6 @@ func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
 
     if !ok {
         s.sendUnclosedStrErr(l)
-
-        pos = 1
-
-        for c, ok = l.Get(pos); ok && !indentation.IsEOL(c); c, ok = l.Get(pos) {
-            pos++
-        }
 
         return pos
     }
@@ -71,19 +64,21 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
 func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
     s.messenger.Send(messaging.Message{
         Reference: "TODO",
-        Message: `String is not terminated with a quote`,
+        Message: "String is not terminated with a quote",
         Severity: messaging.Error,
-        Context: []messaging.Span{
-            { Content: l.GetNextN(1), Note: "The string starts here"},
-        },
-        Notes: []string{"The current line will be skipped"},
+        Context: []messaging.Span{{Content: l.GetNextN(1), Note: "The string starts here"}},
+        Notes: []string{"The remaining content will be interpreted as the string"},
     })
 }
 
-func (s *StringMatcher) sendCloseBraceErr(l *lexer.LexerJob) {
+func (s *StringMatcher) sendCloseBraceErr(l *lexer.LexerJob, pos uint) {
+    context := l.Data[l.Position + pos:l.Position+pos + 1]
+
     s.messenger.Send(messaging.Message{
         Reference: "TODO",
         Message: "Closing brace does not have a matching opening brace",
         Severity: messaging.Error,
+        Context: []messaging.Span{{Content: context}},
+        Notes: []string{"The closing brace will be ignored"},
     })
 }
