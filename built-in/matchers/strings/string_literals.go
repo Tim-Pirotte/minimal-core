@@ -20,6 +20,8 @@ func (s *StringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
 }
 
 func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
+    currentLevel := uint(0)
+
     firstChar, _ := l.Get(0)
 
     if firstChar != '"' {
@@ -29,12 +31,21 @@ func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
     pos := uint(1)
     c, ok := l.Get(pos)
 
-    for ; ok && c != '"'; c, ok = l.Get(pos) {
-        if c == '\\' {
-            pos += 2
-        } else {
+    for ; ok && (c != '"' || currentLevel != 0); c, ok = l.Get(pos) {
+        switch c {
+        case '\\':
             pos++
+        case '{':
+            currentLevel++
+        case '}':
+            if currentLevel != 0 {
+                currentLevel--
+            } else {
+                s.sendCloseBraceErr(l)
+            }
         }
+
+        pos++
     }
 
     if !ok {
@@ -49,7 +60,8 @@ func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
         return pos
     }
 
-    return pos
+    // To include the ending quote
+    return pos + 1
 }
 
 func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
@@ -59,11 +71,19 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
 func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
     s.messenger.Send(messaging.Message{
         Reference: "TODO",
-        Message: `String is not terminated with a "`,
+        Message: `String is not terminated with a quote`,
         Severity: messaging.Error,
         Context: []messaging.Span{
             { Content: l.GetNextN(1), Note: "The string starts here"},
         },
         Notes: []string{"The current line will be skipped"},
+    })
+}
+
+func (s *StringMatcher) sendCloseBraceErr(l *lexer.LexerJob) {
+    s.messenger.Send(messaging.Message{
+        Reference: "TODO",
+        Message: "Closing brace does not have a matching opening brace",
+        Severity: messaging.Error,
     })
 }
