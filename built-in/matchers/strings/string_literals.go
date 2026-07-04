@@ -5,13 +5,31 @@ import (
 	"minimal/minimal-core/built-in/messaging"
 )
 
+var interpolation EnclosingSet = EnclosingSet{
+    openSequence: "{",
+    closingSequence: "}",
+}
+
 type StringMatcher struct {
     messenger *messaging.Messenger
     tokenType lexer.TokenType
+    enclosingSets []EnclosingSet
 }
 
-func NewStringMatcher(messenger *messaging.Messenger, tt lexer.TokenType) *StringMatcher {
-    return &StringMatcher{messenger, tt}
+// TODO assert length > 1
+type EnclosingSet struct {
+    openSequence    string
+    closingSequence string
+}
+
+func NewStringMatcher(
+    messenger *messaging.Messenger,
+    tt lexer.TokenType,
+    enclosingSets []EnclosingSet,
+) *StringMatcher {
+    enclosingSets = append(enclosingSets, interpolation)
+
+    return &StringMatcher{messenger, tt, enclosingSets}
 }
 
 func (s *StringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
@@ -19,7 +37,7 @@ func (s *StringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
 }
 
 func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
-    currentLevel := uint(0)
+    nesting := []EnclosingSet{}
 
     firstChar, _ := l.Get(0)
 
@@ -30,21 +48,40 @@ func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
     pos := uint(1)
     c, ok := l.Get(pos)
 
-    for ; ok && (c != '"' || currentLevel != 0); c, ok = l.Get(pos) {
-        switch c {
-        case '\\':
-            pos++
-        case '{':
-            currentLevel++
-        case '}':
-            if currentLevel != 0 {
-                currentLevel--
-            } else {
-                s.sendCloseBraceErr(l, pos)
-            }
-        }
+    for ; ok && (c != '"' || len(nesting) != 0); c, ok = l.Get(pos) {
+        if len(nesting) > 0 {
+            firstToClose := nesting[len(nesting) - 1].closingSequence
+            maybeClose := l.Data[l.Position + pos:l.Position + pos + uint(len(firstToClose))]
 
-        pos++
+            if maybeClose == firstToClose {
+                nesting = nesting[:len(nesting) - 1]
+                pos += uint(len(firstToClose))
+            } else {
+                found := false
+
+                for _, s := range s.enclosingSets {
+                    maybeOpen := l.Data[l.Position + pos:l.Position + pos + uint(len(s.openSequence))]
+
+                    if maybeOpen == s.openSequence {
+                        nesting = append(nesting, s)
+                        pos += uint(len(s.openSequence))
+                        found = false
+                        break
+                    }
+                }
+
+                if !found {
+                    pos++
+                }
+            }
+        } else if c == '\\' {
+            pos += 2
+        } else if c == '{' {
+            nesting = append(nesting, interpolation)
+            pos++
+        } else {
+            pos++
+        }
     }
 
     if !ok {

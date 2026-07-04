@@ -31,7 +31,13 @@ func getLexer() testLexer {
     testOutput := &messaging.TestOutput{}
     messenger.AddOutput(testOutput)
 
-    stringMatcher := NewStringMatcher(messenger, stringType)
+    stringMatcher := NewStringMatcher(
+        messenger,
+        stringType,
+        []EnclosingSet{
+            {openSequence: `"`, closingSequence: `"`},
+        },
+    )
 
     l.AddMatcher(stringMatcher)
 
@@ -115,4 +121,20 @@ func TestMultipleStrings(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+}
+
+func TestMissingClosingBrace(t *testing.T) {
+
+}
+
+func TestDifferentEnclosing(t *testing.T) {
+    source := `"{ '}' }"`
+
+    l := getLexer()
+
+    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
