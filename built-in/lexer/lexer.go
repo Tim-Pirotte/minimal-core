@@ -33,7 +33,7 @@ type Lexer struct {
 }
 
 type LexerJob struct {
-    matchers    []Matcher
+    Matchers    []Matcher
     Data        string
     Position    uint
     buffer      []Token
@@ -94,7 +94,7 @@ func (l *Lexer) Lex(source string, minSafePeek uint) *LexerJob {
     }
 
     for i, matcher := range l.matchers {
-        job.matchers[i] = matcher.New(job)
+        job.Matchers[i] = matcher.New(job)
     }
 
     job.fillTokenBuffer()
@@ -176,7 +176,7 @@ func (l *LexerJob) fillTokenBuffer() {
         largestLength := uint(0)
         var matcherWithLargestLength Matcher = nil
 
-        for _, matcher := range l.matchers {
+        for _, matcher := range l.Matchers {
             length := matcher.Match(l)
 
             if length > largestLength {
@@ -194,12 +194,6 @@ func (l *LexerJob) fillTokenBuffer() {
             l.Position++
         }
     }
-}
-
-type testStopper struct {}
-
-func (t *testStopper) End(s *LexerJob) bool {
-    return s.Position >= uint(len(s.Data))
 }
 
 func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {

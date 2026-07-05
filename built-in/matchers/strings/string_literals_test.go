@@ -79,11 +79,17 @@ func TestMultiLine(t *testing.T) {
 }
 
 func TestInterpolated(t *testing.T) {
-    source := `"Hello,\{{ "\}\"" } World!"`
+    source := `"H\{{ "\}\"" }W"`
 
     l := getLexer()
 
-    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+    expected := []lexer.Token{
+        {Type: l.stringType, Value: source[:5]},
+        {Type: lexer.UNKNOWN, Value: source[5:6]},
+        {Type: l.stringType, Value: source[6:12]},
+        {Type: lexer.UNKNOWN, Value: source[12:13]},
+        {Type: l.stringType, Value: source[13:16]},
+    }
 
     lexer.CheckTokens(t, l.l, expected, source)
 }
