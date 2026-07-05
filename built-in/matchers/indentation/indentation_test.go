@@ -4,7 +4,6 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
-	eofstopper "minimal/minimal-core/built-in/stoppers/eof-stopper"
 	"os"
 	"testing"
 )
@@ -419,6 +418,6 @@ func FuzzIndent(f *testing.F) {
     l := getLexer(' ', 0)
 
     f.Fuzz(func(t *testing.T, source string) {
-        l.l.Lex(source, eofstopper.NewEOFStopper(), 1)
+        l.l.Lex(source, 1)
     })
 }

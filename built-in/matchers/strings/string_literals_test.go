@@ -33,10 +33,8 @@ func getLexer() testLexer {
 
     stringMatcher := NewStringMatcher(
         messenger,
+        l,
         stringType,
-        []EnclosingSet{
-            {openSequence: `"`, closingSequence: `"`},
-        },
     )
 
     l.AddMatcher(stringMatcher)

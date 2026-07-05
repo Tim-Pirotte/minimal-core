@@ -58,6 +58,19 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
     }
 }
 
+// if s.Position >= uint(len(s.Data)) {
+//     return true
+// }
+
+// switch s.Data[s.Position] {
+// case '{':
+//     i.nesting++
+// case '}':
+//     i.nesting--
+// }
+
+// return i.nesting == 0
+
 func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
     s.messenger.Send(messaging.Message{
         Reference: "TODO",

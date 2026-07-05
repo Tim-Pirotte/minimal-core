@@ -67,6 +67,6 @@ func Benchmark(b *testing.B) {
 	l := NewLexer()
 
 	for b.Loop() {
-		l.Lex(source, &testStopper{}, 1)
+		l.Lex(source, 1)
 	}
 }

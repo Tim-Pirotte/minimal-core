@@ -12,154 +12,148 @@ import (
 type TokenType uint
 
 const (
-	UNKNOWN TokenType = math.MaxUint - iota
-	END
+    UNKNOWN TokenType = math.MaxUint - iota
+    END
 )
 
 type Token struct {
-	Type  TokenType
-	Value string
+    Type  TokenType
+    Value string
 }
 
 type TokenTypeMetadata struct {
-	DisplayName string
-	DebugName   string
+    DisplayName string
+    DebugName   string
 }
 
 type Lexer struct {
-	matchers      []Matcher
-	lastTokenType TokenType
-	tokenTypesMetadata map[TokenType]TokenTypeMetadata
+    matchers      []Matcher
+    lastTokenType TokenType
+    tokenTypesMetadata map[TokenType]TokenTypeMetadata
 }
 
 type LexerJob struct {
-	matchers    []Matcher
-	Data        string
-	Position    uint
-	buffer      []Token
-	read        uint
-	write       uint
-	spillage    []Token
-	minSafePeek uint
-	stopper     Stopper
-	endReached  bool
+    matchers    []Matcher
+    Data        string
+    Position    uint
+    buffer      []Token
+    read        uint
+    write       uint
+    spillage    []Token
+    minSafePeek uint
+    endReached  bool
 }
 
 type Matcher interface {
-	New(t *LexerJob) Matcher
-	Match(t *LexerJob) (length uint)
-	Consume(t *LexerJob, length uint)
-}
-
-type Stopper interface {
-	End(t *LexerJob) bool
+    New(t *LexerJob) Matcher
+    Match(t *LexerJob) (length uint)
+    Consume(t *LexerJob, length uint)
 }
 
 func NewLexer() *Lexer {
-	return &Lexer{
-		[]Matcher{},
-		TokenType(0),
-		map[TokenType]TokenTypeMetadata{
-			UNKNOWN: {"a character that is not a valid token", "UNKNOWN"},
-			END: {"to the end", "END"},
-		},
-	}
+    return &Lexer{
+        []Matcher{},
+        TokenType(0),
+        map[TokenType]TokenTypeMetadata{
+            UNKNOWN: {"a character that is not a valid token", "UNKNOWN"},
+            END: {"to the end", "END"},
+        },
+    }
 }
 
 func (l *Lexer) AddMatcher(matcher Matcher) {
-	l.matchers = append(l.matchers, matcher)
+    l.matchers = append(l.matchers, matcher)
 }
 
 func (l *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
-	l.lastTokenType++
-	l.tokenTypesMetadata[l.lastTokenType] = metadata
+    l.lastTokenType++
+    l.tokenTypesMetadata[l.lastTokenType] = metadata
 
-	return l.lastTokenType
+    return l.lastTokenType
 }
 
 func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
-	v, ok := l.tokenTypesMetadata[tokenType]
+    v, ok := l.tokenTypesMetadata[tokenType]
 
-	return v, ok
+    return v, ok
 }
 
-func (l *Lexer) Lex(source string, stopper Stopper, minSafePeek uint) *LexerJob {
-	capacity := minSafePeek
+func (l *Lexer) Lex(source string, minSafePeek uint) *LexerJob {
+    capacity := minSafePeek
 
-	job := &LexerJob{
-		make([]Matcher, len(l.matchers)),
-		source,
-		0,
-		make([]Token, capacity),
-		0,
-		0,
-		[]Token{},
-		minSafePeek,
-		stopper,
-		false,
-	}
+    job := &LexerJob{
+        make([]Matcher, len(l.matchers)),
+        source,
+        0,
+        make([]Token, capacity),
+        0,
+        0,
+        []Token{},
+        minSafePeek,
+        false,
+    }
 
-	for i, matcher := range l.matchers {
-		job.matchers[i] = matcher.New(job)
-	}
+    for i, matcher := range l.matchers {
+        job.matchers[i] = matcher.New(job)
+    }
 
-	job.fillTokenBuffer()
+    job.fillTokenBuffer()
 
-	return job
+    return job
 }
 
 func (l *LexerJob) Get(i uint) (byte, bool) {
-	offset := l.Position + i
+    offset := l.Position + i
 
-	if offset >= uint(len(l.Data)) {
-		return 0, false
-	}
+    if offset >= uint(len(l.Data)) {
+        return 0, false
+    }
 
-	return l.Data[offset], true
+    return l.Data[offset], true
 }
 
 func (l *LexerJob) GetNextN(length uint) string {
-	return l.Data[l.Position:l.Position + length]
+    return l.Data[l.Position:l.Position + length]
 }
 
 func (l *LexerJob) Emit(token Token) {
-	if l.write - l.read == uint(len(l.buffer)) {
-		l.spillage = append(l.spillage, token)
+    if l.write - l.read == uint(len(l.buffer)) {
+        l.spillage = append(l.spillage, token)
 
-		return
-	}
+        return
+    }
 
-	l.buffer[l.write % uint(len(l.buffer))] = token
-	l.write++
+    l.buffer[l.write % uint(len(l.buffer))] = token
+    l.write++
 }
 
 func (l *LexerJob) Peek(n uint) Token {
-	if n >= l.minSafePeek {
-		panic("attempt to peek more tokens in advance than expected")
-	}
+    if n >= l.minSafePeek {
+        panic("attempt to peek more tokens in advance than expected")
+    }
 
-	read := l.read + n
+    read := l.read + n
 
-	if read >= l.write {
-		// TODO test this for off by one errors
-		return Token{END, l.Data[len(l.Data):]}
-	}
+    if read >= l.write {
+        // TODO test this for off by one errors
+        return Token{END, l.Data[len(l.Data):]}
+    }
 
-	return l.buffer[read % uint(len(l.buffer))]
+    return l.buffer[read % uint(len(l.buffer))]
 }
 
 func (l *LexerJob) Advance() {
-	l.read++
+    l.read++
 
-	if l.read + l.minSafePeek >= l.write {
-		l.fillTokenBuffer()
-	}
+    if l.read + l.minSafePeek >= l.write {
+        l.fillTokenBuffer()
+    }
 }
 
 func (l *LexerJob) fillTokenBuffer() {
-	if len(l.spillage) > 0 {
+    if len(l.spillage) > 0 {
         nEmpty := uint(len(l.buffer)) - (l.write - l.read)
-		nSpillage := uint(len(l.spillage))
+        nSpillage := uint(len(l.spillage))
 
         nFill := min(nEmpty, nSpillage)
 
@@ -171,98 +165,97 @@ func (l *LexerJob) fillTokenBuffer() {
         l.spillage = l.spillage[nFill:]
     }
 
-	// TODO separate bounds check from end function and
-	// check if we can put the end condition higher up
-	for l.write - l.read != uint(len(l.buffer)) && !l.endReached {
-		if l.stopper.End(l) {
-			l.endReached = true
+    // TODO check if we can put the end condition higher up
+    for l.write - l.read != uint(len(l.buffer)) && !l.endReached {
+        if l.Position >= uint(len(l.Data)) {
+            l.endReached = true
 
-			return
-		}
+            return
+        }
 
-		largestLength := uint(0)
-		var matcherWithLargestLength Matcher = nil
+        largestLength := uint(0)
+        var matcherWithLargestLength Matcher = nil
 
-		for _, matcher := range l.matchers {
-			length := matcher.Match(l)
+        for _, matcher := range l.matchers {
+            length := matcher.Match(l)
 
-			if length > largestLength {
-				largestLength = length
-				matcherWithLargestLength = matcher
-			}
-		}
+            if length > largestLength {
+                largestLength = length
+                matcherWithLargestLength = matcher
+            }
+        }
 
-		if matcherWithLargestLength != nil {
-			matcherWithLargestLength.Consume(l, largestLength)
-			l.Position += largestLength
-		} else {
-			l.Emit(Token{Type: UNKNOWN, Value: l.GetNextN(1)})
+        if matcherWithLargestLength != nil {
+            matcherWithLargestLength.Consume(l, largestLength)
+            l.Position += largestLength
+        } else {
+            l.Emit(Token{Type: UNKNOWN, Value: l.GetNextN(1)})
 
-			l.Position++
-		}
-	}
+            l.Position++
+        }
+    }
 }
 
 type testStopper struct {}
 
 func (t *testStopper) End(s *LexerJob) bool {
-	return s.Position >= uint(len(s.Data))
+    return s.Position >= uint(len(s.Data))
 }
 
 func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
-	actual := make([]Token, 0, len(expected))
+    actual := make([]Token, 0, len(expected))
 
-	lexerJob := lexer.Lex(text, &testStopper{}, 1)
+    lexerJob := lexer.Lex(text, 1)
 
-	for current := lexerJob.Peek(0); current.Type != END; current = lexerJob.Peek(0) {
-		actual = append(actual, current)
-		lexerJob.Advance()
-	}
+    for current := lexerJob.Peek(0); current.Type != END; current = lexerJob.Peek(0) {
+        actual = append(actual, current)
+        lexerJob.Advance()
+    }
 
-	// TODO What with this messenger?
-	lexerDebugger := NewLexerDebugger(lexer, os.Stdout, messaging.NewMessenger())
+    // TODO What with this messenger?
+    lexerDebugger := NewLexerDebugger(lexer, os.Stdout, messaging.NewMessenger())
 
-	if len(expected) != len(actual) {
-		lexerDebugger.DisplayTokensDiff(text, actual, expected)
-		fmt.Println("")
-		t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
-	}
+    if len(expected) != len(actual) {
+        lexerDebugger.DisplayTokensDiff(text, actual, expected)
+        fmt.Println("")
+        t.Fatal("Expected", len(expected), "tokens but got", len(actual), "tokens")
+    }
 
-	ok := true
+    ok := true
 
-	for i := range len(expected) {
-		if actual[i].Type != expected[i].Type {
-			t.Error(
-				"\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
-				"\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect type)",
-			)
+    for i := range len(expected) {
+        if actual[i].Type != expected[i].Type {
+            t.Error(
+                "\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
+                "\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect type)",
+            )
 
-			ok = false
+            ok = false
 
-			break
-		} else if actual[i].Value != expected[i].Value {
-			t.Error(
-				"\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
-				"\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect value)",
-			)
+            break
+        } else if actual[i].Value != expected[i].Value {
+            t.Error(
+                "\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
+                "\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect value)",
+            )
 
-			ok = false
+            ok = false
 
-			break
-		} else if unsafe.StringData(actual[i].Value) != unsafe.StringData(expected[i].Value) {
-			t.Error(
-				"\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
-				"\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect string address)",
-			)
+            break
+        } else if unsafe.StringData(actual[i].Value) != unsafe.StringData(expected[i].Value) {
+            t.Error(
+                "\nExpected\n", lexerDebugger.StringifyToken(text, expected[i]),
+                "\nbut got\n", lexerDebugger.StringifyToken(text, actual[i]), "(incorrect string address)",
+            )
 
-			ok = false
+            ok = false
 
-			break
-		}
-	}
+            break
+        }
+    }
 
-	if !ok {
-		lexerDebugger.DisplayTokensDiff(text, actual, expected)
-		fmt.Println()
-	}
+    if !ok {
+        lexerDebugger.DisplayTokensDiff(text, actual, expected)
+        fmt.Println()
+    }
 }
