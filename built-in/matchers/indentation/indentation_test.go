@@ -107,6 +107,8 @@ e
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestRedundantSpace(t *testing.T) {
@@ -125,6 +127,8 @@ func TestRedundantSpace(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestInconsistentIndentation(t *testing.T) {
@@ -201,6 +205,8 @@ func TestExtraIndent(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestTooMuchIndent(t *testing.T) {
@@ -248,6 +254,8 @@ func TestDifferentSpaceChar(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestFixedIndentation(t *testing.T) {
@@ -292,6 +300,8 @@ func TestMatchNonIndentSpace(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestNoBlocks(t *testing.T) {
@@ -307,6 +317,8 @@ func TestNoBlocks(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestNoBlocksIncorrect(t *testing.T) {
@@ -340,6 +352,8 @@ func TestTrailingSpace(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestTrailingEOL(t *testing.T) {
@@ -353,6 +367,8 @@ func TestTrailingEOL(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestOnlyOpenBlock(t *testing.T) {
@@ -366,6 +382,8 @@ func TestOnlyOpenBlock(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestOpenBlockSpaceSuffix(t *testing.T) {
@@ -379,6 +397,8 @@ func TestOpenBlockSpaceSuffix(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestOpenBlockEOLSuffix(t *testing.T) {
@@ -392,6 +412,8 @@ func TestOpenBlockEOLSuffix(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestEOLPrefix(t *testing.T) {
@@ -405,6 +427,8 @@ func TestEOLPrefix(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func FuzzIndent(f *testing.F) {

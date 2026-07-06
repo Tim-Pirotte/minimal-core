@@ -50,6 +50,8 @@ func TestString(t *testing.T) {
     expected := []lexer.Token{{Type: l.stringType, Value: source}}
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestEscape(t *testing.T) {
@@ -60,6 +62,8 @@ func TestEscape(t *testing.T) {
     expected := []lexer.Token{{Type: l.stringType, Value: source}}
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestMultiLine(t *testing.T) {
@@ -76,6 +80,8 @@ func TestMultiLine(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestInterpolated(t *testing.T) {
@@ -92,6 +98,8 @@ func TestInterpolated(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestUnclosedString(t *testing.T) {
@@ -125,6 +133,8 @@ func TestMultipleStrings(t *testing.T) {
     }
 
     lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
 }
 
 func TestMissingClosingBrace(t *testing.T) {
