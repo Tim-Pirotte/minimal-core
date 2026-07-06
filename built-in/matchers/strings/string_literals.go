@@ -39,21 +39,18 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
     for ; ok && c != '"'; c, ok = l.Get(pos) {
         switch c {
         case '{':
-            l.Emit(lexer.Token{Type: s.strType, Value: l.GetNextN(pos + 1)})
+            stringValue := l.GetNextN(pos + 1)
+            l.Emit(lexer.Token{Type: s.strType, Value: stringValue})
             l.Position += pos + 1
-            pos = 1
 
             level := 1
 
             for l.Position < uint(len(l.Data)) {
                 switch c, _ := l.Get(0); c {
-                // This forces every use of '{' as start of a token in an expression
+                // This requires every use of '{' as start of a token in an expression
                 // to be properly closed by '}'
                 case '{':
                     level++
-                // There cannot be tokens starting with '}'
-                // since the part after it would be ambiguous
-                // with the end of a string interpolation
                 case '}':
                     level--
                 }
@@ -85,9 +82,14 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
             }
 
             if level != 0 {
-                // TODO Error: interpolation not properly closed
-                panic("interpolation not closed")
+                l.Emit(lexer.Token{Type: s.strType, Value: l.GetNextN(0)})
+
+                s.sendUnclosedInterpolationErr(stringValue[len(stringValue) - 1:])
+
+                return
             }
+
+            pos = 1
         case '\\':
             pos += 2
         default:
@@ -98,7 +100,10 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
     if !ok {
         s.sendUnclosedStrErr(l)
 
-        pos--
+        l.Emit(lexer.Token{Type: s.strType, Value: l.GetNextN(pos)})
+        l.Position += pos - 1
+
+        return
     }
 
     l.Emit(lexer.Token{Type: s.strType, Value: l.GetNextN(pos + 1)})
@@ -115,14 +120,12 @@ func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
     })
 }
 
-func (s *StringMatcher) sendCloseBraceErr(l *lexer.LexerJob, pos uint) {
-    context := l.Data[l.Position + pos:l.Position+pos + 1]
-
+func (s *StringMatcher) sendUnclosedInterpolationErr(interpolationStart string) {
     s.messenger.Send(messaging.Message{
         Reference: "TODO",
-        Message: "Closing brace does not have a matching opening brace",
+        Message: "String interpolation is not terminated with a closing brace",
         Severity: messaging.Error,
-        Context: []messaging.Span{{Content: context}},
-        Notes: []string{"The closing brace will be ignored"},
+        Context: []messaging.Span{{Content: interpolationStart, Note: "Interpolation starts here"}},
+        Notes: []string{"The string will be closed at the end of the source code"},
     })
 }

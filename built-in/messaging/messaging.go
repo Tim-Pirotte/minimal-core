@@ -98,6 +98,14 @@ func (m *Messenger) Send(message Message) {
 }
 
 func (to *TestOutput) CheckMessages(t *testing.T, expected []Message) {
+    if to.messages == nil {
+        to.messages = []Message{}
+    }
+
+    if expected == nil {
+        expected = []Message{}
+    }
+
     // TODO make this more sophisticated
     if !reflect.DeepEqual(to.messages, expected) {
         t.Error("\nExpected:\n", expected, "\nGot:\n", to.messages)

@@ -128,15 +128,85 @@ func TestMultipleStrings(t *testing.T) {
 }
 
 func TestMissingClosingBrace(t *testing.T) {
+    source := `"{ `
 
+    l := getLexer()
+
+    expected := []lexer.Token{
+        {Type: l.stringType, Value: source[:2]},
+        {Type: lexer.UNKNOWN, Value: source[2:3]},
+        {Type: l.stringType, Value: source[3:3]},
+    }
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Reference: "TODO",
+            Message: "String interpolation is not terminated with a closing brace",
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[1:2], Note: "Interpolation starts here"}},
+            Notes: []string{"The string will be closed at the end of the source code"},
+        },
+    })
 }
 
-func TestDifferentEnclosing(t *testing.T) {
-    source := `"{ '}' }"`
+func TestExtraClosingBrace(t *testing.T) {
+    source := `"}"`
 
     l := getLexer()
 
     expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
+}
+
+type braceSymbolMatcher struct { }
+
+func (b *braceSymbolMatcher) New(_ *lexer.LexerJob) lexer.Matcher { return b }
+
+func (*braceSymbolMatcher) Match(l *lexer.LexerJob) uint {
+    if len(l.Data) - int(l.Position) >= 2 && l.GetNextN(2) == "'}" {
+        return 2
+    }
+
+    return 0
+}
+
+func (*braceSymbolMatcher) Consume(_ *lexer.LexerJob, _ uint) {}
+
+func TestDifferentEnclosing(t *testing.T) {
+    source := `"{ '} }"`
+
+    l := getLexer()
+    l.l.AddMatcher(&braceSymbolMatcher{})
+
+    expected := []lexer.Token{
+        {Type: l.stringType, Value: source[:2]},
+        {Type: lexer.UNKNOWN, Value: source[2:3]},
+        {Type: lexer.UNKNOWN, Value: source[5:6]},
+        {Type: l.stringType, Value: source[6:8]},
+    }
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
+}
+
+func TestMultipleInterpolations(t *testing.T) {
+    source := `"{ } {}"`
+
+    l := getLexer()
+    l.l.AddMatcher(&braceSymbolMatcher{})
+
+    expected := []lexer.Token{
+        {Type: l.stringType, Value: source[:2]},
+        {Type: lexer.UNKNOWN, Value: source[2:3]},
+        {Type: l.stringType, Value: source[3:6]},
+        {Type: l.stringType, Value: source[6:8]},
+    }
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
