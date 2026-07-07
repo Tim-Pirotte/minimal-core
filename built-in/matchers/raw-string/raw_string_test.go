@@ -9,10 +9,10 @@ import (
 )
 
 type testLexer struct {
-    l         *lexer.Lexer
-    strType   lexer.TokenType
-    messenger *messaging.Messenger
-    output    *messaging.TestOutput
+    l          *lexer.Lexer
+    stringType lexer.TokenType
+    messenger  *messaging.Messenger
+    output     *messaging.TestOutput
 }
 
 func getLexer() testLexer {
@@ -42,5 +42,61 @@ func getLexer() testLexer {
 }
 
 func TestRawString(t *testing.T) {
+    source := `-"Hello,\n World!"-`
 
+    l := getLexer()
+
+    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
+}
+
+func TestNoEscape(t *testing.T) {
+    source := `---"Hello, World!\"---`
+
+    l := getLexer()
+
+    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
+}
+
+// TODO improve error message to catch this specific case
+func TestMissingDash(t *testing.T) {
+    source := `---"Hello, World!"-- a`
+
+    l := getLexer()
+
+    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{})
+}
+
+func TestUnclosed(t *testing.T) {
+    source := `---"Hello, World!`
+
+    l := getLexer()
+
+    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Reference: "TODO",
+            Message: `Raw string is not terminated with the "--- sequence`,
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
+            Notes: []string{
+                "The amount of dashes in the string prefix must match with the suffix",
+                "The remaining content will be interpreted as the raw string",
+            },
+        },
+    })
 }

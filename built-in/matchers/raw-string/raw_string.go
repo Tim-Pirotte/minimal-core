@@ -36,17 +36,22 @@ func (r *RawStringMatcher) Match(l *lexer.LexerJob) uint {
     pos++
 
     consecutiveDashes := uint(0)
+    quote := false
 
     for ; ok; c, ok = l.Get(pos) {
         switch c {
         case '-':
             consecutiveDashes++
-        case '"':
-            if consecutiveDashes == dashes {
+
+            if quote && consecutiveDashes == dashes {
                 return pos + 1
             }
+        case '"':
+            consecutiveDashes = 0
+            quote = true
         default:
             consecutiveDashes = 0
+            quote = false
         }
 
         pos++
@@ -69,10 +74,12 @@ func (r *RawStringMatcher) sendUnclosedErr(l *lexer.LexerJob, dashes uint) {
                  ` sequence`,
 
         Severity: messaging.Error,
-        Context: []messaging.Span{{Content: l.GetNextN(dashes), Note: "The raw string starts here"}},
+        Context: []messaging.Span{{Content: l.GetNextN(dashes + 1), Note: "The raw string starts here"}},
         Notes: []string{
             "The amount of dashes in the string prefix must match with the suffix",
             "The remaining content will be interpreted as the raw string",
         },
     })
 }
+
+// TODO rescan the string and keep track of the longest ending sequence
