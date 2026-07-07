@@ -3,9 +3,8 @@ package rawstring
 import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
+	"strings"
 )
-
-const prefix = `r#"`
 
 type RawStringMatcher struct {
     messenger *messaging.Messenger
@@ -21,24 +20,39 @@ func (r *RawStringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
 }
 
 func (r *RawStringMatcher) Match(l *lexer.LexerJob) uint {
-    if len(l.Data) - int(l.Position) < len(prefix) || l.GetNextN(uint(len(prefix))) != prefix {
+    pos := uint(0)
+    c, ok := l.Get(pos)
+
+    for ; ok && c == '-'; c, ok = l.Get(pos) {
+        pos++
+    }
+
+    dashes := pos
+
+    if !ok || c != '"' || dashes == 0 {
         return 0
     }
 
-    pos := uint(len(prefix))
-    previousIsQuote := false
+    pos++
 
-    for c, ok := l.Get(pos); ok; c, ok = l.Get(pos) {
-        if previousIsQuote && c == '#' {
-            return pos + 1
+    consecutiveDashes := uint(0)
+
+    for ; ok; c, ok = l.Get(pos) {
+        switch c {
+        case '-':
+            consecutiveDashes++
+        case '"':
+            if consecutiveDashes == dashes {
+                return pos + 1
+            }
+        default:
+            consecutiveDashes = 0
         }
-
-        previousIsQuote = c == '"'
 
         pos++
     }
 
-    r.sendUnclosedErr(l)
+    r.sendUnclosedErr(l, dashes)
 
     return pos
 }
@@ -47,12 +61,18 @@ func (r *RawStringMatcher) Consume(l *lexer.LexerJob, length uint) {
     l.Emit(lexer.Token{Type: r.tokenType, Value: l.GetNextN(length)})
 }
 
-func (r *RawStringMatcher) sendUnclosedErr(l *lexer.LexerJob) {
+func (r *RawStringMatcher) sendUnclosedErr(l *lexer.LexerJob, dashes uint) {
     r.messenger.Send(messaging.Message{
         Reference: "TODO",
-        Message: `Raw string is not terminated with the "# sequence`,
+        Message: `Raw string is not terminated with the "` +
+                 strings.Repeat("-", int(dashes)) +
+                 ` sequence`,
+
         Severity: messaging.Error,
-        Context: []messaging.Span{{Content: l.GetNextN(1), Note: "The raw string starts here"}},
-        Notes: []string{"The remaining content will be interpreted as the raw string"},
+        Context: []messaging.Span{{Content: l.GetNextN(dashes), Note: "The raw string starts here"}},
+        Notes: []string{
+            "The amount of dashes in the string prefix must match with the suffix",
+            "The remaining content will be interpreted as the raw string",
+        },
     })
 }
