@@ -29,7 +29,8 @@ type TokenTypeMetadata struct {
 type Lexer struct {
     matchers      []Matcher
     lastTokenType TokenType
-    tokenTypesMetadata map[TokenType]TokenTypeMetadata
+    // This can be a slice with index == tokenType
+    metadata map[TokenType]TokenTypeMetadata
 }
 
 type LexerJob struct {
@@ -67,13 +68,13 @@ func (l *Lexer) AddMatcher(matcher Matcher) {
 
 func (l *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
     l.lastTokenType++
-    l.tokenTypesMetadata[l.lastTokenType] = metadata
+    l.metadata[l.lastTokenType] = metadata
 
     return l.lastTokenType
 }
 
 func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
-    v, ok := l.tokenTypesMetadata[tokenType]
+    v, ok := l.metadata[tokenType]
 
     return v, ok
 }
