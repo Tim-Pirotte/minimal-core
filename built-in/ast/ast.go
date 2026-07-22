@@ -29,7 +29,7 @@ func NewAst() *AST {
 
 func (a *AST) NewNodeType(metadata NodeTypeMetadata) NodeType {
 	a.lastNodeType++
-	a.metadata[a.lastNodeType] = metadata
+	a.metadata = append(a.metadata, metadata)
 
 	return a.lastNodeType
 }

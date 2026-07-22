@@ -69,17 +69,12 @@ func (l *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) 
 }
 
 func (l *LexerDebugger) StringifyToken(source string, token Token) string {
-    tokenTypeMetadata, ok := l.lexer.GetTokenTypeMetadata(token.Type)
-    name := tokenTypeMetadata.DebugName
-
-    if !ok {
-        name = strconv.Itoa(int(token.Type))
-    }
+    tokenTypeMetadata := l.lexer.GetTokenTypeMetadata(token.Type)
 
     if !primitives.IsSubString(source, token.Value) {
         return fmt.Sprintf(
             "%-20s %-20s     not from source",
-            name,
+            tokenTypeMetadata.DebugName,
             strconv.Quote(token.Value),
         )
     }
@@ -89,7 +84,7 @@ func (l *LexerDebugger) StringifyToken(source string, token Token) string {
 
     return fmt.Sprintf(
         "%-20s %-20s %6d..%-6d (%d)",
-        name,
+        tokenTypeMetadata.DebugName,
         strconv.Quote(token.Value),
         start,
         start+length,

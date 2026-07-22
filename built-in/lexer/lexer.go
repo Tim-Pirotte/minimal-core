@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"fmt"
-	"math"
 	"minimal/minimal-core/built-in/messaging"
 	"os"
 	"testing"
@@ -12,7 +11,8 @@ import (
 type TokenType uint
 
 const (
-    UNKNOWN TokenType = math.MaxUint - iota
+    UNKNOWN TokenType = iota
+    // Always keep END at the end
     END
 )
 
@@ -29,8 +29,7 @@ type TokenTypeMetadata struct {
 type Lexer struct {
     matchers      []Matcher
     lastTokenType TokenType
-    // This can be a slice with index == tokenType
-    metadata map[TokenType]TokenTypeMetadata
+    metadata      []TokenTypeMetadata
 }
 
 type LexerJob struct {
@@ -54,10 +53,10 @@ type Matcher interface {
 func NewLexer() *Lexer {
     return &Lexer{
         []Matcher{},
-        TokenType(0),
-        map[TokenType]TokenTypeMetadata{
-            UNKNOWN: {"a character that is not a valid token", "UNKNOWN"},
-            END: {"to the end", "END"},
+        END,
+        []TokenTypeMetadata{
+            {"a character that is not a valid token", "UNKNOWN"},
+            {"to the end", "END"},
         },
     }
 }
@@ -68,15 +67,13 @@ func (l *Lexer) AddMatcher(matcher Matcher) {
 
 func (l *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
     l.lastTokenType++
-    l.metadata[l.lastTokenType] = metadata
+    l.metadata = append(l.metadata, metadata)
 
     return l.lastTokenType
 }
 
-func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) (TokenTypeMetadata, bool) {
-    v, ok := l.metadata[tokenType]
-
-    return v, ok
+func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) TokenTypeMetadata {
+    return l.metadata[tokenType]
 }
 
 func (l *Lexer) Lex(source string, minSafePeek uint) *LexerJob {
