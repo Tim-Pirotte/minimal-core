@@ -5,33 +5,33 @@ import "math"
 type NodeType uint32
 
 type Node struct {
-	Type      NodeType
-	Reference uint32
+    Type      NodeType
+    Reference uint32
 }
 
 type NodeTypeMetadata struct {
-	DebugName string
+    DebugName string
 }
 
 type AST struct {
-	Nodes        []Node
-	lastNodeType NodeType
-	metadata     []NodeTypeMetadata
+    Nodes        []Node
+    lastNodeType NodeType
+    metadata     []NodeTypeMetadata
 }
 
 func NewAst() *AST {
-	return &AST{
-		[]Node{},
-		math.MaxUint32,
-		[]NodeTypeMetadata{},
-	}
+    return &AST{
+        []Node{},
+        math.MaxUint32,
+        []NodeTypeMetadata{},
+    }
 }
 
 func (a *AST) NewNodeType(metadata NodeTypeMetadata) NodeType {
-	a.lastNodeType++
-	a.metadata = append(a.metadata, metadata)
+    a.lastNodeType++
+    a.metadata = append(a.metadata, metadata)
 
-	return a.lastNodeType
+    return a.lastNodeType
 }
 
 func (a *AST) GetNodeTypeMetadata(nodeType NodeType) NodeTypeMetadata {

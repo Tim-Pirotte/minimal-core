@@ -8,9 +8,9 @@ import (
 const byteValueCount = 256
 
 type trieNode struct {
-	leaf bool
-	token lexer.TokenType
-	children [byteValueCount]*trieNode
+	leaf      bool
+	tokenType lexer.TokenType
+	children  [byteValueCount]*trieNode
 }
 
 type SymbolMatcher struct {
@@ -46,7 +46,7 @@ func (s *SymbolMatcher) AddSymbol(l *lexer.Lexer, symbol string, tokenType lexer
 	}
 
 	node.leaf = true
-	node.token = tokenType
+	node.tokenType = tokenType
 }
 
 func (s *SymbolMatcher) Match(l *lexer.LexerJob) uint {
@@ -61,7 +61,7 @@ func (s *SymbolMatcher) Match(l *lexer.LexerJob) uint {
 
 		if node.leaf {
 			length = pos
-			s.cachedTokenType = lexer.TokenType(node.token)
+			s.cachedTokenType = lexer.TokenType(node.tokenType)
 		}
 
 		if char, ok = l.Get(pos); !ok {
