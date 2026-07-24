@@ -89,7 +89,7 @@ func TestRace(t *testing.T) {
         },
     }
 
-    p.stages = stages
+    p.Stages = stages
     p.Run()
 
     actualCount := count.Load()
