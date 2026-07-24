@@ -27,6 +27,7 @@ func NewAst() *AST {
     }
 }
 
+// TODO add child count
 func (a *AST) NewNodeType(metadata NodeTypeMetadata) NodeType {
     a.lastNodeType++
     a.metadata = append(a.metadata, metadata)

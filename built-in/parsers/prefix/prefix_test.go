@@ -1,4 +1,4 @@
-package prefixparser
+package prefix
 
 import (
 	"minimal/minimal-core/built-in/ast"

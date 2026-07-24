@@ -1,4 +1,4 @@
-package prefixparser
+package prefix
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 )
 
 type Rule struct {
-    tokenTypes []lexer.TokenType
-    handler    func(*lexer.LexerJob, *ast.AST)
+    TokenTypes []lexer.TokenType
+    Handler    func(*lexer.LexerJob, *ast.AST)
 }
 
 type trieNode struct {
@@ -27,7 +27,7 @@ func NewPrefixParser(prefixes []Rule) *PrefixParser {
     maxLength := uint(0)
 
     for _, prefix := range prefixes {
-        length := uint(len(prefix.tokenTypes))
+        length := uint(len(prefix.TokenTypes))
 
         if length > maxLength {
             maxLength = length
@@ -35,7 +35,7 @@ func NewPrefixParser(prefixes []Rule) *PrefixParser {
 
         node := root
 
-        for _, tokenType := range prefix.tokenTypes {
+        for _, tokenType := range prefix.TokenTypes {
             if _, ok := node.children[tokenType]; !ok {
                 node.children[tokenType] = &trieNode{children: map[lexer.TokenType]*trieNode{}}
             }
@@ -49,7 +49,7 @@ func NewPrefixParser(prefixes []Rule) *PrefixParser {
         }
 
         node.leaf = true
-        node.handler = prefix.handler
+        node.handler = prefix.Handler
     }
 
     return &PrefixParser{root, uint(maxLength)}
@@ -78,5 +78,6 @@ func (p *PrefixParser) Parse(lj *lexer.LexerJob, syntax *ast.AST) {
         panic(fmt.Sprintf("unexpected token %v", lj.Peek(0).Type))
     }
 
+    // TODO should we assert that the position has changed to prevent infinite loops
     largestMatchHandler(lj, syntax)
 }
