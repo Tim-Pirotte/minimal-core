@@ -5,28 +5,6 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 )
 
-// 1 + 2 * 3 + 4
-//   1   2   1   0
-
-// ADD
-//     ADD
-//         1
-//         MUL
-//             2
-//             3
-//     4
-
-// 1 * 2 + 3 * 4
-//   2   1   2   0
-
-// ADD
-//     MUL
-//         1
-//         2
-//     MUL
-//         3
-//         4
-
 // TODO every led that is not a nud can be on a new line. This should be disabled when in ()
 type Prefix struct {
     Handler      func(*PrattParser, *lexer.LexerJob) []ast.Node
