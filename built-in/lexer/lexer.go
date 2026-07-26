@@ -76,6 +76,7 @@ func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) TokenTypeMetadata {
     return l.metadata[tokenType]
 }
 
+// TODO Shouldn't minSafePeek be declared during lexer creation
 func (l *Lexer) Lex(source string, minSafePeek uint) *LexerJob {
     capacity := minSafePeek
 

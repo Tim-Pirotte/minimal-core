@@ -50,19 +50,19 @@ func NewPrattParser(l *lexer.Lexer, prefixes []Prefix, infixes []Infix) *PrattPa
     return &PrattParser{prefixMap, infixMap}
 }
 
-func (p *PrattParser) Parse(lj *lexer.LexerJob, minBindingPower uint) []ast.Node {
-    prefix, ok := p.Prefixes[lj.Peek(0).Type]
+func (p *PrattParser) Parse(l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+    prefix, ok := p.Prefixes[l.Peek(0).Type]
 
     if !ok {
         panic("Expected a valid prefix")
     }
 
-    left := prefix.ParsePrefix(p, lj, minBindingPower)
-    infix, ok := p.Infixes[lj.Peek(0).Type]
+    left := prefix.ParsePrefix(p, l, minBindingPower)
+    infix, ok := p.Infixes[l.Peek(0).Type]
 
     for ok && infix.GetBindingPower() > minBindingPower {
-        left = infix.ParseInfix(p, lj, left, minBindingPower)
-        infix, ok = p.Infixes[lj.Peek(0).Type]
+        left = infix.ParseInfix(p, l, left, minBindingPower)
+        infix, ok = p.Infixes[l.Peek(0).Type]
     }
 
     return left

@@ -1,6 +1,8 @@
 package grouping
 
 import (
+	"fmt"
+	"math"
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/parsers/pratt"
@@ -34,12 +36,36 @@ import (
 // 5 + EOL 4 * 5
 
 type GroupingParser struct {
+    prattParser  *pratt.PrattParser
     eolTokenType lexer.TokenType
+    bindingPower uint
     nestingCount uint
 }
 
-func NewGroupingParser(eolTokenType lexer.TokenType) *GroupingParser {
-    return &GroupingParser{eolTokenType, 0}
+func NewGroupingParser(prattParser *pratt.PrattParser, eolTokenType lexer.TokenType) *GroupingParser {
+    g := &GroupingParser{prattParser, eolTokenType, math.MaxUint32, 0}
+
+    if _, ok := prattParser.Prefixes[eolTokenType]; ok {
+        logEOLPrefixAlreadyDeclared()
+    }
+
+    prattParser.Prefixes[eolTokenType] = g
+
+    if _, ok := prattParser.Infixes[eolTokenType]; ok {
+        logEOLInfixAlreadyDeclared()
+    }
+
+    prattParser.Infixes[eolTokenType] = g
+
+    return g
+}
+
+func (g *GroupingParser) GetTokenType() lexer.TokenType {
+    return g.eolTokenType
+}
+
+func (g *GroupingParser) GetBindingPower() uint {
+    return g.bindingPower
 }
 
 func (g *GroupingParser) ParsePrefix(pp *pratt.PrattParser, lj *lexer.LexerJob, bp uint) []ast.Node {
@@ -52,11 +78,14 @@ func (g *GroupingParser) ParseInfix(
     pp *pratt.PrattParser,
     lj *lexer.LexerJob,
     left []ast.Node,
+    minBindingPower uint,
 ) []ast.Node {
-    // This should have a binding power of 2^32 - 1
-    // The first time this runs if we don't advance
-    // then the bp will be the same and the loop will stop.
-    // This does mean that every Parse call to the pratt parser will visit this function once sadly
+    if g.nestingCount > 0 {
+        lj.Advance()
+
+        return left
+    }
+
     next := lj.Peek(1).Type
 
     _, isPrefix := pp.Prefixes[next]
@@ -64,7 +93,27 @@ func (g *GroupingParser) ParseInfix(
 
     if isInfix && !isPrefix {
         lj.Advance()
+    } else {
+        g.bindingPower = 0
     }
 
     return left
+}
+
+func (g *GroupingParser) Parse(l *lexer.LexerJob) []ast.Node {
+    result := g.prattParser.Parse(l, 0)
+
+    g.bindingPower = math.MaxUint32
+
+    return result
+}
+
+func logEOLPrefixAlreadyDeclared() {
+    // TODO use proper message
+    fmt.Println("The EOL token has already been used for a prefix in this Pratt parser")
+}
+
+func logEOLInfixAlreadyDeclared() {
+    // TODO use proper message
+    fmt.Println("The EOL token has already been used for an infix in this Pratt parser")
 }
