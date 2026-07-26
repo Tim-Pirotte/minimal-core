@@ -8,102 +8,120 @@ import (
 	"minimal/minimal-core/built-in/parsers/pratt"
 )
 
-// Start at an end of line token
-// Skip it
-// Assert that there are no more end of line tokens
-// Check if the next token is a led of the pratt parser
-// If it isn't also a nud then we continue the pratt parser
-// by parsing right with correct binding power propagation
-
-// 5
-// * 4
-
-// 5 EOL * 4
-
-// 5
-// - 4
-
-// 5 EOL - 4
-
-// 5 *
-// 4 + 5
-
-// 5 * EOL 4 + 5
-
-// 5 +
-// 4 * 5
-
-// 5 + EOL 4 * 5
-
 type GroupingParser struct {
-    prattParser  *pratt.PrattParser
-    eolTokenType lexer.TokenType
-    bindingPower uint
-    nestingCount uint
+    prattParser  pratt.PrattParser
+    eol          eolParser
+    nesting      nestingParser
 }
 
-func NewGroupingParser(prattParser *pratt.PrattParser, eolTokenType lexer.TokenType) *GroupingParser {
-    g := &GroupingParser{prattParser, eolTokenType, math.MaxUint32, 0}
+type eolParser struct {
+    eol lexer.TokenType
+    nestingCount *uint
+    bindingPower uint
+}
 
-    if _, ok := prattParser.Prefixes[eolTokenType]; ok {
+type nestingParser struct {
+    open  lexer.TokenType
+    close lexer.TokenType
+    nestingCount *uint
+}
+
+func NewGroupingParser(
+    prattParser *pratt.PrattParser, eol, open, close lexer.TokenType,
+) *GroupingParser {
+    nestingCount := uint(0)
+    g := &GroupingParser{
+        *prattParser,
+        eolParser{eol, &nestingCount, math.MaxUint32},
+        nestingParser{open, close, &nestingCount},
+    }
+
+    if _, ok := prattParser.Prefixes[eol]; ok {
         logEOLPrefixAlreadyDeclared()
     }
 
-    prattParser.Prefixes[eolTokenType] = g
+    prattParser.Prefixes[eol] = &g.eol
 
-    if _, ok := prattParser.Infixes[eolTokenType]; ok {
+    if _, ok := prattParser.Infixes[eol]; ok {
         logEOLInfixAlreadyDeclared()
     }
 
-    prattParser.Infixes[eolTokenType] = g
+    prattParser.Infixes[eol] = &g.eol
+
+    if _, ok := prattParser.Prefixes[open]; ok {
+        logOpenPrefixAlreadyDeclared()
+    }
+
+    prattParser.Prefixes[open] = &g.nesting
 
     return g
 }
 
-func (g *GroupingParser) GetTokenType() lexer.TokenType {
-    return g.eolTokenType
+func (e *eolParser) GetTokenType() lexer.TokenType {
+    return e.eol
 }
 
-func (g *GroupingParser) GetBindingPower() uint {
-    return g.bindingPower
+func (e *eolParser) GetBindingPower() uint {
+    return e.bindingPower
 }
 
-func (g *GroupingParser) ParsePrefix(pp *pratt.PrattParser, lj *lexer.LexerJob, bp uint) []ast.Node {
-    lj.Advance()
+func (e *eolParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.LexerJob, bp uint) []ast.Node {
+    l.Advance()
 
-    return pp.Parse(lj, bp)
+    return pp.Parse(l, bp)
 }
 
-func (g *GroupingParser) ParseInfix(
+func (e *eolParser) ParseInfix(
     pp *pratt.PrattParser,
-    lj *lexer.LexerJob,
+    l *lexer.LexerJob,
     left []ast.Node,
     minBindingPower uint,
 ) []ast.Node {
-    if g.nestingCount > 0 {
-        lj.Advance()
+    if *e.nestingCount > 0 {
+        l.Advance()
 
         return left
     }
 
-    next := lj.Peek(1).Type
+    next := l.Peek(1).Type
 
     _, isPrefix := pp.Prefixes[next]
     _, isInfix := pp.Infixes[next]
 
     if isInfix && !isPrefix {
-        lj.Advance()
+        l.Advance()
     } else {
-        g.bindingPower = 0
+        e.bindingPower = 0
     }
 
     return left
 }
 
+func (n *nestingParser) GetTokenType() lexer.TokenType {
+    return n.open
+}
+
+func (n *nestingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.LexerJob, bp uint) []ast.Node {
+    l.Advance()
+
+    *n.nestingCount++
+    result := pp.Parse(l, 0)
+    *n.nestingCount--
+
+    if l.Peek(0).Type == n.close {
+        l.Advance()
+    } else {
+        // TODO proper message
+        fmt.Println("Expected ')' matching the opening '('")
+    }
+
+    return result
+}
+
 func (g *GroupingParser) Parse(l *lexer.LexerJob) []ast.Node {
     result := g.prattParser.Parse(l, 0)
 
-    g.bindingPower = math.MaxUint32
+    g.eol.bindingPower = math.MaxUint32
 
     return result
 }
@@ -116,4 +134,9 @@ func logEOLPrefixAlreadyDeclared() {
 func logEOLInfixAlreadyDeclared() {
     // TODO use proper message
     fmt.Println("The EOL token has already been used for an infix in this Pratt parser")
+}
+
+func logOpenPrefixAlreadyDeclared() {
+    // TODO use proper message
+    fmt.Println("The Open block token has already been used for a prefix in this Pratt parser")
 }

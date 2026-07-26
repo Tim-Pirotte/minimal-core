@@ -85,6 +85,7 @@ type testGroupingParser struct {
     plus ast.NodeType
     mul ast.NodeType
     min ast.NodeType
+    minBin ast.NodeType
     a ast.NodeType
     b ast.NodeType
     c ast.NodeType
@@ -96,6 +97,8 @@ func getTestGroupingParser() testGroupingParser {
     openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "{"})
     closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "the end of a block", DebugName: "}"})
     eolT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "{"})
+    openParenT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'('", DebugName: "("})
+    closeParenT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "')'", DebugName: ")"})
 
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
@@ -116,6 +119,8 @@ func getTestGroupingParser() testGroupingParser {
     sm.AddSymbol(l, "+", plusT)
     sm.AddSymbol(l, "*", mulT)
     sm.AddSymbol(l, "-", minT)
+    sm.AddSymbol(l, "(", openParenT)
+    sm.AddSymbol(l, ")", closeParenT)
     l.AddMatcher(sm)
 
     syntax := ast.NewAst()
@@ -142,9 +147,9 @@ func getTestGroupingParser() testGroupingParser {
         },
     )
 
-    g := NewGroupingParser(p, eolT)
+    g := NewGroupingParser(p, eolT, openParenT, closeParenT)
 
-    return testGroupingParser{g, l, plus, mul, min, a, b, c}
+    return testGroupingParser{g, l, plus, mul, min, minBin, a, b, c}
 }
 
 func TestPrefix(t *testing.T) {
@@ -236,9 +241,47 @@ func TestAmbiguousInfix(t *testing.T) {
 }
 
 func TestPrefixWithParentheses(t *testing.T) {
+    gp := getTestGroupingParser()
 
+    lj := gp.l.Lex("(((a)+\n(b)))", 2)
+    result := gp.g.Parse(lj)
+
+    expected := []ast.Node{
+        {Type: gp.plus, Reference: 1},
+        {Type: gp.a, Reference: 1},
+        {Type: gp.b, Reference: 1},
+    }
+
+    if !reflect.DeepEqual(expected, result) {
+        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
+    }
 }
 
 func TestInfixWithParentheses(t *testing.T) {
+    gp := getTestGroupingParser()
+
+    lj := gp.l.Lex("(a\n-b)", 2)
+    result := gp.g.Parse(lj)
+
+    expected := []ast.Node{
+        {Type: gp.minBin, Reference: 1},
+        {Type: gp.a, Reference: 1},
+        {Type: gp.b, Reference: 1},
+    }
+
+    if !reflect.DeepEqual(expected, result) {
+        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
+    }
+}
+
+func TestDuplicateEOLPrefix(t *testing.T) {
+
+}
+
+func TestDuplicateEOLInfix(t *testing.T) {
+
+}
+
+func TestDuplicateOpenPrefix(t *testing.T) {
 
 }
