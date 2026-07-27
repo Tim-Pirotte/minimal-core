@@ -8,6 +8,8 @@ import (
 	"minimal/minimal-core/built-in/parsers/pratt"
 )
 
+// TODO should the eol ignore be controllable from outside (for different enclosings)?
+
 type GroupingParser struct {
     prattParser  pratt.PrattParser
     eol          eolParser

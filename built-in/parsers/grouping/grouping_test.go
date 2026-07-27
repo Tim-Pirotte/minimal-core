@@ -62,23 +62,6 @@ func (u *unaryParser) ParsePrefix(
     return result
 }
 
-type symbolParser struct {
-    tokenType lexer.TokenType
-    nodeType  ast.NodeType
-}
-
-func (s *symbolParser) GetTokenType() lexer.TokenType {
-    return s.tokenType
-}
-
-func (s *symbolParser) ParsePrefix(
-    p *pratt.PrattParser, l *lexer.LexerJob, minBindingPower uint,
-) []ast.Node {
-    l.Advance()
-
-    return []ast.Node{{Type: s.nodeType, Reference: 1}}
-}
-
 type testGroupingParser struct {
     g *GroupingParser
     l *lexer.Lexer
@@ -94,19 +77,19 @@ type testGroupingParser struct {
 func getTestGroupingParser() testGroupingParser {
     l := lexer.NewLexer()
 
-    openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "{"})
-    closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "the end of a block", DebugName: "}"})
-    eolT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "{"})
-    openParenT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'('", DebugName: "("})
-    closeParenT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "')'", DebugName: ")"})
+    openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
+    closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "}"})
+    eolT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
+    openParenT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "("})
+    closeParenT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: ")"})
 
-    aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
-    bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
-    cT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "c", DebugName: "C"})
+    aT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "A"})
+    bT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "B"})
+    cT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "C"})
 
-    plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
-    mulT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'*'", DebugName: "*"})
-    minT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'-'", DebugName: "-"})
+    plusT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "+"})
+    mulT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "*"})
+    minT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "-"})
 
     messenger := messaging.NewMessenger()
     im := indentation.NewIndentationMatcher(messenger, ':', ' ', openBlockT, closeBlockT, eolT, 0)
@@ -135,9 +118,9 @@ func getTestGroupingParser() testGroupingParser {
     p := pratt.NewPrattParser(
         l,
         []pratt.Prefix{
-            &symbolParser{aT, a},
-            &symbolParser{bT, b},
-            &symbolParser{cT, c},
+            pratt.NewAtomicParser(aT, a),
+            pratt.NewAtomicParser(bT, b),
+            pratt.NewAtomicParser(cT, c),
             &unaryParser{minT, min, 2},
         },
         []pratt.Infix{

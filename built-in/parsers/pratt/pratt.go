@@ -83,3 +83,22 @@ func logDuplicateInfix(l *lexer.Lexer, tokenType lexer.TokenType) {
         l.GetTokenTypeMetadata(tokenType),
     )
 }
+
+type AtomicParser struct {
+	tokenType lexer.TokenType
+    nodeType  ast.NodeType
+}
+
+func NewAtomicParser(tokenType lexer.TokenType, nodeType ast.NodeType) *AtomicParser {
+	return &AtomicParser{tokenType, nodeType}
+}
+
+func (a *AtomicParser) GetTokenType() lexer.TokenType {
+    return a.tokenType
+}
+
+func (a *AtomicParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+    l.Advance()
+
+    return []ast.Node{{Type: a.nodeType, Reference: 1}}
+}

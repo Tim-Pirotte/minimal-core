@@ -52,21 +52,6 @@ func TestPrefix(t *testing.T) {
     }
 }
 
-type symbolParser struct {
-    tokenType lexer.TokenType
-    nodeType  ast.NodeType
-}
-
-func (s *symbolParser) GetTokenType() lexer.TokenType {
-    return s.tokenType
-}
-
-func (s *symbolParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
-    l.Advance()
-
-    return []ast.Node{{Type: s.nodeType, Reference: 1}}
-}
-
 type plusParser struct {
     plusT lexer.TokenType
     plus  ast.NodeType
@@ -111,7 +96,7 @@ func TestBinary(t *testing.T) {
 
     p := NewPrattParser(
         l,
-        []Prefix{&symbolParser{aT, a}, &symbolParser{bT, b}},
+        []Prefix{NewAtomicParser(aT, a), NewAtomicParser(bT, b)},
         []Infix{&plusParser{plusT, plus}},
     )
 
@@ -227,9 +212,9 @@ func TestParseCompleteExpression(t *testing.T) {
         l,
         []Prefix{
             &minusParser{minusT, minus},
-            &symbolParser{aT, a},
+            NewAtomicParser(aT, a),
             &groupingParser{openParenT, closeParenT, t},
-            &symbolParser{bT, b},
+            NewAtomicParser(bT, b),
         },
         []Infix{
             &plusParser{plusT, plus},
