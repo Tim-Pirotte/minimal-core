@@ -31,7 +31,7 @@ func (b *BinaryParser) ParseInfix(
 
     right := p.Parse(l, b.bindingPower)
 
-    result := []ast.Node{{Type: b.nodeType, Reference: 1}}
+    result := []ast.Node{{Type: b.nodeType}}
     result = append(result, left...)
     result = append(result, right...)
 

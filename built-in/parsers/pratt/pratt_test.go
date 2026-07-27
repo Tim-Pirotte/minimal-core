@@ -26,7 +26,7 @@ func (e *endParser) GetTokenType() lexer.TokenType {
 }
 
 func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
-    return []ast.Node{{Type: e.end, Reference: 1}}
+    return []ast.Node{{Type: e.end}}
 }
 
 func TestPrefix(t *testing.T) {
@@ -44,7 +44,7 @@ func TestPrefix(t *testing.T) {
     result := p.Parse(lj, 0)
 
     expected := []ast.Node{
-        {Type: end, Reference: 1},
+        {Type: end},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -70,7 +70,7 @@ func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.LexerJob, left []ast.N
 
     right := pp.Parse(l, 1)
 
-    result := []ast.Node{{Type: p.plus, Reference: 1}}
+    result := []ast.Node{{Type: p.plus}}
     result = append(result, left...)
     result = append(result, right...)
 
@@ -105,9 +105,9 @@ func TestBinary(t *testing.T) {
     result := p.Parse(lj, 0)
 
     expected := []ast.Node{
-        {Type: plus, Reference: 1},
-        {Type: a, Reference: 1},
-        {Type: b, Reference: 1},
+        {Type: plus},
+        {Type: a},
+        {Type: b},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -127,7 +127,7 @@ func (m *minusParser) GetTokenType() lexer.TokenType {
 func (m *minusParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
     l.Advance()
 
-    result := []ast.Node{{Type: m.minus, Reference: 1}}
+    result := []ast.Node{{Type: m.minus}}
     result = append(result, p.Parse(l, 2)...)
 
     return result
@@ -175,7 +175,7 @@ func (e *exclamationParser) ParseInfix(
 ) []ast.Node {
     l.Advance()
 
-    result := []ast.Node{{Type: e.exclamation, Reference: 1}}
+    result := []ast.Node{{Type: e.exclamation}}
     result = append(result, left...)
 
     return result
@@ -227,11 +227,11 @@ func TestParseCompleteExpression(t *testing.T) {
     result := p.Parse(lj, 0)
 
     expected := []ast.Node{
-        {Type: plus, Reference: 1},
-        {Type: minus, Reference: 1},
-        {Type: a, Reference: 1},
-        {Type: exclamation, Reference: 1},
-        {Type: b, Reference: 1},
+        {Type: plus},
+        {Type: minus},
+        {Type: a},
+        {Type: exclamation},
+        {Type: b},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -243,11 +243,11 @@ func TestParseCompleteExpression(t *testing.T) {
     result = p.Parse(lj, 0)
 
     expected = []ast.Node{
-        {Type: exclamation, Reference: 1},
-        {Type: plus, Reference: 1},
-        {Type: minus, Reference: 1},
-        {Type: a, Reference: 1},
-        {Type: b, Reference: 1},
+        {Type: exclamation},
+        {Type: plus},
+        {Type: minus},
+        {Type: a},
+        {Type: b},
     }
 
     if !reflect.DeepEqual(expected, result) {

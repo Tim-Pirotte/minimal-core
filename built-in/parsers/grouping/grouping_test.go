@@ -32,7 +32,7 @@ func (b *binaryParser) ParseInfix(
 
     right := p.Parse(l, b.bindingPower)
 
-    result := []ast.Node{{Type: b.nodeType, Reference: 1}}
+    result := []ast.Node{{Type: b.nodeType}}
     result = append(result, left...)
     result = append(result, right...)
 
@@ -56,7 +56,7 @@ func (u *unaryParser) ParsePrefix(
 
     right := p.Parse(l, u.bindingPower)
 
-    result := []ast.Node{{Type: u.nodeType, Reference: 1}}
+    result := []ast.Node{{Type: u.nodeType}}
     result = append(result, right...)
 
     return result
@@ -142,11 +142,11 @@ func TestPrefix(t *testing.T) {
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
-        {Type: gp.plus, Reference: 1},
-        {Type: gp.mul, Reference: 1},
-        {Type: gp.a, Reference: 1},
-        {Type: gp.b, Reference: 1},
-        {Type: gp.c, Reference: 1},
+        {Type: gp.plus},
+        {Type: gp.mul},
+        {Type: gp.a},
+        {Type: gp.b},
+        {Type: gp.c},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -158,11 +158,11 @@ func TestPrefix(t *testing.T) {
     result = gp.g.Parse(lj)
 
     expected = []ast.Node{
-        {Type: gp.plus, Reference: 1},
-        {Type: gp.a, Reference: 1},
-        {Type: gp.mul, Reference: 1},
-        {Type: gp.b, Reference: 1},
-        {Type: gp.c, Reference: 1},
+        {Type: gp.plus},
+        {Type: gp.a},
+        {Type: gp.mul},
+        {Type: gp.b},
+        {Type: gp.c},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -177,11 +177,11 @@ func TestInfix(t *testing.T) {
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
-        {Type: gp.plus, Reference: 1},
-        {Type: gp.mul, Reference: 1},
-        {Type: gp.a, Reference: 1},
-        {Type: gp.b, Reference: 1},
-        {Type: gp.c, Reference: 1},
+        {Type: gp.plus},
+        {Type: gp.mul},
+        {Type: gp.a},
+        {Type: gp.b},
+        {Type: gp.c},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -193,11 +193,11 @@ func TestInfix(t *testing.T) {
     result = gp.g.Parse(lj)
 
     expected = []ast.Node{
-        {Type: gp.plus, Reference: 1},
-        {Type: gp.a, Reference: 1},
-        {Type: gp.mul, Reference: 1},
-        {Type: gp.b, Reference: 1},
-        {Type: gp.c, Reference: 1},
+        {Type: gp.plus},
+        {Type: gp.a},
+        {Type: gp.mul},
+        {Type: gp.b},
+        {Type: gp.c},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -213,9 +213,9 @@ func TestAmbiguousInfix(t *testing.T) {
     result = append(result, gp.g.Parse(lj)...)
 
     expected := []ast.Node{
-        {Type: gp.a, Reference: 1},
-        {Type: gp.min, Reference: 1},
-        {Type: gp.b, Reference: 1},
+        {Type: gp.a},
+        {Type: gp.min},
+        {Type: gp.b},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -230,9 +230,9 @@ func TestPrefixWithParentheses(t *testing.T) {
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
-        {Type: gp.plus, Reference: 1},
-        {Type: gp.a, Reference: 1},
-        {Type: gp.b, Reference: 1},
+        {Type: gp.plus},
+        {Type: gp.a},
+        {Type: gp.b},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -247,9 +247,9 @@ func TestInfixWithParentheses(t *testing.T) {
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
-        {Type: gp.minBin, Reference: 1},
-        {Type: gp.a, Reference: 1},
-        {Type: gp.b, Reference: 1},
+        {Type: gp.minBin},
+        {Type: gp.a},
+        {Type: gp.b},
     }
 
     if !reflect.DeepEqual(expected, result) {

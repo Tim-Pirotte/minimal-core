@@ -100,5 +100,5 @@ func (a *AtomicParser) GetTokenType() lexer.TokenType {
 func (a *AtomicParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
     l.Advance()
 
-    return []ast.Node{{Type: a.nodeType, Reference: 1}}
+    return []ast.Node{{Type: a.nodeType}}
 }

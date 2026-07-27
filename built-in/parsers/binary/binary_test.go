@@ -89,9 +89,9 @@ func TestSingle(t *testing.T) {
     result := bp.p.Parse(lj, 0)
 
     expected := []ast.Node{
-        {Type: bp.plus, Reference: 1},
-        {Type: bp.a, Reference: 1},
-        {Type: bp.b, Reference: 1},
+        {Type: bp.plus},
+        {Type: bp.a},
+        {Type: bp.b},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -102,9 +102,9 @@ func TestSingle(t *testing.T) {
     result = bp.p.Parse(lj, 0)
 
     expected = []ast.Node{
-        {Type: bp.plus, Reference: 1},
-        {Type: bp.b, Reference: 1},
-        {Type: bp.a, Reference: 1},
+        {Type: bp.plus},
+        {Type: bp.b},
+        {Type: bp.a},
     }
 
     if !reflect.DeepEqual(expected, result) {
@@ -119,17 +119,17 @@ func TestMultiple(t *testing.T) {
     result := bp.p.Parse(lj, 0)
 
     expected := []ast.Node{
-        {Type: bp.minus, Reference: 1},
-            {Type: bp.plus, Reference: 1},
-                {Type: bp.minus, Reference: 1},
-                    {Type: bp.plus, Reference: 1},
-                        {Type: bp.a, Reference: 1},
-                        {Type: bp.b, Reference: 1},
-                    {Type: bp.mul, Reference: 1},
-                        {Type: bp.c, Reference: 1},
-                        {Type: bp.d, Reference: 1},
-                {Type: bp.e, Reference: 1},
-            {Type: bp.f, Reference: 1},
+        {Type: bp.minus},
+            {Type: bp.plus},
+                {Type: bp.minus},
+                    {Type: bp.plus},
+                        {Type: bp.a},
+                        {Type: bp.b},
+                    {Type: bp.mul},
+                        {Type: bp.c},
+                        {Type: bp.d},
+                {Type: bp.e},
+            {Type: bp.f},
     }
 
     if !reflect.DeepEqual(expected, result) {
