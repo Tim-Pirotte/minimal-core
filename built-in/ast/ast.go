@@ -19,7 +19,7 @@ type AST struct {
     metadata     []NodeTypeMetadata
 }
 
-func NewAst() *AST {
+func New() *AST {
     return &AST{
         []Node{},
         math.MaxUint32,

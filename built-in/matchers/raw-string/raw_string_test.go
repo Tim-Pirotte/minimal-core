@@ -16,7 +16,7 @@ type testLexer struct {
 }
 
 func getLexer() testLexer {
-    l := lexer.NewLexer()
+    l := lexer.New()
 
     rawStringType := l.NewTokenType(
         lexer.TokenTypeMetadata{DisplayName: "a raw string literal", DebugName: "RawString"},

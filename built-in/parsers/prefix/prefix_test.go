@@ -10,10 +10,10 @@ import (
 func TestEmpty(t *testing.T) {
     p := NewPrefixParser([]Rule{})
 
-    l := lexer.NewLexer()
+    l := lexer.New()
     lj := l.Lex("", 1)
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 }
 
 func TestNoMatchHandler(t *testing.T) {
@@ -23,10 +23,10 @@ func TestNoMatchHandler(t *testing.T) {
         {[]lexer.TokenType{}, func(lj *lexer.LexerJob, a *ast.AST) { ok = true }},
     })
 
-    l := lexer.NewLexer()
+    l := lexer.New()
     lj := l.Lex("", 1)
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !ok {
         t.Error("Expected the first handler to run")
@@ -41,10 +41,10 @@ func TestAlreadyDeclared(t *testing.T) {
         {[]lexer.TokenType{}, func(lj *lexer.LexerJob, a *ast.AST) { ok = true }},
     })
 
-    l := lexer.NewLexer()
+    l := lexer.New()
     lj := l.Lex("", 1)
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !ok {
         t.Error("Expected the second handler to run")
@@ -57,7 +57,7 @@ func TestTokens(t *testing.T) {
     b_ok := false
     unknown_ok := false
 
-    l := lexer.NewLexer()
+    l := lexer.New()
     a := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "a"})
     b := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "b"})
 
@@ -76,7 +76,7 @@ func TestTokens(t *testing.T) {
 
     lj := l.Lex("abd", 1)
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !a_ok {
         t.Error("Expected the 'a' handler to run")
@@ -84,7 +84,7 @@ func TestTokens(t *testing.T) {
 
     lj.Advance()
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !b_ok {
         t.Error("Expected the 'b' handler to run")
@@ -92,7 +92,7 @@ func TestTokens(t *testing.T) {
 
     lj.Advance()
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !unknown_ok {
         t.Error("Expected the UNKNOWN handler to run")
@@ -100,7 +100,7 @@ func TestTokens(t *testing.T) {
 
     lj.Advance()
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !empty_ok {
         t.Error("Expected the empty handler to run")
@@ -111,7 +111,7 @@ func TestSamePrefix(t *testing.T) {
     aa_ok := false
     ab_ok := false
 
-    l := lexer.NewLexer()
+    l := lexer.New()
     a := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "a"})
     b := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "b"})
 
@@ -128,7 +128,7 @@ func TestSamePrefix(t *testing.T) {
 
     lj := l.Lex("aaab", 2)
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !aa_ok {
         t.Error("Expected the 'aa' handler to run")
@@ -137,7 +137,7 @@ func TestSamePrefix(t *testing.T) {
     lj.Advance()
     lj.Advance()
 
-    p.Parse(lj, ast.NewAst())
+    p.Parse(lj, ast.New())
 
     if !ab_ok {
         t.Error("Expected the 'ab' handler to run")

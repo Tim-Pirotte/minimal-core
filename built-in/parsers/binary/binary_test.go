@@ -24,7 +24,7 @@ type testBinaryParser struct {
 }
 
 func getTestBinaryParser() testBinaryParser {
-    l := lexer.NewLexer()
+    l := lexer.New()
 
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
@@ -50,7 +50,7 @@ func getTestBinaryParser() testBinaryParser {
     sm.AddSymbol(l, "*", mulT)
     l.AddMatcher(sm)
 
-    syntax := ast.NewAst()
+    syntax := ast.New()
     plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})
     minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-"})
     mul := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "*"})

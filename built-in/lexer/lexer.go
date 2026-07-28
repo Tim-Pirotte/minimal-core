@@ -50,7 +50,7 @@ type Matcher interface {
     Consume(t *LexerJob, length uint)
 }
 
-func NewLexer() *Lexer {
+func New() *Lexer {
     return &Lexer{
         []Matcher{},
         END,

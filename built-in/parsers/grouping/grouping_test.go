@@ -75,7 +75,7 @@ type testGroupingParser struct {
 }
 
 func getTestGroupingParser() testGroupingParser {
-    l := lexer.NewLexer()
+    l := lexer.New()
 
     openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
     closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "}"})
@@ -106,7 +106,7 @@ func getTestGroupingParser() testGroupingParser {
     sm.AddSymbol(l, ")", closeParenT)
     l.AddMatcher(sm)
 
-    syntax := ast.NewAst()
+    syntax := ast.New()
     plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})
     mul := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "*"})
     a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})

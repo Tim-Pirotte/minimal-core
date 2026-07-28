@@ -9,7 +9,7 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-    l := lexer.NewLexer()
+    l := lexer.New()
     p := NewPrattParser(l, []Prefix{}, []Infix{})
     lj := l.Lex("", 1)
 
@@ -30,8 +30,8 @@ func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPow
 }
 
 func TestPrefix(t *testing.T) {
-    l := lexer.NewLexer()
-    syntax := ast.NewAst()
+    l := lexer.New()
+    syntax := ast.New()
     end := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "END"})
 
     p := NewPrattParser(l,
@@ -78,7 +78,7 @@ func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.LexerJob, left []ast.N
 }
 
 func TestBinary(t *testing.T) {
-    l := lexer.NewLexer()
+    l := lexer.New()
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
@@ -89,7 +89,7 @@ func TestBinary(t *testing.T) {
     sm.AddSymbol(l, "b", bT)
     l.AddMatcher(sm)
 
-    syntax := ast.NewAst()
+    syntax := ast.New()
     a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
     plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})
     b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "B"})
@@ -182,7 +182,7 @@ func (e *exclamationParser) ParseInfix(
 }
 
 func TestParseCompleteExpression(t *testing.T) {
-    l := lexer.NewLexer()
+    l := lexer.New()
     minusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'-'", DebugName: "-"})
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
@@ -201,7 +201,7 @@ func TestParseCompleteExpression(t *testing.T) {
     sm.AddSymbol(l, ")", closeParenT)
     l.AddMatcher(sm)
 
-    syntax := ast.NewAst()
+    syntax := ast.New()
     minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-"})
     a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
     plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})

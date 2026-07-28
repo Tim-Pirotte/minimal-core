@@ -11,7 +11,7 @@ import (
 )
 
 func TestBindingPower(t *testing.T) {
-    l := lexer.NewLexer()
+    l := lexer.New()
 
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
@@ -30,7 +30,7 @@ func TestBindingPower(t *testing.T) {
 
     l.AddMatcher(sm)
 
-    syntax := ast.NewAst()
+    syntax := ast.New()
     plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})
     exclamation := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "!"})
     quote := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "'"})
