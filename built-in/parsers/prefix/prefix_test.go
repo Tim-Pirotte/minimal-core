@@ -4,62 +4,108 @@ import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
+	"minimal/minimal-core/built-in/messaging"
 	"testing"
 )
 
 func TestEmpty(t *testing.T) {
-    p := NewPrefixParser([]Rule{})
-
     l := lexer.New()
     lj := l.Lex("", 1)
 
+    m := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    m.AddOutput(to)
+
+    p := NewPrefixParser(m, l, []Rule{})
+
     p.Parse(lj, ast.New())
+
+    m.Close()
+    to.CheckMessages(t, []messaging.Message{})
+}
+
+type okParser struct {
+    ok bool
+}
+
+func (e *okParser) Parse(l *lexer.LexerJob, syntax *ast.AST) {
+    e.ok = true
 }
 
 func TestNoMatchHandler(t *testing.T) {
-    ok := false
-
-    p := NewPrefixParser([]Rule{
-        {[]lexer.TokenType{}, func(lj *lexer.LexerJob, a *ast.AST) { ok = true }},
-    })
-
     l := lexer.New()
     lj := l.Lex("", 1)
 
+    m := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    m.AddOutput(to)
+
+    ep := okParser{}
+
+    p := NewPrefixParser(m, l, []Rule{{[]lexer.TokenType{}, &ep}})
     p.Parse(lj, ast.New())
 
-    if !ok {
+    if !ep.ok {
         t.Error("Expected the first handler to run")
     }
+
+    m.Close()
+    to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestAlreadyDeclared(t *testing.T) {
-    ok := false
-
-    p := NewPrefixParser([]Rule{
-        {[]lexer.TokenType{}, func(lj *lexer.LexerJob, a *ast.AST) { ok = false }},
-        {[]lexer.TokenType{}, func(lj *lexer.LexerJob, a *ast.AST) { ok = true }},
-    })
-
     l := lexer.New()
     lj := l.Lex("", 1)
 
+    m := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    m.AddOutput(to)
+
+    firstOk := &okParser{}
+    secondOk := &okParser{}
+
+    p := NewPrefixParser(
+        m,
+        l,
+        []Rule{
+            {[]lexer.TokenType{}, firstOk},
+            {[]lexer.TokenType{}, secondOk},
+        },
+    )
+
     p.Parse(lj, ast.New())
 
-    if !ok {
-        t.Error("Expected the second handler to run")
+    if firstOk.ok || !secondOk.ok {
+        t.Error("Expected only the second handler to run but the first ran")
     }
+
+    if !secondOk.ok {
+        t.Error("Expected only the second handler to run but it did not run")
+    }
+
+    m.Close()
+    to.CheckMessages(
+        t,
+        []messaging.Message{
+            {
+                Reference: "TODO",
+                Message: "Duplicate prefix in prefix parser",
+                Severity: messaging.Error,
+                Notes: []string{"Prefix: []"},
+            },
+        },
+    )
 }
 
 func TestTokens(t *testing.T) {
-    empty_ok := false
-    a_ok := false
-    b_ok := false
-    unknown_ok := false
+    emptyOk := okParser{}
+    aOk := okParser{}
+    bOk := okParser{}
+    unknownOk := okParser{}
 
     l := lexer.New()
-    a := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "a"})
-    b := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "b"})
+    a := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
+    b := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
 
     sm := symbols.NewSymbolMatcher()
     sm.AddSymbol(l, "a", a)
@@ -67,18 +113,26 @@ func TestTokens(t *testing.T) {
 
     l.AddMatcher(sm)
 
-    p := NewPrefixParser([]Rule{
-        {[]lexer.TokenType{}, func(lj *lexer.LexerJob, a *ast.AST) { empty_ok = true }},
-        {[]lexer.TokenType{a}, func(lj *lexer.LexerJob, a *ast.AST) { a_ok = true }},
-        {[]lexer.TokenType{b}, func(lj *lexer.LexerJob, a *ast.AST) { b_ok = true }},
-        {[]lexer.TokenType{lexer.UNKNOWN}, func(lj *lexer.LexerJob, a *ast.AST) { unknown_ok = true }},
-    })
+    m := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    m.AddOutput(to)
+
+    p := NewPrefixParser(
+        m,
+        l,
+        []Rule{
+            {[]lexer.TokenType{}, &emptyOk},
+            {[]lexer.TokenType{a}, &aOk},
+            {[]lexer.TokenType{b}, &bOk},
+            {[]lexer.TokenType{lexer.UNKNOWN}, &unknownOk},
+        },
+    )
 
     lj := l.Lex("abd", 1)
 
     p.Parse(lj, ast.New())
 
-    if !a_ok {
+    if !aOk.ok {
         t.Error("Expected the 'a' handler to run")
     }
 
@@ -86,7 +140,7 @@ func TestTokens(t *testing.T) {
 
     p.Parse(lj, ast.New())
 
-    if !b_ok {
+    if !bOk.ok {
         t.Error("Expected the 'b' handler to run")
     }
 
@@ -94,7 +148,7 @@ func TestTokens(t *testing.T) {
 
     p.Parse(lj, ast.New())
 
-    if !unknown_ok {
+    if !unknownOk.ok {
         t.Error("Expected the UNKNOWN handler to run")
     }
 
@@ -102,18 +156,21 @@ func TestTokens(t *testing.T) {
 
     p.Parse(lj, ast.New())
 
-    if !empty_ok {
+    if !emptyOk.ok {
         t.Error("Expected the empty handler to run")
     }
+
+    m.Close()
+    to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestSamePrefix(t *testing.T) {
-    aa_ok := false
-    ab_ok := false
+    aaOk := okParser{}
+    abOk := okParser{}
 
     l := lexer.New()
-    a := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "a"})
-    b := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "b"})
+    a := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
+    b := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
 
     sm := symbols.NewSymbolMatcher()
     sm.AddSymbol(l, "a", a)
@@ -121,16 +178,24 @@ func TestSamePrefix(t *testing.T) {
 
     l.AddMatcher(sm)
 
-    p := NewPrefixParser([]Rule{
-        {[]lexer.TokenType{a, a}, func(lj *lexer.LexerJob, a *ast.AST) { aa_ok = true }},
-        {[]lexer.TokenType{a, b}, func(lj *lexer.LexerJob, a *ast.AST) { ab_ok = true }},
-    })
+    m := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    m.AddOutput(to)
+
+    p := NewPrefixParser(
+        m,
+        l,
+        []Rule{
+            {[]lexer.TokenType{a, a}, &aaOk},
+            {[]lexer.TokenType{a, b}, &abOk},
+        },
+    )
 
     lj := l.Lex("aaab", 2)
 
     p.Parse(lj, ast.New())
 
-    if !aa_ok {
+    if !aaOk.ok {
         t.Error("Expected the 'aa' handler to run")
     }
 
@@ -139,7 +204,10 @@ func TestSamePrefix(t *testing.T) {
 
     p.Parse(lj, ast.New())
 
-    if !ab_ok {
+    if !abOk.ok {
         t.Error("Expected the 'ab' handler to run")
     }
+
+    m.Close()
+    to.CheckMessages(t, []messaging.Message{})
 }

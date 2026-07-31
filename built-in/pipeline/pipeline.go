@@ -25,16 +25,11 @@ func NewPipeline() *Pipeline {
 }
 
 func (p *Pipeline) Run() {
-    if len(p.Stages) == 0 {
-        logNoStages()
-    }
-
     for _, stage := range p.Stages {
-        if len(stage.Units) == 0 {
-            stage.logNoUnits()
-        }
+        stage.logStartStage()
 
         for _, unit := range stage.Units {
+            unit.logStartUnit()
             p.wg.Go(unit.Run)
         }
 
@@ -45,16 +40,6 @@ func (p *Pipeline) Run() {
 // Should only be called from within a running unit
 func (p *Pipeline) AddUnitToCurrentStage(unit Unit) {
     p.wg.Go(unit.Run)
-}
-
-func logNoStages() {
-    // TODO use proper messaging
-    fmt.Println("Running pipeline without stages")
-}
-
-func (s *Stage) logNoUnits() {
-    // TODO use proper messaging
-    fmt.Printf("Running stage %s without units:\n", s.Name)
 }
 
 func (s *Stage) logStartStage() {

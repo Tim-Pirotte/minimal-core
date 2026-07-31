@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// TODO allow stacktraces
+
 const bufferSize = 16
 
 type Messenger struct {

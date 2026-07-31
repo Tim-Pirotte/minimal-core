@@ -1,19 +1,24 @@
 package prefix
 
 import (
-	"fmt"
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
+	"minimal/minimal-core/built-in/messaging"
+	"strings"
 )
 
 type Rule struct {
     TokenTypes []lexer.TokenType
-    Handler    func(*lexer.LexerJob, *ast.AST)
+    Parser     RuleParser
+}
+
+type RuleParser interface {
+    Parse(*lexer.LexerJob, *ast.AST)
 }
 
 type trieNode struct {
     leaf     bool
-    handler  func(*lexer.LexerJob, *ast.AST)
+    parser  RuleParser
     children map[lexer.TokenType]*trieNode
 }
 
@@ -22,7 +27,7 @@ type PrefixParser struct {
     maxLength uint
 }
 
-func NewPrefixParser(prefixes []Rule) *PrefixParser {
+func NewPrefixParser(m *messaging.Messenger, l *lexer.Lexer, prefixes []Rule) PrefixParser {
     root := &trieNode{false, nil, map[lexer.TokenType]*trieNode{}}
     maxLength := uint(0)
 
@@ -44,40 +49,61 @@ func NewPrefixParser(prefixes []Rule) *PrefixParser {
         }
 
         if node.leaf {
-            // TODO log error message or panic
-            panic(fmt.Sprintf("'%v' has already been declared", prefix))
+            logDuplicatePrefix(m, l, prefix.TokenTypes)
         }
 
         node.leaf = true
-        node.handler = prefix.Handler
+        node.parser = prefix.Parser
     }
 
-    return &PrefixParser{root, uint(maxLength)}
+    return PrefixParser{root, uint(maxLength)}
 }
 
-func (p *PrefixParser) Parse(lj *lexer.LexerJob, syntax *ast.AST) {
-    var largestMatchHandler func(*lexer.LexerJob, *ast.AST)
+func (p *PrefixParser) Parse(l *lexer.LexerJob, syntax *ast.AST) {
+    var largestMatchParser RuleParser
     node := p.prefixes
     ok := true
 
     if node.leaf {
-        largestMatchHandler = node.handler
+        largestMatchParser = node.parser
     }
 
     for pos := uint(0); ok && pos < p.maxLength; pos++ {
-        tokenType := lj.Peek(pos).Type
+        tokenType := l.Peek(pos).Type
         node, ok = node.children[tokenType]
 
         if ok && node.leaf {
-            largestMatchHandler = node.handler
+            largestMatchParser = node.parser
         }
     }
 
-    if largestMatchHandler == nil {
-        // TODO error
-        panic(fmt.Sprintf("unexpected token %v", lj.Peek(0).Type))
+    if largestMatchParser != nil {
+        largestMatchParser.Parse(l, syntax)
+    }
+}
+
+func logDuplicatePrefix(m *messaging.Messenger, l *lexer.Lexer, prefix []lexer.TokenType) {
+    sb := strings.Builder{}
+    sb.WriteString("Prefix: [")
+
+    for i, t := range prefix {
+        metadata := l.GetTokenTypeMetadata(t)
+
+        sb.WriteString(metadata.DebugName)
+
+        if i + 1 != len(prefix) {
+            sb.WriteString(", ")
+        }
     }
 
-    // TODO should we assert that the position has changed to prevent infinite loops
-    largestMatchHandler(lj, syntax)
+    sb.WriteByte(']')
+
+    m.Send(
+        messaging.Message{
+            Reference: "TODO",
+            Message: "Duplicate prefix in prefix parser",
+            Severity: messaging.Error,
+            Notes: []string{sb.String()},
+        },
+    )
 }
