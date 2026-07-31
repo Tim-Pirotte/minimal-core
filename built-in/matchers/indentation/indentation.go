@@ -181,7 +181,6 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool,
 
 func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.LexerJob, startIndent uint) {
     i.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Source code cannot start with indentation",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: l.GetNextN(startIndent)}},
@@ -193,7 +192,6 @@ func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.LexerJob, length
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
     message := messaging.Message{
-        Reference: "TODO",
         Message: "Indentation is inconsistent",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: context}},
@@ -221,7 +219,6 @@ func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.LexerJob, length uint) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
     i.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Got more indentation than expected",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: context}},

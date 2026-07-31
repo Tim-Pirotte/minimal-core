@@ -100,7 +100,6 @@ func logDuplicatePrefix(m *messaging.Messenger, l *lexer.Lexer, prefix []lexer.T
 
     m.Send(
         messaging.Message{
-            Reference: "TODO",
             Message: "Duplicate prefix in prefix parser",
             Severity: messaging.Error,
             Notes: []string{sb.String()},

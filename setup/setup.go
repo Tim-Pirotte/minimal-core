@@ -11,43 +11,38 @@ import (
 )
 
 func RegisterCommands(
-	commands *startup.Commands,
-	messenger *messaging.Messenger,
-	ui ui.UI,
+    commands *startup.Commands,
+    messenger *messaging.Messenger,
+    ui ui.UI,
 ) {
-	projectCreator := templates.NewProjectCreator(messenger, ui)
-	err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(messenger), "directory", 1)
+    projectCreator := templates.NewProjectCreator(messenger, ui)
+    err := projectCreator.RegisterTemplateStore(directory.NewDirectoryStore(messenger), "directory", 1)
 
-	if err != nil {
-		messenger.Send(messaging.Message{
-			Reference: "TODO",
-			Message: "Failed to register the directory template store",
-			Severity: messaging.Error,
-		})
+    if err != nil {
+        messenger.Send(messaging.Message{
+            Message: "Failed to register the directory template store",
+            Severity: messaging.Error,
+        })
 
-		os.Exit(1)
-	}
+        os.Exit(1)
+    }
 
-	err = commands.AddCommand("new", projectCreator.NewProjectCLI)
+    err = commands.AddCommand("new", projectCreator.NewProjectCLI)
 
-	if err != nil {
-		messenger.Send(messaging.Message{
-			Reference: "TODO",
-			Message: "Failed to register the 'new' command",
-			Severity: messaging.Error,
-		})
+    if err != nil {
+        messenger.Send(messaging.Message{
+            Message: "Failed to register the 'new' command",
+            Severity: messaging.Error,
+        })
 
-		os.Exit(1)
-	}
+        os.Exit(1)
+    }
 
-	err = commands.AddCommand("tui", tui.NewTUI().StartTUI)
+    err = commands.AddCommand("tui", tui.NewTUI().StartTUI)
 
-	if err != nil {
-		messenger.Send(messaging.Message{
-			Reference: "TODO",
-			Message: "Failed to register the 'tui' command",
-		})
+    if err != nil {
+        messenger.Send(messaging.Message{Message: "Failed to register the 'tui' command"})
 
-		os.Exit(1)
-	}
+        os.Exit(1)
+    }
 }

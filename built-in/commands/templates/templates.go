@@ -140,7 +140,6 @@ func (p *ProjectCreator) CreateNewProject(templateName, projectName, destination
 
     if ok := selectedStore.LoadTemplate(templateName, projectName, destination, fields); !ok {
         p.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "Could not load the template '" + templateName + "' from '" + selectedStore.name + "'",
             Severity: messaging.Error,
         })
@@ -185,7 +184,6 @@ func (p *ProjectCreator) askUserForStore(stores []templateStore) (templateStore,
 
     if !ok {
         p.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "No valid answer for project creation",
             Severity: messaging.Error,
         })
@@ -230,7 +228,6 @@ func (p *ProjectCreator) StoreTemplateCLI(args []string) bool {
 
     if ok := p.StoreTemplate(templateName, source, loadProjectArgs.fields); !ok {
         p.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "Storing the template failed",
             Severity: messaging.Error,
         })
@@ -300,7 +297,6 @@ func (p *ProjectCreator) StoreTemplate(templateName, source string, fields map[s
 
 func (p *ProjectCreator) logDuplicateTemplateStore(name string) {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "A template with the name '" + name + "' already exists in this store",
         Severity: messaging.Error,
     })
@@ -308,7 +304,6 @@ func (p *ProjectCreator) logDuplicateTemplateStore(name string) {
 
 func (p *ProjectCreator) logTemplateRegistered(name string) {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "A template with the name '" + name + "' has successfully been registered",
         Severity: messaging.Info,
     })
@@ -316,7 +311,6 @@ func (p *ProjectCreator) logTemplateRegistered(name string) {
 
 func (p *ProjectCreator) logIncorrectLoadArguments(actual int) {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Expected 1 or 2 arguments but got " + strconv.Itoa(actual),
         Severity: messaging.Error,
     })
@@ -324,7 +318,6 @@ func (p *ProjectCreator) logIncorrectLoadArguments(actual int) {
 
 func (p *ProjectCreator) logMissingArgumentAfterDestination(args []string) {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Missing argument after destination flag",
         Severity: messaging.Error,
     })
@@ -332,7 +325,6 @@ func (p *ProjectCreator) logMissingArgumentAfterDestination(args []string) {
 
 func (p *ProjectCreator) logMissingArgumentsAfterField(args []string) {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Missing key after field flag",
         Severity: messaging.Error,
     })
@@ -352,7 +344,6 @@ func (p *ProjectCreator) logNoSourcesForLoading(templateName string) {
     }
 
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "The template '" + templateName + "' could not be found",
         Severity: messaging.Error,
         Notes: []string{hint.String()},
@@ -361,7 +352,6 @@ func (p *ProjectCreator) logNoSourcesForLoading(templateName string) {
 
 func (p *ProjectCreator) logIncorrectStoreArguments(actual int) {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Expected 1 or 2 arguments but got " + strconv.Itoa(actual),
         Severity: messaging.Error,
     })
@@ -369,7 +359,6 @@ func (p *ProjectCreator) logIncorrectStoreArguments(actual int) {
 
 func (p *ProjectCreator) logNoSourcesForStoring() {
     p.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "There are no stores to save the template in",
         Severity: messaging.Error,
     })

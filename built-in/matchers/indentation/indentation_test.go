@@ -151,7 +151,6 @@ func TestInconsistentIndentation(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Reference: "TODO",
             Message: "Indentation is inconsistent",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[6:11]}},
@@ -168,7 +167,6 @@ func TestInconsistentIndentation(t *testing.T) {
             },
         },
         {
-            Reference: "TODO",
             Message: "Indentation is inconsistent",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[13:14]}},
@@ -226,7 +224,6 @@ func TestTooMuchIndent(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Reference: "TODO",
             Message: "Got more indentation than expected",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[6:12]}},
@@ -273,7 +270,6 @@ func TestFixedIndentation(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Reference: "TODO",
             Message: "Indentation is inconsistent",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[2:4]}},
@@ -332,7 +328,6 @@ func TestNoBlocksIncorrect(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Reference: "TODO",
             Message: "Source code cannot start with indentation",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[:1]}},

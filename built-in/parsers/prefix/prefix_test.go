@@ -88,7 +88,6 @@ func TestAlreadyDeclared(t *testing.T) {
         t,
         []messaging.Message{
             {
-                Reference: "TODO",
                 Message: "Duplicate prefix in prefix parser",
                 Severity: messaging.Error,
                 Notes: []string{"Prefix: []"},

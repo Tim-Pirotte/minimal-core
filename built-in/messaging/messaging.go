@@ -28,7 +28,6 @@ const (
 )
 
 type Message struct {
-    Reference         string
     Message           string
     Severity          Severity
     Context           []Span

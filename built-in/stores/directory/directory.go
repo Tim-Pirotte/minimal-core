@@ -71,7 +71,6 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string,
         return false
     default:
         d.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "An unforseen error has occurred",
             Severity: messaging.Error,
         })
@@ -87,7 +86,6 @@ func (d *DirectoryStore) getSourcePath(name string) (string, bool) {
 
     if err != nil {
         d.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "Cannot retrieve the executable path",
         })
 
@@ -102,7 +100,6 @@ func (d *DirectoryStore) checkPath(path string) {
 
     if err != nil {
         d.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "The path '" + path + "' does not exist",
             Severity: messaging.Error,
         })

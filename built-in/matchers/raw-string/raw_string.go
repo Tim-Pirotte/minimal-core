@@ -68,7 +68,6 @@ func (r *RawStringMatcher) Consume(l *lexer.LexerJob, length uint) {
 
 func (r *RawStringMatcher) sendUnclosedErr(l *lexer.LexerJob, dashes uint) {
     r.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: `Raw string is not terminated with the "` +
                  strings.Repeat("-", int(dashes)) +
                  ` sequence`,

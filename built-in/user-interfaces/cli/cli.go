@@ -58,7 +58,6 @@ func (c *CLI) PromptBool(question string, defaultTrue bool) (answer bool, ok boo
 
         if err != nil {
             c.messenger.Send(messaging.Message{
-                Reference: "TODO",
                 Message: "Could not read a string from the provided input",
                 Severity: messaging.Error,
             })
@@ -97,7 +96,6 @@ func (c *CLI) PromptString(question, suggestion string) (answer string, ok bool)
 
     if err != nil {
         c.messenger.Send(messaging.Message{
-            Reference: "TODO",
             Message: "Could not read a string from the provided input",
             Severity: messaging.Error,
         })

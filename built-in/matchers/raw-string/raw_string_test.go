@@ -89,7 +89,6 @@ func TestUnclosed(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Reference: "TODO",
             Message: `Raw string is not terminated with the "--- sequence`,
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},

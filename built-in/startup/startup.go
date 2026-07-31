@@ -90,7 +90,6 @@ func (c *Commands) GetEntrypoint(args []string) (fn func(args []string) (ok bool
 
 func (c *Commands) logDuplicateCommand(name string) {
     c.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "The command '" + name + "' has already been declared",
         Severity: messaging.Error,
     })
@@ -98,7 +97,6 @@ func (c *Commands) logDuplicateCommand(name string) {
 
 func (c *Commands) logNotEnoughArgs(argsLength int) {
     c.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Expected " +
                  strconv.Itoa(minimumExpectedArgs) +
                  " arguments but got " +
@@ -109,7 +107,6 @@ func (c *Commands) logNotEnoughArgs(argsLength int) {
 
 func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {
     c.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "Running '" + commandName + "'",
         Severity: messaging.Debug,
     })
@@ -117,7 +114,6 @@ func (c *Commands) logRunningCommand(commandName string, fromConfig bool) {
 
 func (c *Commands) logCommandNotExists(commandName, configName string) {
     c.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "The command '" + commandName + "' does not exist",
         Severity: messaging.Error,
     })

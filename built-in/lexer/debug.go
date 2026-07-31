@@ -26,10 +26,7 @@ func NewLexerDebugger(
 func (l *LexerDebugger) DisplayTokens(source string, tokens []Token) {
     for _, token := range tokens {
         if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
-            l.messenger.Send(messaging.Message{
-                Reference: "TODO",
-                Message: "Lexer debugger output write failed",
-            })
+            l.messenger.Send(messaging.Message{Message: "Lexer debugger output write failed"})
 
             return
         }
@@ -58,10 +55,7 @@ func (l *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) 
         fmt.Print(prefix)
 
         if _, err := io.WriteString(l.output, l.StringifyToken(source, diffPart.Value)+"\n"); err != nil {
-            l.messenger.Send(messaging.Message{
-                Reference: "TODO",
-                Message: "Lexer debugger output write failed",
-            })
+            l.messenger.Send(messaging.Message{Message: "Lexer debugger output write failed"})
 
             return
         }

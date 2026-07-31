@@ -112,7 +112,6 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
 
 func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
     s.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "String is not terminated with a quote",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: l.GetNextN(1), Note: "The string starts here"}},
@@ -122,7 +121,6 @@ func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
 
 func (s *StringMatcher) sendUnclosedInterpolationErr(interpolationStart string) {
     s.messenger.Send(messaging.Message{
-        Reference: "TODO",
         Message: "String interpolation is not terminated with a closing brace",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: interpolationStart, Note: "Interpolation starts here"}},

@@ -113,7 +113,6 @@ func TestUnclosedString(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Reference: "TODO",
             Message: "String is not terminated with a quote",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[:1], Note: "The string starts here"}},
@@ -150,15 +149,17 @@ func TestMissingClosingBrace(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
-        {
-            Reference: "TODO",
-            Message: "String interpolation is not terminated with a closing brace",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[1:2], Note: "Interpolation starts here"}},
-            Notes: []string{"The string will be closed at the end of the source code"},
+    l.output.CheckMessages(
+        t,
+        []messaging.Message{
+            {
+                Message: "String interpolation is not terminated with a closing brace",
+                Severity: messaging.Error,
+                Context: []messaging.Span{{Content: source[1:2], Note: "Interpolation starts here"}},
+                Notes: []string{"The string will be closed at the end of the source code"},
+            },
         },
-    })
+    )
 }
 
 func TestExtraClosingBrace(t *testing.T) {
