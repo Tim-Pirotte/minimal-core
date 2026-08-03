@@ -42,7 +42,7 @@ func getLexer() testLexer {
 }
 
 func TestRawString(t *testing.T) {
-    source := `-"Hello,\n World!"-`
+    source := `-'Hello,\n World!'-`
 
     l := getLexer()
 
@@ -54,7 +54,7 @@ func TestRawString(t *testing.T) {
 }
 
 func TestNoEscape(t *testing.T) {
-    source := `---"Hello, World!\"---`
+    source := `---'Hello, World!\'---`
 
     l := getLexer()
 
@@ -67,7 +67,7 @@ func TestNoEscape(t *testing.T) {
 
 // TODO improve error message to catch this specific case
 func TestMissingDash(t *testing.T) {
-    source := `---"Hello, World!"-- a`
+    source := `---'Hello, World!'-- a`
 
     l := getLexer()
 
@@ -79,7 +79,7 @@ func TestMissingDash(t *testing.T) {
 }
 
 func TestUnclosed(t *testing.T) {
-    source := `---"Hello, World!`
+    source := `---'Hello, World!`
 
     l := getLexer()
 
@@ -89,7 +89,7 @@ func TestUnclosed(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Message: `Raw string is not terminated with the "--- sequence`,
+            Message: `Raw string is not terminated with '---`,
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
             Notes: []string{

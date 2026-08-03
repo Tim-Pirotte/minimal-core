@@ -25,7 +25,7 @@ func (s *StringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
 
 func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
     // This matcher could violate max munch
-    if c, _ := l.Get(0); c == '"' {
+    if c, _ := l.Get(0); c == '\'' {
         return 1
     } else {
         return 0
@@ -36,7 +36,7 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
     pos := uint(1)
     c, ok := l.Get(pos)
 
-    for ; ok && c != '"'; c, ok = l.Get(pos) {
+    for ; ok && c != '\''; c, ok = l.Get(pos) {
         switch c {
         case '{':
             stringValue := l.GetNextN(pos + 1)
@@ -112,7 +112,7 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
 
 func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
     s.messenger.Send(messaging.Message{
-        Message: "String is not terminated with a quote",
+        Message: "String is not terminated with '",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: l.GetNextN(1), Note: "The string starts here"}},
         Notes: []string{"The remaining content will be interpreted as the string"},
@@ -121,7 +121,7 @@ func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
 
 func (s *StringMatcher) sendUnclosedInterpolationErr(interpolationStart string) {
     s.messenger.Send(messaging.Message{
-        Message: "String interpolation is not terminated with a closing brace",
+        Message: "String interpolation is not terminated with }",
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: interpolationStart, Note: "Interpolation starts here"}},
         Notes: []string{"The string will be closed at the end of the source code"},

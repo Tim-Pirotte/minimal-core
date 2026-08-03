@@ -43,7 +43,7 @@ func getLexer() testLexer {
 }
 
 func TestString(t *testing.T) {
-    source := `"Hello, World!"`
+    source := `'Hello, World!'`
 
     l := getLexer()
 
@@ -55,7 +55,7 @@ func TestString(t *testing.T) {
 }
 
 func TestEscape(t *testing.T) {
-    source := `"Hello,\" World!\\"`
+    source := `'Hello,\' World!\\'`
 
     l := getLexer()
 
@@ -68,9 +68,9 @@ func TestEscape(t *testing.T) {
 
 func TestMultiLine(t *testing.T) {
     source :=
-` "Hello,
-     \" World!\\
-       "`
+` 'Hello,
+     \' World!\\
+       '`
 
     l := getLexer()
 
@@ -85,7 +85,7 @@ func TestMultiLine(t *testing.T) {
 }
 
 func TestInterpolated(t *testing.T) {
-    source := `"H\{{ "\}\"" }W"`
+    source := `'H\{{ '\}\'' }W'`
 
     l := getLexer()
 
@@ -103,7 +103,7 @@ func TestInterpolated(t *testing.T) {
 }
 
 func TestUnclosedString(t *testing.T) {
-    source := `"Hello,`
+    source := `'Hello,`
 
     l := getLexer()
 
@@ -113,7 +113,7 @@ func TestUnclosedString(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(t, []messaging.Message{
         {
-            Message: "String is not terminated with a quote",
+            Message: "String is not terminated with '",
             Severity: messaging.Error,
             Context: []messaging.Span{{Content: source[:1], Note: "The string starts here"}},
             Notes: []string{"The remaining content will be interpreted as the string"},
@@ -122,7 +122,7 @@ func TestUnclosedString(t *testing.T) {
 }
 
 func TestMultipleStrings(t *testing.T) {
-    source := `"Hello, World!""Hello, World!"`
+    source := `'Hello, World!''Hello, World!'`
 
     l := getLexer()
 
@@ -137,7 +137,7 @@ func TestMultipleStrings(t *testing.T) {
 }
 
 func TestMissingClosingBrace(t *testing.T) {
-    source := `"{ `
+    source := `'{ `
 
     l := getLexer()
 
@@ -153,7 +153,7 @@ func TestMissingClosingBrace(t *testing.T) {
         t,
         []messaging.Message{
             {
-                Message: "String interpolation is not terminated with a closing brace",
+                Message: "String interpolation is not terminated with }",
                 Severity: messaging.Error,
                 Context: []messaging.Span{{Content: source[1:2], Note: "Interpolation starts here"}},
                 Notes: []string{"The string will be closed at the end of the source code"},
@@ -163,7 +163,7 @@ func TestMissingClosingBrace(t *testing.T) {
 }
 
 func TestExtraClosingBrace(t *testing.T) {
-    source := `"}"`
+    source := `'}'`
 
     l := getLexer()
 
@@ -179,7 +179,7 @@ type braceSymbolMatcher struct { }
 func (b *braceSymbolMatcher) New(_ *lexer.LexerJob) lexer.Matcher { return b }
 
 func (*braceSymbolMatcher) Match(l *lexer.LexerJob) uint {
-    if len(l.Data) - int(l.Position) >= 2 && l.GetNextN(2) == "'}" {
+    if len(l.Data) - int(l.Position) >= 2 && l.GetNextN(2) == `"}` {
         return 2
     }
 
@@ -189,7 +189,7 @@ func (*braceSymbolMatcher) Match(l *lexer.LexerJob) uint {
 func (*braceSymbolMatcher) Consume(_ *lexer.LexerJob, _ uint) {}
 
 func TestDifferentEnclosing(t *testing.T) {
-    source := `"{ '} }"`
+    source := `'{ "} }'`
 
     l := getLexer()
     l.l.AddMatcher(&braceSymbolMatcher{})
@@ -207,7 +207,7 @@ func TestDifferentEnclosing(t *testing.T) {
 }
 
 func TestMultipleInterpolations(t *testing.T) {
-    source := `"{ } {}"`
+    source := `'{ } {}'`
 
     l := getLexer()
     l.l.AddMatcher(&braceSymbolMatcher{})

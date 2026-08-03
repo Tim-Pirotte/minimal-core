@@ -29,7 +29,7 @@ func (r *RawStringMatcher) Match(l *lexer.LexerJob) uint {
 
     dashes := pos
 
-    if !ok || c != '"' || dashes == 0 {
+    if !ok || c != '\'' || dashes == 0 {
         return 0
     }
 
@@ -46,7 +46,7 @@ func (r *RawStringMatcher) Match(l *lexer.LexerJob) uint {
             if quote && consecutiveDashes == dashes {
                 return pos + 1
             }
-        case '"':
+        case '\'':
             consecutiveDashes = 0
             quote = true
         default:
@@ -68,9 +68,7 @@ func (r *RawStringMatcher) Consume(l *lexer.LexerJob, length uint) {
 
 func (r *RawStringMatcher) sendUnclosedErr(l *lexer.LexerJob, dashes uint) {
     r.messenger.Send(messaging.Message{
-        Message: `Raw string is not terminated with the "` +
-                 strings.Repeat("-", int(dashes)) +
-                 ` sequence`,
+        Message: `Raw string is not terminated with '` + strings.Repeat("-", int(dashes)),
 
         Severity: messaging.Error,
         Context: []messaging.Span{{Content: l.GetNextN(dashes + 1), Note: "The raw string starts here"}},
