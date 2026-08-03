@@ -9,6 +9,7 @@ import (
 )
 
 // TODO should the eol ignore be controllable from outside (for different enclosings)?
+// Yes
 
 type GroupingParser struct {
     prattParser  pratt.PrattParser

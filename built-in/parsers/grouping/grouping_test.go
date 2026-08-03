@@ -75,7 +75,7 @@ type testGroupingParser struct {
 }
 
 func getTestGroupingParser() testGroupingParser {
-    l := lexer.New()
+    l := lexer.New(2)
 
     openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
     closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "}"})
@@ -138,7 +138,7 @@ func getTestGroupingParser() testGroupingParser {
 func TestPrefix(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("a*\nb+c", 1)
+    lj := gp.l.Lex("a*\nb+c")
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
@@ -153,7 +153,7 @@ func TestPrefix(t *testing.T) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
 
-    lj = gp.l.Lex("a+\nb*c", 1)
+    lj = gp.l.Lex("a+\nb*c")
 
     result = gp.g.Parse(lj)
 
@@ -173,7 +173,7 @@ func TestPrefix(t *testing.T) {
 func TestInfix(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("a\n*b\n+c", 2)
+    lj := gp.l.Lex("a\n*b\n+c")
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
@@ -188,7 +188,7 @@ func TestInfix(t *testing.T) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
 
-    lj = gp.l.Lex("a\n+b\n*c", 2)
+    lj = gp.l.Lex("a\n+b\n*c")
 
     result = gp.g.Parse(lj)
 
@@ -208,7 +208,7 @@ func TestInfix(t *testing.T) {
 func TestAmbiguousInfix(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("a\n-b", 2)
+    lj := gp.l.Lex("a\n-b")
     result := gp.g.Parse(lj)
     result = append(result, gp.g.Parse(lj)...)
 
@@ -226,7 +226,7 @@ func TestAmbiguousInfix(t *testing.T) {
 func TestPrefixWithParentheses(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("(((a)+\n(b)))", 2)
+    lj := gp.l.Lex("(((a)+\n(b)))")
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{
@@ -243,7 +243,7 @@ func TestPrefixWithParentheses(t *testing.T) {
 func TestInfixWithParentheses(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("(a\n-b)", 2)
+    lj := gp.l.Lex("(a\n-b)")
     result := gp.g.Parse(lj)
 
     expected := []ast.Node{

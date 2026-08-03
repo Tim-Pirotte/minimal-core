@@ -6,7 +6,7 @@ import (
 )
 
 func getLexer() (*lexer.Lexer, lexer.TokenType) {
-	l := lexer.New()
+	l := lexer.New(1)
 	numberType := l.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "a number", DebugName: "Number"},
 	)

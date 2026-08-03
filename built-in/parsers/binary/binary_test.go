@@ -24,7 +24,7 @@ type testBinaryParser struct {
 }
 
 func getTestBinaryParser() testBinaryParser {
-    l := lexer.New()
+    l := lexer.New(1)
 
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
@@ -85,7 +85,7 @@ func getTestBinaryParser() testBinaryParser {
 func TestSingle(t *testing.T) {
     bp := getTestBinaryParser()
 
-    lj := bp.l.Lex("a+b", 1)
+    lj := bp.l.Lex("a+b")
     result := bp.p.Parse(lj, 0)
 
     expected := []ast.Node{
@@ -98,7 +98,7 @@ func TestSingle(t *testing.T) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
 
-    lj = bp.l.Lex("b+a", 1)
+    lj = bp.l.Lex("b+a")
     result = bp.p.Parse(lj, 0)
 
     expected = []ast.Node{
@@ -115,7 +115,7 @@ func TestSingle(t *testing.T) {
 func TestMultiple(t *testing.T) {
     bp := getTestBinaryParser()
 
-    lj := bp.l.Lex("a+b-c*d+e-f", 1)
+    lj := bp.l.Lex("a+b-c*d+e-f")
     result := bp.p.Parse(lj, 0)
 
     expected := []ast.Node{

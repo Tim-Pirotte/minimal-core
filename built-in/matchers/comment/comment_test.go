@@ -6,7 +6,7 @@ import (
 )
 
 func getLexer() (*lexer.Lexer, lexer.TokenType) {
-	l := lexer.New()
+	l := lexer.New(1)
 	commentType := l.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "a comment", DebugName: "Comment"},
 	)

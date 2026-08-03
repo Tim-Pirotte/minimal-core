@@ -9,9 +9,9 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-    l := lexer.New()
+    l := lexer.New(1)
     p := NewPrattParser(l, []Prefix{}, []Infix{})
-    lj := l.Lex("", 1)
+    lj := l.Lex("")
 
     p.Parse(lj, 0)
 }
@@ -30,7 +30,7 @@ func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPow
 }
 
 func TestPrefix(t *testing.T) {
-    l := lexer.New()
+    l := lexer.New(1)
     syntax := ast.New()
     end := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "END"})
 
@@ -39,7 +39,7 @@ func TestPrefix(t *testing.T) {
         []Infix{},
     )
 
-    lj := l.Lex("", 1)
+    lj := l.Lex("")
 
     result := p.Parse(lj, 0)
 
@@ -78,7 +78,7 @@ func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.LexerJob, left []ast.N
 }
 
 func TestBinary(t *testing.T) {
-    l := lexer.New()
+    l := lexer.New(1)
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
@@ -100,7 +100,7 @@ func TestBinary(t *testing.T) {
         []Infix{&plusParser{plusT, plus}},
     )
 
-    lj := l.Lex("a+b", 1)
+    lj := l.Lex("a+b")
 
     result := p.Parse(lj, 0)
 
@@ -182,7 +182,7 @@ func (e *exclamationParser) ParseInfix(
 }
 
 func TestParseCompleteExpression(t *testing.T) {
-    l := lexer.New()
+    l := lexer.New(1)
     minusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'-'", DebugName: "-"})
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
@@ -222,7 +222,7 @@ func TestParseCompleteExpression(t *testing.T) {
         },
     )
 
-    lj := l.Lex("-a+(b!)", 1)
+    lj := l.Lex("-a+(b!)")
 
     result := p.Parse(lj, 0)
 
@@ -238,7 +238,7 @@ func TestParseCompleteExpression(t *testing.T) {
         t.Errorf("Expected:\n%v\nActual:\n%v", expected, result)
     }
 
-    lj = l.Lex("-a+b!", 1)
+    lj = l.Lex("-a+b!")
 
     result = p.Parse(lj, 0)
 

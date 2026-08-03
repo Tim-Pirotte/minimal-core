@@ -8,7 +8,7 @@ import (
 func TestLexSpace(t *testing.T) {
 	source := " \t        a            "
 
-	l := lexer.New()
+	l := lexer.New(1)
 	identifierMatcher := NewSpaceMatcher()
 	l.AddMatcher(identifierMatcher)
 

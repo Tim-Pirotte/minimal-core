@@ -18,7 +18,7 @@ type testLexer struct {
 }
 
 func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
-    l := lexer.New()
+    l := lexer.New(1)
 
     openBlock := l.NewTokenType(
         lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "OpenBlock"},
@@ -437,6 +437,6 @@ func FuzzIndent(f *testing.F) {
     l := getLexer(' ', 0)
 
     f.Fuzz(func(t *testing.T, source string) {
-        l.l.Lex(source, 1)
+        l.l.Lex(source)
     })
 }

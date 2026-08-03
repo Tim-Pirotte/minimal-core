@@ -11,7 +11,7 @@ import (
 )
 
 func TestBindingPower(t *testing.T) {
-    l := lexer.New()
+    l := lexer.New(1)
 
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
@@ -51,7 +51,7 @@ func TestBindingPower(t *testing.T) {
         },
     )
 
-    lj := l.Lex("a!+b'", 1)
+    lj := l.Lex("a!+b'")
     result := p.Parse(lj, 0)
 
     expected := []ast.Node{

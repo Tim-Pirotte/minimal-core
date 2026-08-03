@@ -5,14 +5,14 @@ import (
 )
 
 func TestLexEmpty(t *testing.T) {
-	l := New()
+	l := New(1)
 	CheckTokens(t, l, []Token{}, "")
 }
 
 func TestLexUnknown(t *testing.T) {
 	source := "a"
 
-	l := New()
+	l := New(1)
 	expected := []Token{
 		{Type: UNKNOWN, Value: source},
 	}
@@ -47,7 +47,7 @@ func (s *spillageTestMatcher) Consume(t *LexerJob, length uint) {
 func TestSpillage(t *testing.T) {
 	source := "a"
 
-	l := New()
+	l := New(1)
 	s := newSpillageTestMatcher(l)
 	l.AddMatcher(s)
 
@@ -64,9 +64,9 @@ func TestSpillage(t *testing.T) {
 
 func Benchmark(b *testing.B) {
 	source := string(make([]byte, 1_000_000))
-	l := New()
+	l := New(1)
 
 	for b.Loop() {
-		l.Lex(source, 1)
+		l.Lex(source)
 	}
 }

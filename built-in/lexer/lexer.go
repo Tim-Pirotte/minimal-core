@@ -27,6 +27,7 @@ type TokenTypeMetadata struct {
 }
 
 type Lexer struct {
+    maxSafePeek   uint
     matchers      []Matcher
     lastTokenType TokenType
     metadata      []TokenTypeMetadata
@@ -50,8 +51,9 @@ type Matcher interface {
     Consume(t *LexerJob, length uint)
 }
 
-func New() *Lexer {
+func New(maxSafePeek uint) *Lexer {
     return &Lexer{
+        maxSafePeek,
         []Matcher{},
         END,
         []TokenTypeMetadata{
@@ -76,9 +78,8 @@ func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) TokenTypeMetadata {
     return l.metadata[tokenType]
 }
 
-// TODO Shouldn't minSafePeek be declared during lexer creation
-func (l *Lexer) Lex(source string, minSafePeek uint) *LexerJob {
-    capacity := minSafePeek
+func (l *Lexer) Lex(source string) *LexerJob {
+    capacity := l.maxSafePeek
 
     job := &LexerJob{
         make([]Matcher, len(l.matchers)),
@@ -88,7 +89,7 @@ func (l *Lexer) Lex(source string, minSafePeek uint) *LexerJob {
         0,
         0,
         []Token{},
-        minSafePeek,
+        l.maxSafePeek,
         false,
     }
 
@@ -198,7 +199,7 @@ func (l *LexerJob) fillTokenBuffer() {
 func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
     actual := make([]Token, 0, len(expected))
 
-    lexerJob := lexer.Lex(text, 1)
+    lexerJob := lexer.Lex(text)
 
     for current := lexerJob.Peek(0); current.Type != END; current = lexerJob.Peek(0) {
         actual = append(actual, current)
