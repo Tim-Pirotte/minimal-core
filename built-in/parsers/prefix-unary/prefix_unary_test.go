@@ -35,14 +35,14 @@ func TestBindingPower(t *testing.T) {
     l.AddMatcher(sm)
 
     syntax := ast.New()
-    minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-"})
-    minusMinus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "--"})
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})
+    minus := syntax.NewNodeType(1, ast.NodeTypeMetadata{DebugName: "-"})
+    minusMinus := syntax.NewNodeType(1, ast.NodeTypeMetadata{DebugName: "--"})
+    plus := syntax.NewNodeType(2, ast.NodeTypeMetadata{DebugName: "+"})
 
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "a"})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "b"})
-    c := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "c"})
-    d := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "d"})
+    a := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "a"})
+    b := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "b"})
+    c := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "c"})
+    d := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "d"})
 
     p := pratt.NewPrattParser(
         l,

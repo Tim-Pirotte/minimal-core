@@ -51,16 +51,16 @@ func getTestBinaryParser() testBinaryParser {
     l.AddMatcher(sm)
 
     syntax := ast.New()
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+"})
-    minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-"})
-    mul := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "*"})
+    plus := syntax.NewNodeType(2, ast.NodeTypeMetadata{DebugName: "+"})
+    minus := syntax.NewNodeType(1, ast.NodeTypeMetadata{DebugName: "-"})
+    mul := syntax.NewNodeType(2, ast.NodeTypeMetadata{DebugName: "*"})
 
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "a"})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "b"})
-    c := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "c"})
-    d := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "d"})
-    e := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "e"})
-    f := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "f"})
+    a := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "a"})
+    b := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "b"})
+    c := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "c"})
+    d := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "d"})
+    e := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "e"})
+    f := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "f"})
 
     p := pratt.NewPrattParser(
         l,
