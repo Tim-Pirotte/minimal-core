@@ -24,6 +24,7 @@ func (a *AST) Display(output io.Writer, messenger *messaging.Messenger) {
     }
 }
 
+// TODO Add syntax highlighting
 func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
     metadata := a.traverser.ast.GetNodeTypeMetadata(node.Type)
 
@@ -53,14 +54,14 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
 
         return a.tryWrite(
             "%sMissing EndNode\n",
-            strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
+            strings.Repeat(" ", int(spacesPerLevel * depth)),
         )
     }
 
     for i := range childCount {
         if a.traverser.IsAtEnd() {
             return a.tryWrite(
-                "%s%d missing children\n",
+                "%s%d missing\n",
                 strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
                 childCount - i,
             )

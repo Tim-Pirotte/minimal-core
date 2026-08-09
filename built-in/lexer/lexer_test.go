@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+// TODO tests for the printer
+
 func TestLexEmpty(t *testing.T) {
 	l := New(1)
 	CheckTokens(t, l, []Token{}, "")

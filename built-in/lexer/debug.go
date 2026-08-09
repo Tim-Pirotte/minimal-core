@@ -15,6 +15,7 @@ type LexerDebugger struct {
     messenger *messaging.Messenger
 }
 
+// TODO Add syntax highlighting
 func NewLexerDebugger(
     lexer *Lexer,
     output io.Writer,
