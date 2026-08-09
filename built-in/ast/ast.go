@@ -23,6 +23,11 @@ type AST struct {
     metadata     []NodeTypeMetadata
 }
 
+type Traverser struct {
+    ast        *AST
+    position   uint32
+}
+
 func New() *AST {
     return &AST{
         []Node{},
@@ -33,8 +38,9 @@ func New() *AST {
 }
 
 // Create a new node with a certain amount of children (< 255).
-// If it has a variable amount of children childCount should be VariableChildren and EndNode should be appended
-// to the AST after the last element of the node.
+// If it has a variable amount of children childCount should be VariableChildren
+// and EndNode with reference equal to the opening NodeType should be appended to the AST
+// after the last element of the node.
 func (a *AST) NewNodeType(childCount uint8, metadata NodeTypeMetadata) NodeType {
     a.lastNodeType++
     a.childCounts = append(a.childCounts, childCount)
@@ -51,11 +57,6 @@ func (a *AST) GetNodeTypeMetadata(nodeType NodeType) NodeTypeMetadata {
     return a.metadata[nodeType]
 }
 
-type Traverser struct {
-    ast        *AST
-    position   uint32
-}
-
 func NewTraverser(ast *AST) *Traverser {
     return &Traverser{ast, 0}
 }
@@ -63,12 +64,16 @@ func NewTraverser(ast *AST) *Traverser {
 // Returns nodes depth first pre-order
 // EndNode can be used to know when a variably sized node ends
 func (t *Traverser) Next() Node {
-    if int(t.position) == len(t.ast.Nodes) {
-        // TODO error
+    if t.IsAtEnd() {
+        panic("*Traveler.Next called when all nodes have been consumed")
     }
 
     node := t.ast.Nodes[t.position]
     t.position++
 
     return node
+}
+
+func (t *Traverser) IsAtEnd() bool {
+    return int(t.position) == len(t.ast.Nodes)
 }

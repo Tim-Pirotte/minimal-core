@@ -26,7 +26,12 @@ func NewLexerDebugger(
 func (l *LexerDebugger) DisplayTokens(source string, tokens []Token) {
     for _, token := range tokens {
         if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
-            l.messenger.Send(messaging.Message{Message: "Lexer debugger output write failed"})
+            l.messenger.Send(
+                messaging.Message{
+                    Message: "Lexer debugger output write failed",
+                    Severity: messaging.Error,
+                },
+            )
 
             return
         }

@@ -6,6 +6,7 @@ import (
 )
 
 // TODO allow stacktraces
+// TODO change package name to messager and change constructor to New
 
 const bufferSize = 16
 
