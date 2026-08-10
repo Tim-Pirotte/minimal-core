@@ -20,7 +20,14 @@ func (a *AST) Display(output io.Writer, messenger *messaging.Messenger) {
 
     for !ad.traverser.IsAtEnd() {
         node := ad.traverser.Next()
-        ad.displayNode(node, 0)
+
+        if node.Type != EndNode {
+            if !ad.displayNode(node, 0) {
+                return
+            }
+        } else if !ad.tryWrite("EndNode (%d) not inside a Node\n", node.Reference) {
+            return
+        }
     }
 }
 
@@ -41,20 +48,33 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
 
     if childCount == VariableChildren {
         for !a.traverser.IsAtEnd() {
-            node := a.traverser.Next()
+            peekedNode := a.traverser.ast.Nodes[a.traverser.position]
 
-            if node.Type == EndNode {
-                return true
-            }
+            if peekedNode.Type != EndNode || peekedNode.Reference == uint32(node.Type) {
+                node := a.traverser.Next()
 
-            if !a.displayNode(node, depth + 1) {
-                return false
+                if node.Type == EndNode {
+                    return true
+                }
+
+                if !a.displayNode(node, depth + 1) {
+                    return false
+                }
+            } else {
+                // TODO how can we print the actual node types
+                return a.tryWrite(
+                    "%sIncorrect EndNode (%d) expected (%d)\n",
+                    strings.Repeat(" ", int(spacesPerLevel * depth)),
+                    peekedNode.Reference,
+                    node.Type,
+                )
             }
         }
 
         return a.tryWrite(
-            "%sMissing EndNode\n",
+            "%sMissing EndNode (%d)\n",
             strings.Repeat(" ", int(spacesPerLevel * depth)),
+            node.Type,
         )
     }
 
@@ -69,7 +89,15 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
 
         node := a.traverser.Next()
 
-        if !a.displayNode(node, depth + 1) {
+        if node.Type == EndNode {
+            if !a.tryWrite(
+                "%sEndNode (%d) in fixed childcount Node\n",
+                strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
+                node.Reference,
+            ) {
+                return false
+            }
+        } else if !a.displayNode(node, depth + 1) {
             return false
         }
     }

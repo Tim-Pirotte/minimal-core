@@ -108,7 +108,6 @@ func TestIncorrectFixedChildren(t *testing.T) {
     to.CheckMessages(t, []messaging.Message{})
 }
 
-// TODO detect which node the EndNode belongs to
 func TestUnclosed(t *testing.T) {
     ta := getTestAST()
 
@@ -129,10 +128,12 @@ func TestUnclosed(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `Two                                                                    (0)
-  One                                                                  (0)
-    1 missing
-  1 missing
+    expected := `Variable1                                                              (0)
+  Zero                                                                 (0)
+  Variable2                                                            (0)
+    Zero                                                               (0)
+    Zero                                                               (0)
+  Incorrect EndNode (0) expected (5)
 `
 
     if buf.String() != expected {
