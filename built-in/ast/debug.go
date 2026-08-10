@@ -25,7 +25,7 @@ func (a *AST) Display(output io.Writer, messenger *messaging.Messenger) {
             if !ad.displayNode(node, 0) {
                 return
             }
-        } else if !ad.tryWrite("EndNode (%d) not inside a Node\n", node.Reference) {
+        } else if !ad.tryWrite("EndNode %s not inside a Node\n", ad.getEndNodeName(node)) {
             return
         }
     }
@@ -61,21 +61,15 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
                     return false
                 }
             } else {
-                // TODO how can we print the actual node types
                 return a.tryWrite(
-                    "%sIncorrect EndNode (%d) expected (%d)\n",
+                    "%sIncorrect EndNode %s\n",
                     strings.Repeat(" ", int(spacesPerLevel * depth)),
-                    peekedNode.Reference,
-                    node.Type,
+                    a.getEndNodeName(peekedNode),
                 )
             }
         }
 
-        return a.tryWrite(
-            "%sMissing EndNode (%d)\n",
-            strings.Repeat(" ", int(spacesPerLevel * depth)),
-            node.Type,
-        )
+        return a.tryWrite("%sMissing EndNode\n", strings.Repeat(" ", int(spacesPerLevel * depth)))
     }
 
     for i := range childCount {
@@ -91,9 +85,9 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
 
         if node.Type == EndNode {
             if !a.tryWrite(
-                "%sEndNode (%d) in fixed childcount Node\n",
+                "%sEndNode %s in fixed childcount Node\n",
                 strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
-                node.Reference,
+                a.getEndNodeName(node),
             ) {
                 return false
             }
@@ -120,4 +114,12 @@ func (a *astDebugger) tryWrite(format string, args ...any) bool {
     }
 
     return true
+}
+
+func (a *astDebugger) getEndNodeName(endNode Node) string {
+    if int(endNode.Reference) < len(a.traverser.ast.metadata) {
+        return a.traverser.ast.GetNodeTypeMetadata(NodeType(endNode.Reference)).DebugName
+    }
+
+    return fmt.Sprintf("UNKNOWN (%d)", endNode.Reference)
 }
