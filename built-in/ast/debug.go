@@ -37,9 +37,9 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
 
     // TODO allow custom writes for references
     if !a.tryWrite(
-        "%-70s (%d)\n",
+        "%-70s %s\n",
         strings.Repeat(" ", int(spacesPerLevel * depth)) + metadata.DebugName,
-        node.Reference,
+        a.getReferenceText(node),
     ) {
         return false
     }
@@ -122,4 +122,12 @@ func (a *astDebugger) getEndNodeName(endNode Node) string {
     }
 
     return fmt.Sprintf("UNKNOWN (%d)", endNode.Reference)
+}
+
+func (a *astDebugger) getReferenceText(node Node) string {
+    if node.Reference == 0 {
+        return ""
+    }
+
+    return fmt.Sprintf("(%d)", node.Reference)
 }

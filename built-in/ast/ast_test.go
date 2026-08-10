@@ -57,18 +57,17 @@ func TestCorrect(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `Zero                                                                   (0)
-One                                                                    (0)
-  Zero                                                                 (0)
-Two                                                                    (0)
-  One                                                                  (0)
-    Zero                                                               (0)
-  Variable1                                                            (0)
-    Zero                                                               (0)
-    Variable2                                                          (0)
-      Zero                                                             (0)
-    Zero                                                               (0)
-`
+    expected := "Zero                                                                   \n" +
+                "One                                                                    \n" +
+                "  Zero                                                                 \n" +
+                "Two                                                                    \n" +
+                "  One                                                                  \n" +
+                "    Zero                                                               \n" +
+                "  Variable1                                                            \n" +
+                "    Zero                                                               \n" +
+                "    Variable2                                                          \n" +
+                "      Zero                                                             \n" +
+                "    Zero                                                               \n"
 
     if buf.String() != expected {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
@@ -94,11 +93,10 @@ func TestIncorrectFixedChildren(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `Two                                                                    (0)
-  One                                                                  (0)
-    1 missing
-  1 missing
-`
+    expected := "Two                                                                    \n" +
+                "  One                                                                  \n" +
+                "    1 missing\n" +
+                "  1 missing\n"
 
     if buf.String() != expected {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
@@ -124,10 +122,9 @@ func TestMissingEndNode(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `Variable1                                                              (0)
-  Zero                                                                 (0)
-Missing EndNode
-`
+    expected := "Variable1                                                              \n" +
+                "  Zero                                                                 \n" +
+                "Missing EndNode\n"
 
     if buf.String() != expected {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
@@ -157,13 +154,12 @@ func TestMissingEndNodeNested(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `Variable1                                                              (0)
-  Zero                                                                 (0)
-  Variable2                                                            (0)
-    Zero                                                               (0)
-    Zero                                                               (0)
-  Incorrect EndNode Variable1
-`
+    expected := "Variable1                                                              \n" +
+                "  Zero                                                                 \n" +
+                "  Variable2                                                            \n" +
+                "    Zero                                                               \n" +
+                "    Zero                                                               \n" +
+                "  Incorrect EndNode Variable1\n"
 
     if buf.String() != expected {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
@@ -189,9 +185,8 @@ func TestEndNodeInFixedChildrenNode(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `One                                                                    (0)
-  EndNode Variable1 in fixed childcount Node
-`
+    expected := "One                                                                    \n" +
+                "  EndNode Variable1 in fixed childcount Node\n"
 
     if buf.String() != expected {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
@@ -217,10 +212,9 @@ func TestUnknownEndNodeReference(t *testing.T) {
 
     ta.ast.Display(&buf, messenger)
 
-    expected := `Variable1                                                              (0)
-Incorrect EndNode UNKNOWN (100)
-EndNode UNKNOWN (100) not inside a Node
-`
+    expected := "Variable1                                                              \n" +
+                "Incorrect EndNode UNKNOWN (100)\n" +
+                "EndNode UNKNOWN (100) not inside a Node\n"
 
     if buf.String() != expected {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
