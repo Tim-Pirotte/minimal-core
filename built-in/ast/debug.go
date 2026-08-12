@@ -1,10 +1,11 @@
 package ast
 
 import (
-    "fmt"
-    "io"
-    "minimal/minimal-core/built-in/messaging"
-    "strings"
+	"fmt"
+	"io"
+	"minimal/minimal-core/built-in/ansi"
+	"minimal/minimal-core/built-in/messaging"
+	"strings"
 )
 
 const spacesPerLevel = 2
@@ -165,4 +166,29 @@ func (a *ASTDisplayer) logDuplicateNodeDisplayer(nodeType NodeType) {
         Severity: messaging.Error,
         Notes: []string{fmt.Sprintf("NodeType=%d", nodeType)},
     })
+}
+
+type NodeColorer struct {
+    ast      *AST
+    nodeType NodeType
+    color    ansi.RGB
+}
+
+func NewNodeColorer(ast *AST, nodeType NodeType, color ansi.RGB) *NodeColorer {
+    return &NodeColorer{ast, nodeType, color}
+}
+
+func (n *NodeColorer) GetNodeType() NodeType {
+    return n.nodeType
+}
+
+func (n *NodeColorer) Display(reference uint32) string {
+    metadata := n.ast.GetNodeTypeMetadata(n.nodeType)
+    colored := string(n.color) + metadata.DebugName + ansi.Reset
+
+    if reference == 0 {
+        return colored
+    }
+
+    return fmt.Sprintf("%s Reference=%d", colored, reference)
 }

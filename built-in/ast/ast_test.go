@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"errors"
+	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/messaging"
 	"testing"
 )
@@ -332,4 +333,34 @@ func TestDuplicateDisplay(t *testing.T) {
             },
         },
     )
+}
+
+func TestColoredNodes(t *testing.T) {
+    ta := getTestAST()
+
+    ta.ast.Nodes = []Node{
+        {ta.oneChild, 0},
+        {ta.zeroChildren, 1},
+    }
+
+    messenger := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    messenger.AddOutput(to)
+
+    var buf bytes.Buffer
+
+    a := NewASTDebugger(messenger)
+    a.AddNodeDisplayer(NewNodeColorer(ta.ast, ta.oneChild, ansi.GetRGBColor(0, 255, 242)))
+    a.AddNodeDisplayer(NewNodeColorer(ta.ast, ta.zeroChildren, ansi.GetRGBColor(255, 0, 162)))
+    a.Display(ta.ast, &buf)
+
+    expected := "\x1b[38;2;0;255;242mOne\x1b[0m\n" +
+                "  \x1b[38;2;255;0;162mZero\x1b[0m Reference=1\n"
+
+    if buf.String() != expected {
+        t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
+    }
+
+    messenger.Close()
+    to.CheckMessages(t, []messaging.Message{})
 }
