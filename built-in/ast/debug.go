@@ -9,89 +9,109 @@ import (
 
 const spacesPerLevel = 2
 
-type astDebugger struct {
-    traverser       *Traverser
-    output         io.Writer
+type ASTDisplayer struct {
     messenger      *messaging.Messenger
+    nodeDisplayers map[NodeType]NodeDisplayer
 }
 
-func (a *AST) Display(output io.Writer, messenger *messaging.Messenger) {
-    ad := &astDebugger{NewTraverser(a), output, messenger}
+type NodeDisplayer interface {
+    GetNodeType() NodeType
+    Display(reference uint32) string
+}
 
-    for !ad.traverser.IsAtEnd() {
-        node := ad.traverser.Next()
+func NewASTDebugger(messenger *messaging.Messenger) ASTDisplayer {
+    return ASTDisplayer{messenger, map[NodeType]NodeDisplayer{}}
+}
+
+func (a *ASTDisplayer) AddNodeDisplayer(n NodeDisplayer) {
+    nodeType := n.GetNodeType()
+
+    if _, ok := a.nodeDisplayers[nodeType]; ok {
+        a.logDuplicateNodeDisplayer(nodeType)
+    }
+
+    a.nodeDisplayers[nodeType] = n
+}
+
+func (a *ASTDisplayer) Display(ast *AST, o io.Writer) {
+    t := NewTraverser(ast)
+
+    for !t.IsAtEnd() {
+        node := t.Next()
 
         if node.Type != EndNode {
-            if !ad.displayNode(node, 0) {
+            if !a.displayNode(o, t, node, 0) {
                 return
             }
-        } else if !ad.tryWrite("EndNode %s not inside a Node\n", ad.getEndNodeName(node)) {
+        } else if !a.tryWrite(o, "EndNode %s not inside a Node\n", a.getEndNodeName(ast, node)) {
             return
         }
     }
 }
 
 // TODO Add syntax highlighting
-func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
-    metadata := a.traverser.ast.GetNodeTypeMetadata(node.Type)
-
-    // TODO allow custom writes for references
+// Make a color wrapper for displayers and NodeTypes to color them
+func (a *ASTDisplayer) displayNode(o io.Writer, t *Traverser, node Node, depth uint) (writeSuccess bool) {
     if !a.tryWrite(
-        "%-70s %s\n",
-        strings.Repeat(" ", int(spacesPerLevel * depth)) + metadata.DebugName,
-        a.getReferenceText(node),
+        o,
+        "%s%s\n",
+        strings.Repeat(" ", int(spacesPerLevel * depth)),
+        a.getNodeAsString(t.ast, node),
     ) {
         return false
     }
 
-    childCount := a.traverser.ast.GetChildCount(node.Type)
+    childCount := t.ast.GetChildCount(node.Type)
 
     if childCount == VariableChildren {
-        for !a.traverser.IsAtEnd() {
-            peekedNode := a.traverser.ast.Nodes[a.traverser.position]
+        for !t.IsAtEnd() {
+            peekedNode := t.ast.Nodes[t.position]
 
             if peekedNode.Type != EndNode || peekedNode.Reference == uint32(node.Type) {
-                node := a.traverser.Next()
+                node := t.Next()
 
                 if node.Type == EndNode {
                     return true
                 }
 
-                if !a.displayNode(node, depth + 1) {
+                if !a.displayNode(o, t, node, depth + 1) {
                     return false
                 }
             } else {
                 return a.tryWrite(
+                    o,
                     "%sIncorrect EndNode %s\n",
                     strings.Repeat(" ", int(spacesPerLevel * depth)),
-                    a.getEndNodeName(peekedNode),
+                    a.getEndNodeName(t.ast, peekedNode),
                 )
             }
         }
 
-        return a.tryWrite("%sMissing EndNode\n", strings.Repeat(" ", int(spacesPerLevel * depth)))
+        return a.tryWrite(o, "%sMissing EndNode\n", strings.Repeat(" ", int(spacesPerLevel * depth)))
     }
 
     for i := range childCount {
-        if a.traverser.IsAtEnd() {
+        if t.IsAtEnd() {
             return a.tryWrite(
+                o,
                 "%s%d missing\n",
                 strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
                 childCount - i,
             )
         }
 
-        node := a.traverser.Next()
+        node := t.Next()
 
         if node.Type == EndNode {
             if !a.tryWrite(
+                o,
                 "%sEndNode %s in fixed childcount Node\n",
                 strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
-                a.getEndNodeName(node),
+                a.getEndNodeName(t.ast, node),
             ) {
                 return false
             }
-        } else if !a.displayNode(node, depth + 1) {
+        } else if !a.displayNode(o, t, node, depth + 1) {
             return false
         }
     }
@@ -99,8 +119,8 @@ func (a *astDebugger) displayNode(node Node, depth uint) (writeSuccess bool) {
     return true
 }
 
-func (a *astDebugger) tryWrite(format string, args ...any) bool {
-    _, err := fmt.Fprintf(a.output, format, args...)
+func (a *ASTDisplayer) tryWrite(output io.Writer, format string, args ...any) bool {
+    _, err := fmt.Fprintf(output, format, args...)
 
     if err != nil {
         a.messenger.Send(
@@ -116,18 +136,33 @@ func (a *astDebugger) tryWrite(format string, args ...any) bool {
     return true
 }
 
-func (a *astDebugger) getEndNodeName(endNode Node) string {
-    if int(endNode.Reference) < len(a.traverser.ast.metadata) {
-        return a.traverser.ast.GetNodeTypeMetadata(NodeType(endNode.Reference)).DebugName
+func (a *ASTDisplayer) getEndNodeName(ast *AST, endNode Node) string {
+    if int(endNode.Reference) < len(ast.metadata) {
+        return ast.GetNodeTypeMetadata(NodeType(endNode.Reference)).DebugName
     }
 
-    return fmt.Sprintf("UNKNOWN (%d)", endNode.Reference)
+    return fmt.Sprintf("UNKNOWN Reference=%d", endNode.Reference)
 }
 
-func (a *astDebugger) getReferenceText(node Node) string {
-    if node.Reference == 0 {
-        return ""
+func (a *ASTDisplayer) getNodeAsString(ast *AST, node Node) string {
+    if displayer, ok := a.nodeDisplayers[node.Type]; ok {
+        return displayer.Display(node.Reference)
     }
 
-    return fmt.Sprintf("(%d)", node.Reference)
+    metadata := ast.GetNodeTypeMetadata(node.Type)
+
+    if node.Reference == 0 {
+        return metadata.DebugName
+    }
+
+    return fmt.Sprintf("%s Reference=%d", metadata.DebugName, node.Reference)
+}
+
+func (a *ASTDisplayer) logDuplicateNodeDisplayer(nodeType NodeType) {
+    // TODO print the debug name
+    a.messenger.Send(messaging.Message{
+        Message: "Duplicate node displayer in the AST displayer",
+        Severity: messaging.Error,
+        Notes: []string{fmt.Sprintf("NodeType=%d", nodeType)},
+    })
 }

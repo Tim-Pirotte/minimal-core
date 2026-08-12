@@ -16,6 +16,7 @@ type NodeTypeMetadata struct {
     DebugName string
 }
 
+// TODO should metadata be in this since it is the same for every source file
 type AST struct {
     Nodes        []Node
     childCounts  []uint8
