@@ -18,7 +18,7 @@ func TestEmpty(t *testing.T) {
 
     p := NewPrefixParser(m, l, []Rule{})
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     m.Close()
     to.CheckMessages(t, []messaging.Message{})
@@ -28,7 +28,7 @@ type okParser struct {
     ok bool
 }
 
-func (e *okParser) Parse(l *lexer.LexerJob, syntax *ast.AST) {
+func (e *okParser) Parse(l *lexer.LexerJob, syntax *ast.ASTSchema) {
     e.ok = true
 }
 
@@ -43,7 +43,7 @@ func TestNoMatchHandler(t *testing.T) {
     ep := okParser{}
 
     p := NewPrefixParser(m, l, []Rule{{[]lexer.TokenType{}, &ep}})
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !ep.ok {
         t.Error("Expected the first handler to run")
@@ -73,7 +73,7 @@ func TestAlreadyDeclared(t *testing.T) {
         },
     )
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if firstOk.ok || !secondOk.ok {
         t.Error("Expected only the second handler to run but the first ran")
@@ -129,7 +129,7 @@ func TestTokens(t *testing.T) {
 
     lj := l.Lex("abd")
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !aOk.ok {
         t.Error("Expected the 'a' handler to run")
@@ -137,7 +137,7 @@ func TestTokens(t *testing.T) {
 
     lj.Advance()
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !bOk.ok {
         t.Error("Expected the 'b' handler to run")
@@ -145,7 +145,7 @@ func TestTokens(t *testing.T) {
 
     lj.Advance()
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !unknownOk.ok {
         t.Error("Expected the UNKNOWN handler to run")
@@ -153,7 +153,7 @@ func TestTokens(t *testing.T) {
 
     lj.Advance()
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !emptyOk.ok {
         t.Error("Expected the empty handler to run")
@@ -192,7 +192,7 @@ func TestSamePrefix(t *testing.T) {
 
     lj := l.Lex("aaab")
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !aaOk.ok {
         t.Error("Expected the 'aa' handler to run")
@@ -201,7 +201,7 @@ func TestSamePrefix(t *testing.T) {
     lj.Advance()
     lj.Advance()
 
-    p.Parse(lj, ast.New())
+    p.Parse(lj, ast.NewSchema())
 
     if !abOk.ok {
         t.Error("Expected the 'ab' handler to run")

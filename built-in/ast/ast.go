@@ -2,7 +2,7 @@ package ast
 
 const (
     EndNode = NodeType(0)
-    VariableChildren = 255
+    VariableChildCount = 255
 )
 
 type NodeType uint32
@@ -13,68 +13,59 @@ type Node struct {
 }
 
 type NodeTypeMetadata struct {
-    DebugName string
+    DisplayName string
+    DebugName   string
+    // Up to 254 fixed children or VariableChildren (255) for a node that ends with EndNode
+    ChildCount  uint8
 }
 
-// TODO should metadata be in this since it is the same for every source file
-type AST struct {
-    Nodes        []Node
-    childCounts  []uint8
+type ASTSchema struct {
     lastNodeType NodeType
     metadata     []NodeTypeMetadata
 }
 
+type AST []Node
+
 type Traverser struct {
-    ast        *AST
+    ast        AST
     position   uint32
 }
 
-func New() *AST {
-    return &AST{
-        []Node{},
-        []uint8{0},
-        EndNode,
-        []NodeTypeMetadata{{"EndNode"}},
-    }
+func New() AST {
+    return AST([]Node{})
 }
 
-// Create a new node with a certain amount of children (< 255).
-// If it has a variable amount of children childCount should be VariableChildren
-// and EndNode with reference equal to the opening NodeType should be appended to the AST
-// after the last element of the node.
-func (a *AST) NewNodeType(childCount uint8, metadata NodeTypeMetadata) NodeType {
+func NewSchema() *ASTSchema {
+    return &ASTSchema{EndNode, []NodeTypeMetadata{{DebugName: "EndNode"}}}
+}
+
+func (a *ASTSchema) NewNodeType(metadata NodeTypeMetadata) NodeType {
     a.lastNodeType++
-    a.childCounts = append(a.childCounts, childCount)
     a.metadata = append(a.metadata, metadata)
 
     return a.lastNodeType
 }
 
-func (a *AST) GetChildCount(nodeType NodeType) uint8 {
-    return a.childCounts[nodeType]
-}
-
-func (a *AST) GetNodeTypeMetadata(nodeType NodeType) NodeTypeMetadata {
+func (a *ASTSchema) GetNodeTypeMetadata(nodeType NodeType) NodeTypeMetadata {
     return a.metadata[nodeType]
 }
 
-func NewTraverser(ast *AST) *Traverser {
+func NewTraverser(ast AST) *Traverser {
     return &Traverser{ast, 0}
 }
 
 // Returns nodes depth first pre-order
-// EndNode can be used to know when a variably sized node ends
 func (t *Traverser) Next() Node {
     if t.IsAtEnd() {
         panic("*Traveler.Next called when all nodes have been consumed")
     }
 
-    node := t.ast.Nodes[t.position]
+    node := t.ast[t.position]
     t.position++
 
     return node
 }
 
 func (t *Traverser) IsAtEnd() bool {
-    return int(t.position) == len(t.ast.Nodes)
+    return int(t.position) == len(t.ast)
 }

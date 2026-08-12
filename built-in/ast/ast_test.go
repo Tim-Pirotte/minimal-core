@@ -9,32 +9,56 @@ import (
 )
 
 type testAST struct {
-    ast *AST
-    zeroChildren NodeType
-    oneChild NodeType
-    twoChildren NodeType
+    a                      ASTDisplayer
+    schema                 *ASTSchema
+    messenger              *messaging.Messenger
+    to                     *messaging.TestOutput
+    zeroChildren           NodeType
+    oneChild               NodeType
+    twoChildren            NodeType
 
-    firstVariableChildren NodeType
+    firstVariableChildren  NodeType
     secondVariableChildren NodeType
 }
 
 func getTestAST() testAST {
-    ast := New()
+    schema := NewSchema()
 
-    zeroChildren := ast.NewNodeType(0, NodeTypeMetadata{DebugName: "Zero"})
-    oneChild := ast.NewNodeType(1, NodeTypeMetadata{DebugName: "One"})
-    twoChildren := ast.NewNodeType(2, NodeTypeMetadata{DebugName: "Two"})
+    zeroChildren := schema.NewNodeType(NodeTypeMetadata{DebugName: "Zero"})
+    oneChild := schema.NewNodeType(NodeTypeMetadata{DebugName: "One", ChildCount: 1})
+    twoChildren := schema.NewNodeType(NodeTypeMetadata{DebugName: "Two", ChildCount: 2})
 
-    firstVariableChildren := ast.NewNodeType(VariableChildren, NodeTypeMetadata{DebugName: "Variable1"})
-    secondVariableChildren := ast.NewNodeType(VariableChildren, NodeTypeMetadata{DebugName: "Variable2"})
+    firstVariableChildren := schema.NewNodeType(
+        NodeTypeMetadata{DebugName: "Variable1", ChildCount: VariableChildCount},
+    )
 
-    return testAST{ast, zeroChildren, oneChild, twoChildren, firstVariableChildren, secondVariableChildren}
+    secondVariableChildren := schema.NewNodeType(
+        NodeTypeMetadata{DebugName: "Variable2", ChildCount: VariableChildCount},
+    )
+
+    messenger := messaging.NewMessenger()
+    to := &messaging.TestOutput{}
+    messenger.AddOutput(to)
+
+    a := NewASTDisplayer(messenger, schema)
+
+    return testAST{
+        a,
+        schema,
+        messenger,
+        to,
+        zeroChildren,
+        oneChild,
+        twoChildren,
+        firstVariableChildren,
+        secondVariableChildren,
+    }
 }
 
 func TestCorrect(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.zeroChildren, 0},
         {ta.oneChild, 0},
         {ta.zeroChildren, 0},
@@ -50,14 +74,9 @@ func TestCorrect(t *testing.T) {
         {EndNode, uint32(ta.firstVariableChildren)},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "Zero\n" +
                 "One\n" +
@@ -75,26 +94,21 @@ func TestCorrect(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestIncorrectFixedChildren(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.twoChildren, 0},
         {ta.oneChild, 0},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "Two\n" +
                 "  One\n" +
@@ -105,26 +119,21 @@ func TestIncorrectFixedChildren(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestMissingEndNode(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.firstVariableChildren, 0},
         {ta.zeroChildren, 0},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "Variable1\n" +
                 "  Zero\n" +
@@ -134,14 +143,14 @@ func TestMissingEndNode(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestMissingEndNodeNested(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.firstVariableChildren, 0},
         {ta.zeroChildren, 0},
         {ta.secondVariableChildren, 0},
@@ -150,14 +159,9 @@ func TestMissingEndNodeNested(t *testing.T) {
         {EndNode, uint32(ta.firstVariableChildren)},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "Variable1\n" +
                 "  Zero\n" +
@@ -170,26 +174,21 @@ func TestMissingEndNodeNested(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestEndNodeInFixedChildrenNode(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.oneChild, 0},
         {EndNode, uint32(ta.firstVariableChildren)},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "One\n" +
                 "  EndNode Variable1 in fixed childcount Node\n"
@@ -198,26 +197,21 @@ func TestEndNodeInFixedChildrenNode(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestUnknownEndNodeReference(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.firstVariableChildren, 0},
         {EndNode, uint32(100)},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "Variable1\n" +
                 "Incorrect EndNode UNKNOWN Reference=100\n" +
@@ -227,8 +221,8 @@ func TestUnknownEndNodeReference(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 type failingWriter struct{}
@@ -240,17 +234,13 @@ func (failingWriter) Write(p []byte) (int, error) {
 func TestFailingWriter(t *testing.T) {
     ta := getTestAST()
     writer := failingWriter{}
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
 
-    ta.ast.Nodes = []Node{{ta.zeroChildren, 0}}
+    ast := []Node{{ta.zeroChildren, 0}}
 
-    a := NewASTDebugger(messenger)
-    a.Display(ta.ast, writer)
+    ta.a.Display(ast, writer)
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{{
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{{
         Message: "AST debugger output write failed",
         Severity: messaging.Error,
     }})
@@ -272,18 +262,13 @@ func (c *customDisplay) Display(uint32) string {
 func TestCustomDisplay(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{{ta.oneChild, 0}, {ta.zeroChildren, 0}}
-
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
+    ast := []Node{{ta.oneChild, 0}, {ta.zeroChildren, 0}}
 
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
     cd := customDisplay{ta.zeroChildren, "TestCustomDisplay"}
-    a.AddNodeDisplayer(&cd)
-    a.Display(ta.ast, &buf)
+    ta.a.AddNodeDisplayer(&cd)
+    ta.a.Display(ast, &buf)
 
     expected := "One\n" +
                 "  TestCustomDisplay\n"
@@ -292,29 +277,23 @@ func TestCustomDisplay(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }
 
 func TestDuplicateDisplay(t *testing.T) {
     ta := getTestAST()
-    ta.ast.Nodes = []Node{{ta.zeroChildren, 0}}
-
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
+    ast := []Node{{ta.zeroChildren, 0}}
 
     var buf bytes.Buffer
-
-    a := NewASTDebugger(messenger)
 
     cd1 := customDisplay{ta.zeroChildren, "FirstCustomDisplay"}
     cd2 := customDisplay{ta.zeroChildren, "SecondCustomDisplay"}
 
-    a.AddNodeDisplayer(&cd1)
-    a.AddNodeDisplayer(&cd2)
+    ta.a.AddNodeDisplayer(&cd1)
+    ta.a.AddNodeDisplayer(&cd2)
 
-    a.Display(ta.ast, &buf)
+    ta.a.Display(ast, &buf)
 
     expected := "SecondCustomDisplay\n"
 
@@ -322,14 +301,14 @@ func TestDuplicateDisplay(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(
+    ta.messenger.Close()
+    ta.to.CheckMessages(
         t,
         []messaging.Message{
             {
                 Message: "Duplicate node displayer in the AST displayer",
                 Severity: messaging.Error,
-                Notes: []string{"NodeType=1"},
+                Notes: []string{"NodeType=Zero"},
             },
         },
     )
@@ -338,21 +317,16 @@ func TestDuplicateDisplay(t *testing.T) {
 func TestColoredNodes(t *testing.T) {
     ta := getTestAST()
 
-    ta.ast.Nodes = []Node{
+    ast := []Node{
         {ta.oneChild, 0},
         {ta.zeroChildren, 1},
     }
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
-
     var buf bytes.Buffer
 
-    a := NewASTDebugger(messenger)
-    a.AddNodeDisplayer(NewNodeColorer(ta.ast, ta.oneChild, ansi.GetRGBColor(0, 255, 242)))
-    a.AddNodeDisplayer(NewNodeColorer(ta.ast, ta.zeroChildren, ansi.GetRGBColor(255, 0, 162)))
-    a.Display(ta.ast, &buf)
+    ta.a.AddNodeDisplayer(NewNodeColorer(ta.schema, ta.oneChild, ansi.GetRGBColor(0, 255, 242)))
+    ta.a.AddNodeDisplayer(NewNodeColorer(ta.schema, ta.zeroChildren, ansi.GetRGBColor(255, 0, 162)))
+    ta.a.Display(ast, &buf)
 
     expected := "\x1b[38;2;0;255;242mOne\x1b[0m\n" +
                 "  \x1b[38;2;255;0;162mZero\x1b[0m Reference=1\n"
@@ -361,6 +335,6 @@ func TestColoredNodes(t *testing.T) {
         t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
     }
 
-    messenger.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    ta.messenger.Close()
+    ta.to.CheckMessages(t, []messaging.Message{})
 }

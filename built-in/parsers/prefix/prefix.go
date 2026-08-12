@@ -13,7 +13,7 @@ type Rule struct {
 }
 
 type RuleParser interface {
-    Parse(*lexer.LexerJob, *ast.AST)
+    Parse(*lexer.LexerJob, *ast.ASTSchema)
 }
 
 type trieNode struct {
@@ -59,7 +59,7 @@ func NewPrefixParser(m *messaging.Messenger, l *lexer.Lexer, prefixes []Rule) Pr
     return PrefixParser{root, uint(maxLength)}
 }
 
-func (p *PrefixParser) Parse(l *lexer.LexerJob, syntax *ast.AST) {
+func (p *PrefixParser) Parse(l *lexer.LexerJob, syntax *ast.ASTSchema) {
     var largestMatchParser RuleParser
     node := p.prefixes
     ok := true

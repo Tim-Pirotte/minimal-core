@@ -31,8 +31,8 @@ func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPow
 
 func TestPrefix(t *testing.T) {
     l := lexer.New(1)
-    syntax := ast.New()
-    end := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "END"})
+    syntax := ast.NewSchema()
+    end := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "END"})
 
     p := NewPrattParser(l,
         []Prefix{&endParser{lexer.END, end}},
@@ -89,10 +89,10 @@ func TestBinary(t *testing.T) {
     sm.AddSymbol(l, "b", bT)
     l.AddMatcher(sm)
 
-    syntax := ast.New()
-    a := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "A"})
-    plus := syntax.NewNodeType(2, ast.NodeTypeMetadata{DebugName: "+"})
-    b := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "B"})
+    syntax := ast.NewSchema()
+    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
+    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "B"})
 
     p := NewPrattParser(
         l,
@@ -201,12 +201,12 @@ func TestParseCompleteExpression(t *testing.T) {
     sm.AddSymbol(l, ")", closeParenT)
     l.AddMatcher(sm)
 
-    syntax := ast.New()
-    minus := syntax.NewNodeType(1, ast.NodeTypeMetadata{DebugName: "-"})
-    a := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "A"})
-    plus := syntax.NewNodeType(2, ast.NodeTypeMetadata{DebugName: "+"})
-    b := syntax.NewNodeType(0, ast.NodeTypeMetadata{DebugName: "B"})
-    exclamation := syntax.NewNodeType(1, ast.NodeTypeMetadata{DebugName: "!"})
+    syntax := ast.NewSchema()
+    minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-", ChildCount: 1})
+    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
+    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "B"})
+    exclamation := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "!", ChildCount: 1})
 
     p := NewPrattParser(
         l,

@@ -12,6 +12,7 @@ const spacesPerLevel = 2
 
 type ASTDisplayer struct {
     messenger      *messaging.Messenger
+    schema         *ASTSchema
     nodeDisplayers map[NodeType]NodeDisplayer
 }
 
@@ -20,8 +21,8 @@ type NodeDisplayer interface {
     Display(reference uint32) string
 }
 
-func NewASTDebugger(messenger *messaging.Messenger) ASTDisplayer {
-    return ASTDisplayer{messenger, map[NodeType]NodeDisplayer{}}
+func NewASTDisplayer(messenger *messaging.Messenger, schema *ASTSchema) ASTDisplayer {
+    return ASTDisplayer{messenger, schema, map[NodeType]NodeDisplayer{}}
 }
 
 func (a *ASTDisplayer) AddNodeDisplayer(n NodeDisplayer) {
@@ -34,7 +35,7 @@ func (a *ASTDisplayer) AddNodeDisplayer(n NodeDisplayer) {
     a.nodeDisplayers[nodeType] = n
 }
 
-func (a *ASTDisplayer) Display(ast *AST, o io.Writer) {
+func (a *ASTDisplayer) Display(ast AST, o io.Writer) {
     t := NewTraverser(ast)
 
     for !t.IsAtEnd() {
@@ -44,7 +45,7 @@ func (a *ASTDisplayer) Display(ast *AST, o io.Writer) {
             if !a.displayNode(o, t, node, 0) {
                 return
             }
-        } else if !a.tryWrite(o, "EndNode %s not inside a Node\n", a.getEndNodeName(ast, node)) {
+        } else if !a.tryWrite(o, "EndNode %s not inside a Node\n", a.getEndNodeName(node)) {
             return
         }
     }
@@ -57,16 +58,16 @@ func (a *ASTDisplayer) displayNode(o io.Writer, t *Traverser, node Node, depth u
         o,
         "%s%s\n",
         strings.Repeat(" ", int(spacesPerLevel * depth)),
-        a.getNodeAsString(t.ast, node),
+        a.getNodeAsString(node),
     ) {
         return false
     }
 
-    childCount := t.ast.GetChildCount(node.Type)
+    childCount := a.schema.GetNodeTypeMetadata(node.Type).ChildCount
 
-    if childCount == VariableChildren {
+    if childCount == VariableChildCount {
         for !t.IsAtEnd() {
-            peekedNode := t.ast.Nodes[t.position]
+            peekedNode := t.ast[t.position]
 
             if peekedNode.Type != EndNode || peekedNode.Reference == uint32(node.Type) {
                 node := t.Next()
@@ -83,7 +84,7 @@ func (a *ASTDisplayer) displayNode(o io.Writer, t *Traverser, node Node, depth u
                     o,
                     "%sIncorrect EndNode %s\n",
                     strings.Repeat(" ", int(spacesPerLevel * depth)),
-                    a.getEndNodeName(t.ast, peekedNode),
+                    a.getEndNodeName(peekedNode),
                 )
             }
         }
@@ -108,7 +109,7 @@ func (a *ASTDisplayer) displayNode(o io.Writer, t *Traverser, node Node, depth u
                 o,
                 "%sEndNode %s in fixed childcount Node\n",
                 strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
-                a.getEndNodeName(t.ast, node),
+                a.getEndNodeName(node),
             ) {
                 return false
             }
@@ -137,20 +138,20 @@ func (a *ASTDisplayer) tryWrite(output io.Writer, format string, args ...any) bo
     return true
 }
 
-func (a *ASTDisplayer) getEndNodeName(ast *AST, endNode Node) string {
-    if int(endNode.Reference) < len(ast.metadata) {
-        return ast.GetNodeTypeMetadata(NodeType(endNode.Reference)).DebugName
+func (a *ASTDisplayer) getEndNodeName(endNode Node) string {
+    if int(endNode.Reference) < len(a.schema.metadata) {
+        return a.schema.GetNodeTypeMetadata(NodeType(endNode.Reference)).DebugName
     }
 
     return fmt.Sprintf("UNKNOWN Reference=%d", endNode.Reference)
 }
 
-func (a *ASTDisplayer) getNodeAsString(ast *AST, node Node) string {
+func (a *ASTDisplayer) getNodeAsString(node Node) string {
     if displayer, ok := a.nodeDisplayers[node.Type]; ok {
         return displayer.Display(node.Reference)
     }
 
-    metadata := ast.GetNodeTypeMetadata(node.Type)
+    metadata := a.schema.GetNodeTypeMetadata(node.Type)
 
     if node.Reference == 0 {
         return metadata.DebugName
@@ -164,18 +165,18 @@ func (a *ASTDisplayer) logDuplicateNodeDisplayer(nodeType NodeType) {
     a.messenger.Send(messaging.Message{
         Message: "Duplicate node displayer in the AST displayer",
         Severity: messaging.Error,
-        Notes: []string{fmt.Sprintf("NodeType=%d", nodeType)},
+        Notes: []string{fmt.Sprintf("NodeType=%s", a.schema.GetNodeTypeMetadata(nodeType).DebugName)},
     })
 }
 
 type NodeColorer struct {
-    ast      *AST
+    schema   *ASTSchema
     nodeType NodeType
     color    ansi.RGB
 }
 
-func NewNodeColorer(ast *AST, nodeType NodeType, color ansi.RGB) *NodeColorer {
-    return &NodeColorer{ast, nodeType, color}
+func NewNodeColorer(schema *ASTSchema, nodeType NodeType, color ansi.RGB) *NodeColorer {
+    return &NodeColorer{schema, nodeType, color}
 }
 
 func (n *NodeColorer) GetNodeType() NodeType {
@@ -183,7 +184,7 @@ func (n *NodeColorer) GetNodeType() NodeType {
 }
 
 func (n *NodeColorer) Display(reference uint32) string {
-    metadata := n.ast.GetNodeTypeMetadata(n.nodeType)
+    metadata := n.schema.GetNodeTypeMetadata(n.nodeType)
     colored := string(n.color) + metadata.DebugName + ansi.Reset
 
     if reference == 0 {
