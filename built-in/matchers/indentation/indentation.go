@@ -40,7 +40,7 @@ func NewIndentationMatcher(
     }
 }
 
-func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
+func (i *IndentationMatcher) New(l *lexer.Lexer) lexer.Matcher {
 	m := &IndentationMatcher{
         i.messenger,
         i.openBlockSymbol,
@@ -68,7 +68,7 @@ func (i *IndentationMatcher) New(l *lexer.LexerJob) lexer.Matcher {
     return m
 }
 
-func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
+func (i *IndentationMatcher) Match(l *lexer.Lexer) uint {
     pos := uint(0)
     c, ok := l.Get(pos)
 
@@ -109,7 +109,7 @@ func (i *IndentationMatcher) Match(l *lexer.LexerJob) uint {
     return pos
 }
 
-func (i *IndentationMatcher) Consume(l *lexer.LexerJob, length uint) {
+func (i *IndentationMatcher) Consume(l *lexer.Lexer, length uint) {
     isOpenBlock := false
 
     if c, _ := l.Get(0); c == i.openBlockSymbol {
@@ -149,7 +149,7 @@ func IsEOL(c byte) bool {
 	return c == '\n' || c == '\r'
 }
 
-func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool, length uint) uint {
+func (i *IndentationMatcher) getIndentLevel(l *lexer.Lexer, isOpenBlock bool, length uint) uint {
     if i.spaceCount == 0 {
         return 0
     }
@@ -179,7 +179,7 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.LexerJob, isOpenBlock bool,
     return level
 }
 
-func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.LexerJob, startIndent uint) {
+func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.Lexer, startIndent uint) {
     i.messenger.Send(messaging.Message{
         Message: "Source code cannot start with indentation",
         Severity: messaging.Error,
@@ -188,7 +188,7 @@ func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.LexerJob, startIndent 
     })
 }
 
-func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.LexerJob, length uint) {
+func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length uint) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
     message := messaging.Message{
@@ -215,7 +215,7 @@ func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.LexerJob, length
     i.messenger.Send(message)
 }
 
-func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.LexerJob, length uint) {
+func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.Lexer, length uint) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
     i.messenger.Send(messaging.Message{

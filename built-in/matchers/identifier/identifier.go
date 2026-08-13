@@ -12,11 +12,11 @@ func NewIdentifierMatcher(tt lexer.TokenType) *IdentifierMatcher {
 	return &IdentifierMatcher{tt}
 }
 
-func (i *IdentifierMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+func (i *IdentifierMatcher) New(_ *lexer.Lexer) lexer.Matcher {
 	return i
 }
 
-func (i *IdentifierMatcher) Match(l *lexer.LexerJob) uint {
+func (i *IdentifierMatcher) Match(l *lexer.Lexer) uint {
 	firstChar, _ := l.Get(0)
 
 	if !isAlphaOrUnicode(firstChar) {
@@ -32,7 +32,7 @@ func (i *IdentifierMatcher) Match(l *lexer.LexerJob) uint {
 	return pos
 }
 
-func (i *IdentifierMatcher) Consume(l *lexer.LexerJob, length uint) {
+func (i *IdentifierMatcher) Consume(l *lexer.Lexer, length uint) {
 	l.Emit(lexer.Token{Type: i.tokenType, Value: l.GetNextN(length)})
 }
 

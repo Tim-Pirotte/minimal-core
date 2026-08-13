@@ -13,7 +13,7 @@ type Rule struct {
 }
 
 type RuleParser interface {
-    Parse(*lexer.LexerJob, *ast.ASTSchema)
+    Parse(*lexer.Lexer, *ast.ASTSchema)
 }
 
 type trieNode struct {
@@ -27,7 +27,7 @@ type PrefixParser struct {
     maxLength uint
 }
 
-func NewPrefixParser(m *messaging.Messenger, l *lexer.Lexer, prefixes []Rule) PrefixParser {
+func NewPrefixParser(m *messaging.Messenger, l *lexer.LexerScheme, prefixes []Rule) PrefixParser {
     root := &trieNode{false, nil, map[lexer.TokenType]*trieNode{}}
     maxLength := uint(0)
 
@@ -59,7 +59,7 @@ func NewPrefixParser(m *messaging.Messenger, l *lexer.Lexer, prefixes []Rule) Pr
     return PrefixParser{root, uint(maxLength)}
 }
 
-func (p *PrefixParser) Parse(l *lexer.LexerJob, syntax *ast.ASTSchema) {
+func (p *PrefixParser) Parse(l *lexer.Lexer, syntax *ast.ASTSchema) {
     var largestMatchParser RuleParser
     node := p.prefixes
     ok := true
@@ -82,7 +82,7 @@ func (p *PrefixParser) Parse(l *lexer.LexerJob, syntax *ast.ASTSchema) {
     }
 }
 
-func logDuplicatePrefix(m *messaging.Messenger, l *lexer.Lexer, prefix []lexer.TokenType) {
+func logDuplicatePrefix(m *messaging.Messenger, l *lexer.LexerScheme, prefix []lexer.TokenType) {
     sb := strings.Builder{}
     sb.WriteString("Prefix: [")
 

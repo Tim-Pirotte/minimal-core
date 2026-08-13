@@ -26,7 +26,7 @@ type BaseParserData struct {
 }
 
 type BaseParser interface {
-    Parse(*NumberParser, *lexer.LexerJob, base) []ast.Node
+    Parse(*NumberParser, *lexer.Lexer, base) []ast.Node
 }
 
 type base uint
@@ -101,7 +101,7 @@ func (n *NumberParser) GetTokenType() lexer.TokenType {
     return n.integerType
 }
 
-func (n *NumberParser) ParsePrefix(_ *pratt.PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+func (n *NumberParser) ParsePrefix(_ *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
     prefix := l.Peek(0).Value
 
     l.Advance()

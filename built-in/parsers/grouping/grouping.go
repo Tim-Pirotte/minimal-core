@@ -68,7 +68,7 @@ func (e *eolParser) GetBindingPower() uint {
     return e.bindingPower
 }
 
-func (e *eolParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.LexerJob, bp uint) []ast.Node {
+func (e *eolParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint) []ast.Node {
     l.Advance()
 
     return pp.Parse(l, bp)
@@ -76,7 +76,7 @@ func (e *eolParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.LexerJob, bp uin
 
 func (e *eolParser) ParseInfix(
     pp *pratt.PrattParser,
-    l *lexer.LexerJob,
+    l *lexer.Lexer,
     left []ast.Node,
     minBindingPower uint,
 ) []ast.Node {
@@ -104,7 +104,7 @@ func (n *nestingParser) GetTokenType() lexer.TokenType {
     return n.open
 }
 
-func (n *nestingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.LexerJob, bp uint) []ast.Node {
+func (n *nestingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint) []ast.Node {
     l.Advance()
 
     *n.nestingCount++
@@ -121,7 +121,7 @@ func (n *nestingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.LexerJob, bp
     return result
 }
 
-func (g *GroupingParser) Parse(l *lexer.LexerJob) []ast.Node {
+func (g *GroupingParser) Parse(l *lexer.Lexer) []ast.Node {
     result := g.prattParser.Parse(l, 0)
 
     g.eol.bindingPower = math.MaxUint32

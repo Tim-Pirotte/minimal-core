@@ -26,14 +26,14 @@ type TokenTypeMetadata struct {
     DebugName   string
 }
 
-type Lexer struct {
+type LexerScheme struct {
     maxSafePeek   uint
     matchers      []Matcher
     lastTokenType TokenType
     metadata      []TokenTypeMetadata
 }
 
-type LexerJob struct {
+type Lexer struct {
     Matchers    []Matcher
     Data        string
     Position    uint
@@ -46,13 +46,13 @@ type LexerJob struct {
 }
 
 type Matcher interface {
-    New(t *LexerJob) Matcher
-    Match(t *LexerJob) (length uint)
-    Consume(t *LexerJob, length uint)
+    New(t *Lexer) Matcher
+    Match(t *Lexer) (length uint)
+    Consume(t *Lexer, length uint)
 }
 
-func New(maxSafePeek uint) *Lexer {
-    return &Lexer{
+func New(maxSafePeek uint) *LexerScheme {
+    return &LexerScheme{
         maxSafePeek,
         []Matcher{},
         END,
@@ -63,25 +63,25 @@ func New(maxSafePeek uint) *Lexer {
     }
 }
 
-func (l *Lexer) AddMatcher(matcher Matcher) {
+func (l *LexerScheme) AddMatcher(matcher Matcher) {
     l.matchers = append(l.matchers, matcher)
 }
 
-func (l *Lexer) NewTokenType(metadata TokenTypeMetadata) TokenType {
+func (l *LexerScheme) NewTokenType(metadata TokenTypeMetadata) TokenType {
     l.lastTokenType++
     l.metadata = append(l.metadata, metadata)
 
     return l.lastTokenType
 }
 
-func (l *Lexer) GetTokenTypeMetadata(tokenType TokenType) TokenTypeMetadata {
+func (l *LexerScheme) GetTokenTypeMetadata(tokenType TokenType) TokenTypeMetadata {
     return l.metadata[tokenType]
 }
 
-func (l *Lexer) Lex(source string) *LexerJob {
+func (l *LexerScheme) Lex(source string) *Lexer {
     capacity := l.maxSafePeek
 
-    job := &LexerJob{
+    job := &Lexer{
         make([]Matcher, len(l.matchers)),
         source,
         0,
@@ -102,7 +102,7 @@ func (l *Lexer) Lex(source string) *LexerJob {
     return job
 }
 
-func (l *LexerJob) Get(i uint) (byte, bool) {
+func (l *Lexer) Get(i uint) (byte, bool) {
     offset := l.Position + i
 
     if offset >= uint(len(l.Data)) {
@@ -112,11 +112,11 @@ func (l *LexerJob) Get(i uint) (byte, bool) {
     return l.Data[offset], true
 }
 
-func (l *LexerJob) GetNextN(length uint) string {
+func (l *Lexer) GetNextN(length uint) string {
     return l.Data[l.Position:l.Position + length]
 }
 
-func (l *LexerJob) Emit(token Token) {
+func (l *Lexer) Emit(token Token) {
     if l.write - l.read == uint(len(l.buffer)) {
         l.spillage = append(l.spillage, token)
 
@@ -127,7 +127,7 @@ func (l *LexerJob) Emit(token Token) {
     l.write++
 }
 
-func (l *LexerJob) Peek(n uint) Token {
+func (l *Lexer) Peek(n uint) Token {
     if n >= l.minSafePeek {
         panic("attempt to peek more tokens in advance than expected")
     }
@@ -142,7 +142,7 @@ func (l *LexerJob) Peek(n uint) Token {
     return l.buffer[read % uint(len(l.buffer))]
 }
 
-func (l *LexerJob) Advance() {
+func (l *Lexer) Advance() {
     l.read++
 
     if l.read + l.minSafePeek >= l.write {
@@ -150,7 +150,7 @@ func (l *LexerJob) Advance() {
     }
 }
 
-func (l *LexerJob) fillTokenBuffer() {
+func (l *Lexer) fillTokenBuffer() {
     if len(l.spillage) > 0 {
         nEmpty := uint(len(l.buffer)) - (l.write - l.read)
         nSpillage := uint(len(l.spillage))
@@ -196,7 +196,7 @@ func (l *LexerJob) fillTokenBuffer() {
     }
 }
 
-func CheckTokens(t *testing.T, lexer *Lexer, expected []Token, text string) {
+func CheckTokens(t *testing.T, lexer *LexerScheme, expected []Token, text string) {
     actual := make([]Token, 0, len(expected))
 
     lexerJob := lexer.Lex(text)

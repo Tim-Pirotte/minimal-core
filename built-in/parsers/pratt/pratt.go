@@ -8,13 +8,13 @@ import (
 
 type Prefix interface {
     GetTokenType() lexer.TokenType
-    ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node
+    ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node
 }
 
 type Infix interface {
     GetTokenType() lexer.TokenType
     GetBindingPower() uint
-    ParseInfix(p *PrattParser, lj *lexer.LexerJob, left []ast.Node, minBindingPower uint) []ast.Node
+    ParseInfix(p *PrattParser, lj *lexer.Lexer, left []ast.Node, minBindingPower uint) []ast.Node
 }
 
 type PrattParser struct {
@@ -22,7 +22,7 @@ type PrattParser struct {
     Infixes    map[lexer.TokenType]Infix
 }
 
-func NewPrattParser(l *lexer.Lexer, prefixes []Prefix, infixes []Infix) *PrattParser {
+func NewPrattParser(l *lexer.LexerScheme, prefixes []Prefix, infixes []Infix) *PrattParser {
     prefixMap := map[lexer.TokenType]Prefix{}
 
     for _, prefix := range prefixes {
@@ -50,7 +50,7 @@ func NewPrattParser(l *lexer.Lexer, prefixes []Prefix, infixes []Infix) *PrattPa
     return &PrattParser{prefixMap, infixMap}
 }
 
-func (p *PrattParser) Parse(l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint) []ast.Node {
     prefix, ok := p.Prefixes[l.Peek(0).Type]
 
     if !ok {
@@ -68,7 +68,7 @@ func (p *PrattParser) Parse(l *lexer.LexerJob, minBindingPower uint) []ast.Node 
     return left
 }
 
-func logDuplicatePrefix(l *lexer.Lexer, tokenType lexer.TokenType) {
+func logDuplicatePrefix(l *lexer.LexerScheme, tokenType lexer.TokenType) {
     // TODO proper message
     fmt.Printf(
         "Multiple prefixes have been declared for the token type %s\n",
@@ -76,7 +76,7 @@ func logDuplicatePrefix(l *lexer.Lexer, tokenType lexer.TokenType) {
     )
 }
 
-func logDuplicateInfix(l *lexer.Lexer, tokenType lexer.TokenType) {
+func logDuplicateInfix(l *lexer.LexerScheme, tokenType lexer.TokenType) {
     // TODO proper message
     fmt.Printf(
         "Multiple infixes have been declared for the token type %s\n",
@@ -97,7 +97,7 @@ func (a *AtomicParser) GetTokenType() lexer.TokenType {
     return a.tokenType
 }
 
-func (a *AtomicParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+func (a *AtomicParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
     l.Advance()
 
     return []ast.Node{{Type: a.nodeType}}

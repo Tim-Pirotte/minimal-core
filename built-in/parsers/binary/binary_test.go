@@ -11,7 +11,7 @@ import (
 
 type testBinaryParser struct {
     p *pratt.PrattParser
-    l *lexer.Lexer
+    l *lexer.LexerScheme
     a ast.NodeType
     b ast.NodeType
     c ast.NodeType

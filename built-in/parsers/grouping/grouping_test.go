@@ -26,7 +26,7 @@ func (b *binaryParser) GetBindingPower() uint {
 }
 
 func (b *binaryParser) ParseInfix(
-    p *pratt.PrattParser, l *lexer.LexerJob, left []ast.Node, minBindingPower uint,
+    p *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint,
 ) []ast.Node {
     l.Advance()
 
@@ -50,7 +50,7 @@ func (u *unaryParser) GetTokenType() lexer.TokenType {
 }
 
 func (u *unaryParser) ParsePrefix(
-    p *pratt.PrattParser, l *lexer.LexerJob, minBindingPower uint,
+    p *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint,
 ) []ast.Node {
     l.Advance()
 
@@ -64,7 +64,7 @@ func (u *unaryParser) ParsePrefix(
 
 type testGroupingParser struct {
     g *GroupingParser
-    l *lexer.Lexer
+    l *lexer.LexerScheme
     plus ast.NodeType
     mul ast.NodeType
     min ast.NodeType

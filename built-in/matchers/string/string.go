@@ -7,23 +7,23 @@ import (
 
 type StringMatcher struct {
     messenger *messaging.Messenger
-    lexer     *lexer.Lexer
+    lexer     *lexer.LexerScheme
     strType lexer.TokenType
 }
 
 func NewStringMatcher(
     messenger *messaging.Messenger,
-    lexer *lexer.Lexer,
+    lexer *lexer.LexerScheme,
     tt lexer.TokenType,
 ) *StringMatcher {
     return &StringMatcher{messenger, lexer, tt}
 }
 
-func (s *StringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+func (s *StringMatcher) New(_ *lexer.Lexer) lexer.Matcher {
     return s
 }
 
-func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
+func (s *StringMatcher) Match(l *lexer.Lexer) uint {
     // This matcher could violate max munch
     if c, _ := l.Get(0); c == '\'' {
         return 1
@@ -32,7 +32,7 @@ func (s *StringMatcher) Match(l *lexer.LexerJob) uint {
     }
 }
 
-func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
+func (s *StringMatcher) Consume(l *lexer.Lexer, length uint) {
     pos := uint(1)
     c, ok := l.Get(pos)
 
@@ -110,7 +110,7 @@ func (s *StringMatcher) Consume(l *lexer.LexerJob, length uint) {
     l.Position += pos
 }
 
-func (s *StringMatcher) sendUnclosedStrErr(l *lexer.LexerJob) {
+func (s *StringMatcher) sendUnclosedStrErr(l *lexer.Lexer) {
     s.messenger.Send(messaging.Message{
         Message: "String is not terminated with '",
         Severity: messaging.Error,

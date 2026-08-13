@@ -23,7 +23,7 @@ func (p *PrefixUnaryParser) GetTokenType() lexer.TokenType {
 }
 
 func (p *PrefixUnaryParser) ParsePrefix(
-    pp *pratt.PrattParser, l *lexer.LexerJob, minBindingPower uint,
+    pp *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint,
 ) []ast.Node {
     l.Advance()
 

@@ -28,7 +28,7 @@ type okParser struct {
     ok bool
 }
 
-func (e *okParser) Parse(l *lexer.LexerJob, syntax *ast.ASTSchema) {
+func (e *okParser) Parse(l *lexer.Lexer, syntax *ast.ASTSchema) {
     e.ok = true
 }
 

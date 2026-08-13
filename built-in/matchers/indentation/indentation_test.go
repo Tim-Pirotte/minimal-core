@@ -9,7 +9,7 @@ import (
 )
 
 type testLexer struct {
-    l          *lexer.Lexer
+    l          *lexer.LexerScheme
     openBlock  lexer.TokenType
     closeBlock lexer.TokenType
     eolType    lexer.TokenType

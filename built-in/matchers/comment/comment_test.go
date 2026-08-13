@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func getLexer() (*lexer.Lexer, lexer.TokenType) {
+func getLexer() (*lexer.LexerScheme, lexer.TokenType) {
 	l := lexer.New(1)
 	commentType := l.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "a comment", DebugName: "Comment"},

@@ -161,7 +161,6 @@ func (a *ASTDisplayer) getNodeAsString(node Node) string {
 }
 
 func (a *ASTDisplayer) logDuplicateNodeDisplayer(nodeType NodeType) {
-    // TODO print the debug name
     a.messenger.Send(messaging.Message{
         Message: "Duplicate node displayer in the AST displayer",
         Severity: messaging.Error,

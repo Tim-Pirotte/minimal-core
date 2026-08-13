@@ -9,7 +9,7 @@ import (
 )
 
 type testLexer struct {
-    l          *lexer.Lexer
+    l          *lexer.LexerScheme
     stringType lexer.TokenType
     messenger  *messaging.Messenger
     output     *messaging.TestOutput
@@ -176,9 +176,9 @@ func TestExtraClosingBrace(t *testing.T) {
 
 type braceSymbolMatcher struct { }
 
-func (b *braceSymbolMatcher) New(_ *lexer.LexerJob) lexer.Matcher { return b }
+func (b *braceSymbolMatcher) New(_ *lexer.Lexer) lexer.Matcher { return b }
 
-func (*braceSymbolMatcher) Match(l *lexer.LexerJob) uint {
+func (*braceSymbolMatcher) Match(l *lexer.Lexer) uint {
     if len(l.Data) - int(l.Position) >= 2 && l.GetNextN(2) == `"}` {
         return 2
     }
@@ -186,7 +186,7 @@ func (*braceSymbolMatcher) Match(l *lexer.LexerJob) uint {
     return 0
 }
 
-func (*braceSymbolMatcher) Consume(_ *lexer.LexerJob, _ uint) {}
+func (*braceSymbolMatcher) Consume(_ *lexer.Lexer, _ uint) {}
 
 func TestDifferentEnclosing(t *testing.T) {
     source := `'{ "} }'`

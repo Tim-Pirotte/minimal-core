@@ -15,11 +15,11 @@ func NewRawStringMatcher(messenger *messaging.Messenger, tt lexer.TokenType) *Ra
     return &RawStringMatcher{messenger, tt}
 }
 
-func (r *RawStringMatcher) New(_ *lexer.LexerJob) lexer.Matcher {
+func (r *RawStringMatcher) New(_ *lexer.Lexer) lexer.Matcher {
     return r
 }
 
-func (r *RawStringMatcher) Match(l *lexer.LexerJob) uint {
+func (r *RawStringMatcher) Match(l *lexer.Lexer) uint {
     pos := uint(0)
     c, ok := l.Get(pos)
 
@@ -62,11 +62,11 @@ func (r *RawStringMatcher) Match(l *lexer.LexerJob) uint {
     return pos
 }
 
-func (r *RawStringMatcher) Consume(l *lexer.LexerJob, length uint) {
+func (r *RawStringMatcher) Consume(l *lexer.Lexer, length uint) {
     l.Emit(lexer.Token{Type: r.tokenType, Value: l.GetNextN(length)})
 }
 
-func (r *RawStringMatcher) sendUnclosedErr(l *lexer.LexerJob, dashes uint) {
+func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint) {
     r.messenger.Send(messaging.Message{
         Message: `Raw string is not terminated with '` + strings.Repeat("-", int(dashes)),
 

@@ -9,7 +9,7 @@ import (
 )
 
 type testLexer struct {
-    l          *lexer.Lexer
+    l          *lexer.LexerScheme
     stringType lexer.TokenType
     messenger  *messaging.Messenger
     output     *messaging.TestOutput

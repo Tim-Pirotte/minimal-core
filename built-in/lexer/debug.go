@@ -10,14 +10,14 @@ import (
 )
 
 type LexerDebugger struct {
-    lexer     *Lexer
+    lexer     *LexerScheme
     output    io.Writer
     messenger *messaging.Messenger
 }
 
 // TODO Add syntax highlighting
 func NewLexerDebugger(
-    lexer *Lexer,
+    lexer *LexerScheme,
     output io.Writer,
     messenger *messaging.Messenger,
 ) *LexerDebugger {

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func getLexer() (*lexer.Lexer, lexer.TokenType) {
+func getLexer() (*lexer.LexerScheme, lexer.TokenType) {
 	l := lexer.New(1)
 	numberType := l.NewTokenType(
 		lexer.TokenTypeMetadata{DisplayName: "a number", DebugName: "Number"},

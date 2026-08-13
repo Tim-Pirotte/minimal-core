@@ -26,21 +26,21 @@ type spillageTestMatcher struct {
 	tokenType TokenType
 }
 
-func newSpillageTestMatcher(lexer *Lexer) *spillageTestMatcher {
+func newSpillageTestMatcher(lexer *LexerScheme) *spillageTestMatcher {
 	return &spillageTestMatcher{
 		lexer.NewTokenType(TokenTypeMetadata{"spillage", "Spillage"}),
 	}
 }
 
-func (s *spillageTestMatcher) New(_ *LexerJob) Matcher {
+func (s *spillageTestMatcher) New(_ *Lexer) Matcher {
 	return s
 }
 
-func (s *spillageTestMatcher) Match(t *LexerJob) uint {
+func (s *spillageTestMatcher) Match(t *Lexer) uint {
 	return 1
 }
 
-func (s *spillageTestMatcher) Consume(t *LexerJob, length uint) {
+func (s *spillageTestMatcher) Consume(t *Lexer, length uint) {
 	for range 5 {
 		t.Emit(Token{s.tokenType, t.Data[:0]})
 	}

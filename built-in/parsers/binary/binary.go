@@ -25,7 +25,7 @@ func (b *BinaryParser) GetBindingPower() uint {
 }
 
 func (b *BinaryParser) ParseInfix(
-    p *pratt.PrattParser, l *lexer.LexerJob, left []ast.Node, minBindingPower uint,
+    p *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint,
 ) []ast.Node {
     l.Advance()
 

@@ -25,7 +25,7 @@ func (e *endParser) GetTokenType() lexer.TokenType {
     return e.endT
 }
 
-func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
     return []ast.Node{{Type: e.end}}
 }
 
@@ -65,7 +65,7 @@ func (p *plusParser) GetBindingPower() uint {
     return 2
 }
 
-func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.LexerJob, left []ast.Node, minBindingPower uint) []ast.Node {
+func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint) []ast.Node {
     l.Advance()
 
     right := pp.Parse(l, 1)
@@ -124,7 +124,7 @@ func (m *minusParser) GetTokenType() lexer.TokenType {
     return m.minusT
 }
 
-func (m *minusParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+func (m *minusParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
     l.Advance()
 
     result := []ast.Node{{Type: m.minus}}
@@ -143,7 +143,7 @@ func (g *groupingParser) GetTokenType() lexer.TokenType {
     return g.openParenT
 }
 
-func (g *groupingParser) ParsePrefix(p *PrattParser, l *lexer.LexerJob, minBindingPower uint) []ast.Node {
+func (g *groupingParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
     l.Advance()
 
     result := p.Parse(l, 0)
@@ -171,7 +171,7 @@ func (e *exclamationParser) GetBindingPower() uint {
 }
 
 func (e *exclamationParser) ParseInfix(
-    p *PrattParser, l *lexer.LexerJob, left []ast.Node, minBindingPower uint,
+    p *PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint,
 ) []ast.Node {
     l.Advance()
 
