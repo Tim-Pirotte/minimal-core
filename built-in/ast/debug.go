@@ -35,14 +35,15 @@ func (a *ASTDisplayer) AddNodeDisplayer(n NodeDisplayer) {
     a.nodeDisplayers[nodeType] = n
 }
 
-func (a *ASTDisplayer) Display(ast AST, o io.Writer) {
-    t := NewTraverser(ast)
+func (a *ASTDisplayer) Display(ast []Node, o io.Writer) {
+    position := 0
 
-    for !t.IsAtEnd() {
-        node := t.Next()
+    for position != len(ast) {
+        node := ast[position]
+        position++
 
         if node.Type != EndNode {
-            if !a.displayNode(o, t, node, 0) {
+            if !a.displayNode(o, ast, node, &position, 0) {
                 return
             }
         } else if !a.tryWrite(o, "EndNode %s not inside a Node\n", a.getEndNodeName(node)) {
@@ -51,13 +52,11 @@ func (a *ASTDisplayer) Display(ast AST, o io.Writer) {
     }
 }
 
-// TODO Add syntax highlighting
-// Make a color wrapper for displayers and NodeTypes to color them
-func (a *ASTDisplayer) displayNode(o io.Writer, t *Traverser, node Node, depth uint) (writeSuccess bool) {
+func (a *ASTDisplayer) displayNode(o io.Writer, ast []Node, node Node, position *int, depth int) (writeSuccess bool) {
     if !a.tryWrite(
         o,
         "%s%s\n",
-        strings.Repeat(" ", int(spacesPerLevel * depth)),
+        strings.Repeat(" ", spacesPerLevel * depth),
         a.getNodeAsString(node),
     ) {
         return false
@@ -66,54 +65,55 @@ func (a *ASTDisplayer) displayNode(o io.Writer, t *Traverser, node Node, depth u
     childCount := a.schema.GetNodeTypeMetadata(node.Type).ChildCount
 
     if childCount == VariableChildCount {
-        for !t.IsAtEnd() {
-            peekedNode := t.ast[t.position]
+        for *position != len(ast) {
+            nextNode := ast[*position]
 
-            if peekedNode.Type != EndNode || peekedNode.Reference == uint32(node.Type) {
-                node := t.Next()
+            if nextNode.Type != EndNode || nextNode.Reference == uint32(node.Type) {
+                *position++
 
-                if node.Type == EndNode {
+                if nextNode.Type == EndNode {
                     return true
                 }
 
-                if !a.displayNode(o, t, node, depth + 1) {
+                if !a.displayNode(o, ast, nextNode, position, depth + 1) {
                     return false
                 }
             } else {
                 return a.tryWrite(
                     o,
                     "%sIncorrect EndNode %s\n",
-                    strings.Repeat(" ", int(spacesPerLevel * depth)),
-                    a.getEndNodeName(peekedNode),
+                    strings.Repeat(" ", spacesPerLevel * depth),
+                    a.getEndNodeName(nextNode),
                 )
             }
         }
 
-        return a.tryWrite(o, "%sMissing EndNode\n", strings.Repeat(" ", int(spacesPerLevel * depth)))
+        return a.tryWrite(o, "%sMissing EndNode\n", strings.Repeat(" ", spacesPerLevel * depth))
     }
 
     for i := range childCount {
-        if t.IsAtEnd() {
+        if *position == len(ast) {
             return a.tryWrite(
                 o,
                 "%s%d missing\n",
-                strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
+                strings.Repeat(" ", spacesPerLevel * (depth + 1)),
                 childCount - i,
             )
         }
 
-        node := t.Next()
+        nextNode := ast[*position]
+        *position++
 
-        if node.Type == EndNode {
+        if nextNode.Type == EndNode {
             if !a.tryWrite(
                 o,
                 "%sEndNode %s in fixed childcount Node\n",
-                strings.Repeat(" ", int(spacesPerLevel * (depth + 1))),
-                a.getEndNodeName(node),
+                strings.Repeat(" ", spacesPerLevel * (depth + 1)),
+                a.getEndNodeName(nextNode),
             ) {
                 return false
             }
-        } else if !a.displayNode(o, t, node, depth + 1) {
+        } else if !a.displayNode(o, ast, nextNode, position, depth + 1) {
             return false
         }
     }
