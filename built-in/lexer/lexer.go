@@ -3,6 +3,7 @@ package lexer
 import (
 	"fmt"
 	"minimal/minimal-core/built-in/messaging"
+	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
 	"testing"
 	"unsafe"
@@ -51,7 +52,7 @@ type Matcher interface {
     Consume(t *Lexer, length uint)
 }
 
-func New(maxSafePeek uint) *LexerScheme {
+func NewScheme(maxSafePeek uint) *LexerScheme {
     return &LexerScheme{
         maxSafePeek,
         []Matcher{},
@@ -135,7 +136,6 @@ func (l *Lexer) Peek(n uint) Token {
     read := l.read + n
 
     if read >= l.write {
-        // TODO test this for off by one errors
         return Token{END, l.Data[len(l.Data):]}
     }
 
@@ -165,8 +165,7 @@ func (l *Lexer) fillTokenBuffer() {
         l.spillage = l.spillage[nFill:]
     }
 
-    // TODO check if we can put the end condition higher up
-    for l.write - l.read != uint(len(l.buffer)) && !l.endReached {
+    for !l.endReached && l.write - l.read != uint(len(l.buffer)) {
         if l.Position >= uint(len(l.Data)) {
             l.endReached = true
 
@@ -196,18 +195,20 @@ func (l *Lexer) fillTokenBuffer() {
     }
 }
 
-func CheckTokens(t *testing.T, lexer *LexerScheme, expected []Token, text string) {
+func CheckTokens(t *testing.T, scheme *LexerScheme, expected []Token, text string) {
     actual := make([]Token, 0, len(expected))
 
-    lexerJob := lexer.Lex(text)
+    lexer := scheme.Lex(text)
 
-    for current := lexerJob.Peek(0); current.Type != END; current = lexerJob.Peek(0) {
+    for current := lexer.Peek(0); current.Type != END; current = lexer.Peek(0) {
         actual = append(actual, current)
-        lexerJob.Advance()
+        lexer.Advance()
     }
 
-    // TODO What with this messenger?
-    lexerDebugger := NewLexerDebugger(lexer, os.Stdout, messaging.NewMessenger())
+    messenger := messaging.NewMessenger()
+    messenger.AddOutput(logrendering.NewLogRenderer(os.Stdout))
+
+    lexerDebugger := NewLexerDebugger(scheme, os.Stdout, messenger)
 
     if len(expected) != len(actual) {
         lexerDebugger.DisplayTokensDiff(text, actual, expected)

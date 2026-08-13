@@ -18,7 +18,7 @@ type testLexer struct {
 }
 
 func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
-    l := lexer.New(1)
+    l := lexer.NewScheme(1)
 
     openBlock := l.NewTokenType(
         lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "OpenBlock"},

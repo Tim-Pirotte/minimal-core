@@ -9,7 +9,7 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-    l := lexer.New(1)
+    l := lexer.NewScheme(1)
     p := NewPrattParser(l, []Prefix{}, []Infix{})
     lj := l.Lex("")
 
@@ -30,7 +30,7 @@ func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower 
 }
 
 func TestPrefix(t *testing.T) {
-    l := lexer.New(1)
+    l := lexer.NewScheme(1)
     syntax := ast.NewSchema()
     end := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "END"})
 
@@ -78,7 +78,7 @@ func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.Lexer, left []ast.Node
 }
 
 func TestBinary(t *testing.T) {
-    l := lexer.New(1)
+    l := lexer.NewScheme(1)
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
@@ -182,7 +182,7 @@ func (e *exclamationParser) ParseInfix(
 }
 
 func TestParseCompleteExpression(t *testing.T) {
-    l := lexer.New(1)
+    l := lexer.NewScheme(1)
     minusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'-'", DebugName: "-"})
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
     plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})

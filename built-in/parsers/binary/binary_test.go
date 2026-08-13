@@ -24,7 +24,7 @@ type testBinaryParser struct {
 }
 
 func getTestBinaryParser() testBinaryParser {
-    l := lexer.New(1)
+    l := lexer.NewScheme(1)
 
     aT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     bT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
