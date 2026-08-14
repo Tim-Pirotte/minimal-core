@@ -1,6 +1,7 @@
 package rawstring
 
 import (
+	"fmt"
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messaging"
 	"strings"
@@ -76,7 +77,69 @@ func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint) {
             "The amount of dashes in the string prefix must match with the suffix",
             "The remaining content will be interpreted as the raw string",
         },
+        Suggestions: findPossibleStringEnd(l, dashes),
     })
 }
 
-// TODO rescan the string and keep track of the longest ending sequence
+func findPossibleStringEnd(l *lexer.Lexer, expectedDashes uint) []messaging.Suggestion {
+    pos := uint(expectedDashes + 1)
+    longestEndSequence := uint(0)
+    startOfLongestEndSequence := uint(0)
+    consecutiveDashes := uint(0)
+    startOfLastQuote := uint(0)
+    quote := false
+
+    for c, ok := l.Get(pos); ok; c, ok = l.Get(pos) {
+        switch c {
+        case '-':
+            consecutiveDashes++
+
+            if quote && consecutiveDashes + 1 > longestEndSequence {
+                longestEndSequence = consecutiveDashes + 1
+                startOfLongestEndSequence = startOfLastQuote
+            }
+        case '\'':
+            consecutiveDashes = 0
+            quote = true
+            startOfLastQuote = pos
+
+            if longestEndSequence == 0 {
+                longestEndSequence = 1
+                startOfLongestEndSequence = startOfLastQuote
+            }
+        default:
+            consecutiveDashes = 0
+            quote = false
+        }
+
+        pos++
+    }
+
+    if longestEndSequence > 0 {
+        missing := expectedDashes - (longestEndSequence - 1)
+        plural := ""
+
+        if missing > 1 {
+            plural = "es"
+        }
+
+        return []messaging.Suggestion{
+            {
+                Suggestion: "This looks like an ending sequence",
+                Replacements: []messaging.Replacement{
+                    {
+                        From: messaging.Span{
+                            Content: l.GetNextN(pos)[startOfLongestEndSequence:startOfLongestEndSequence + longestEndSequence],
+                            Note: fmt.Sprintf("Missing %d dash%s", missing, plural),
+                        },
+                        To: messaging.Span{
+                            Content: "'" + strings.Repeat("-", int(expectedDashes)),
+                        },
+                    },
+                },
+            },
+        }
+    }
+
+    return nil
+}

@@ -229,6 +229,4 @@ func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.Lexer, length uint) {
             "The indentation will be set to the current level",
         },
     })
-
-    // TODO add more info reference
 }

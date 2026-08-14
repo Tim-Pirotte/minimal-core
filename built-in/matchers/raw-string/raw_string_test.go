@@ -65,9 +65,8 @@ func TestNoEscape(t *testing.T) {
     l.output.CheckMessages(t, []messaging.Message{})
 }
 
-// TODO improve error message to catch this specific case
 func TestMissingDash(t *testing.T) {
-    source := `---'Hello, World!'-- a`
+    source := `---'Hello,'- World!'-- a'-`
 
     l := getLexer()
 
@@ -75,7 +74,73 @@ func TestMissingDash(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Message: `Raw string is not terminated with '---`,
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
+            Notes: []string{
+                "The amount of dashes in the string prefix must match with the suffix",
+                "The remaining content will be interpreted as the raw string",
+            },
+            Suggestions: []messaging.Suggestion{
+                {
+                    Suggestion: "This looks like an ending sequence",
+                    Replacements: []messaging.Replacement{
+                        {
+                            From: messaging.Span{
+                                Content: source[19:22],
+                                Note: "Missing 1 dash",
+                            },
+                            To: messaging.Span{
+                                Content: "'---",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    })
+}
+
+func TestMissingDashes(t *testing.T) {
+    source := `---'Hello, World!'- a`
+
+    l := getLexer()
+
+    expected := []lexer.Token{{Type: l.stringType, Value: source}}
+
+    lexer.CheckTokens(t, l.l, expected, source)
+    l.messenger.Close()
+
+    l.output.CheckMessages(t, []messaging.Message{
+        {
+            Message: `Raw string is not terminated with '---`,
+            Severity: messaging.Error,
+            Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
+            Notes: []string{
+                "The amount of dashes in the string prefix must match with the suffix",
+                "The remaining content will be interpreted as the raw string",
+            },
+            Suggestions: []messaging.Suggestion{
+                {
+                    Suggestion: "This looks like an ending sequence",
+                    Replacements: []messaging.Replacement{
+                        {
+                            From: messaging.Span{
+                                Content: source[17:19],
+                                Note: "Missing 2 dashes",
+                            },
+                            To: messaging.Span{
+                                Content: "'---",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    })
 }
 
 func TestUnclosed(t *testing.T) {
