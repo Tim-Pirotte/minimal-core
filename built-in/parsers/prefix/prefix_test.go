@@ -9,7 +9,7 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-    l := lexer.NewScheme(1)
+    l := lexer.NewScheme()
     lj := l.Lex("")
 
     m := messaging.NewMessenger()
@@ -33,7 +33,7 @@ func (e *okParser) Parse(l *lexer.Lexer, syntax *ast.ASTSchema) {
 }
 
 func TestNoMatchHandler(t *testing.T) {
-    l := lexer.NewScheme(1)
+    l := lexer.NewScheme()
     lj := l.Lex("")
 
     m := messaging.NewMessenger()
@@ -54,7 +54,7 @@ func TestNoMatchHandler(t *testing.T) {
 }
 
 func TestAlreadyDeclared(t *testing.T) {
-    l := lexer.NewScheme(1)
+    l := lexer.NewScheme()
     lj := l.Lex("")
 
     m := messaging.NewMessenger()
@@ -102,7 +102,7 @@ func TestTokens(t *testing.T) {
     bOk := okParser{}
     unknownOk := okParser{}
 
-    l := lexer.NewScheme(1)
+    l := lexer.NewScheme()
     a := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     b := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
 
@@ -167,7 +167,9 @@ func TestSamePrefix(t *testing.T) {
     aaOk := okParser{}
     abOk := okParser{}
 
-    l := lexer.NewScheme(2)
+    l := lexer.NewScheme()
+    l.RequireLookahead(2)
+
     a := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "a"})
     b := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "b"})
 

@@ -5,17 +5,15 @@ import (
 	"unsafe"
 )
 
-// TODO tests for the printer
-
 func TestLexEmpty(t *testing.T) {
-    l := NewScheme(1)
+    l := NewScheme()
     CheckTokens(t, l, []Token{}, "")
 }
 
 func TestLexUnknown(t *testing.T) {
     source := "a"
 
-    l := NewScheme(1)
+    l := NewScheme()
     expected := []Token{{Type: UNKNOWN, Value: source}}
 
     CheckTokens(t, l, expected, source)
@@ -48,7 +46,7 @@ func (s *spillageTestMatcher) Consume(t *Lexer, length uint) {
 func TestSpillage(t *testing.T) {
     source := "a"
 
-    l := NewScheme(1)
+    l := NewScheme()
     s := newSpillageTestMatcher(l)
     l.AddMatcher(s)
 
@@ -65,7 +63,7 @@ func TestSpillage(t *testing.T) {
 
 func TestEnd(t *testing.T) {
     source := ""
-    s := NewScheme(1)
+    s := NewScheme()
     l := s.Lex(source)
 
     token := l.Peek(0)
@@ -85,7 +83,7 @@ func TestEnd(t *testing.T) {
 
 func TestOverAdvance(t *testing.T) {
     source := "a"
-	s := NewScheme(1)
+	s := NewScheme()
 	l := s.Lex(source)
 
     for range 5 {
@@ -107,9 +105,25 @@ func TestOverAdvance(t *testing.T) {
 	}
 }
 
+func TestDisplay(t *testing.T) {
+    s := NewScheme()
+}
+
+func TestColor(t *testing.T) {
+
+}
+
+func TestDiff(t *testing.T) {
+
+}
+
+func TestWriteFail(t *testing.T) {
+
+}
+
 func Benchmark(b *testing.B) {
     source := string(make([]byte, 1_000_000))
-    l := NewScheme(1)
+    l := NewScheme()
 
     for b.Loop() {
         l.Lex(source)

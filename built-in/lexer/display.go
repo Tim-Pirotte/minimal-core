@@ -3,28 +3,33 @@ package lexer
 import (
 	"fmt"
 	"io"
+	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/diff"
 	"minimal/minimal-core/built-in/messaging"
 	"minimal/minimal-core/built-in/primitives"
 	"strconv"
 )
 
-type LexerDebugger struct {
-    lexer     *LexerScheme
-    output    io.Writer
-    messenger *messaging.Messenger
+type LexerDisplayer struct {
+    lexer       *LexerScheme
+    output      io.Writer
+    messenger   *messaging.Messenger
+    tokenColors map[TokenType] ansi.RGB
 }
 
-// TODO Add syntax highlighting
-func NewLexerDebugger(
-    lexer *LexerScheme,
+func NewLexerDisplayer(
+    scheme *LexerScheme,
     output io.Writer,
     messenger *messaging.Messenger,
-) *LexerDebugger {
-    return &LexerDebugger{lexer, output, messenger}
+) *LexerDisplayer {
+    return &LexerDisplayer{scheme, output, messenger, map[TokenType]ansi.RGB{}}
 }
 
-func (l *LexerDebugger) DisplayTokens(source string, tokens []Token) {
+func (l *LexerDisplayer) SetTokenTypeColor(tokenType TokenType, color ansi.RGB) {
+    l.tokenColors[tokenType] = color
+}
+
+func (l *LexerDisplayer) DisplayTokens(source string, tokens []Token) {
     for _, token := range tokens {
         if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
             l.messenger.Send(
@@ -45,7 +50,7 @@ func compareTokens(a, b Token) bool {
 
 // Prints a diff of tokens to a writer. Tokens are considered the same if there types and values are equal.
 // The range is deliberately ignored since a small change can change all the following ranges.
-func (l *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) {
+func (l *LexerDisplayer) DisplayTokensDiff(source string, before, after []Token) {
     tokenDiff := diff.GetDiff(before, after, compareTokens)
 
     for _, diffPart := range tokenDiff {
@@ -68,13 +73,17 @@ func (l *LexerDebugger) DisplayTokensDiff(source string, before, after []Token) 
     }
 }
 
-func (l *LexerDebugger) StringifyToken(source string, token Token) string {
-    tokenTypeMetadata := l.lexer.GetTokenTypeMetadata(token.Type)
+func (l *LexerDisplayer) StringifyToken(source string, token Token) string {
+    name := l.lexer.GetTokenTypeMetadata(token.Type).DebugName
+
+    if color, ok := l.tokenColors[token.Type]; ok {
+        name = string(color) + name + ansi.Reset
+    }
 
     if !primitives.IsSubString(source, token.Value) {
         return fmt.Sprintf(
             "%-20s %-20s     not from source",
-            tokenTypeMetadata.DebugName,
+            name,
             strconv.Quote(token.Value),
         )
     }
@@ -84,7 +93,7 @@ func (l *LexerDebugger) StringifyToken(source string, token Token) string {
 
     return fmt.Sprintf(
         "%-20s %-20s %6d..%-6d (%d)",
-        tokenTypeMetadata.DebugName,
+        name,
         strconv.Quote(token.Value),
         start,
         start+length,

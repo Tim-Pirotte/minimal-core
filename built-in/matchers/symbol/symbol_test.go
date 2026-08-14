@@ -8,7 +8,7 @@ import (
 func TestLexSymbols(t *testing.T) {
 	source := "1+2-3"
 
-	l := lexer.NewScheme(1)
+	l := lexer.NewScheme()
 	symbolMatcher := NewSymbolMatcher()
 	l.AddMatcher(symbolMatcher)
 
@@ -40,7 +40,7 @@ func TestLexSymbols(t *testing.T) {
 func TestLexMultiCharSymbols(t *testing.T) {
 	source := "1-2--3"
 
-	l := lexer.NewScheme(1)
+	l := lexer.NewScheme()
 	symbolMatcher := NewSymbolMatcher()
 	l.AddMatcher(symbolMatcher)
 
@@ -72,7 +72,7 @@ func TestLexMultiCharSymbols(t *testing.T) {
 func TestLexUnicodeSymbols(t *testing.T) {
 	source := "1☘2❤3"
 
-	l := lexer.NewScheme(1)
+	l := lexer.NewScheme()
 	symbolMatcher := NewSymbolMatcher()
 	l.AddMatcher(symbolMatcher)
 

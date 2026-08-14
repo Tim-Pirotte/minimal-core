@@ -42,7 +42,7 @@ type Lexer struct {
     read        uint
     write       uint
     spillage    []Token
-    minSafePeek uint
+    maxSafePeek uint
     endReached  bool
 }
 
@@ -52,15 +52,21 @@ type Matcher interface {
     Consume(t *Lexer, length uint)
 }
 
-func NewScheme(maxSafePeek uint) *LexerScheme {
+func NewScheme() *LexerScheme {
     return &LexerScheme{
-        maxSafePeek,
+        1,
         []Matcher{},
         END,
         []TokenTypeMetadata{
             {"a character that is not a valid token", "UNKNOWN"},
             {"to the end", "END"},
         },
+    }
+}
+
+func (l *LexerScheme) RequireLookahead(n uint) {
+    if n > l.maxSafePeek {
+        l.maxSafePeek = n
     }
 }
 
@@ -129,7 +135,7 @@ func (l *Lexer) Emit(token Token) {
 }
 
 func (l *Lexer) Peek(n uint) Token {
-    if n >= l.minSafePeek {
+    if n >= l.maxSafePeek {
         panic("attempt to peek more tokens in advance than expected")
     }
 
@@ -145,7 +151,7 @@ func (l *Lexer) Peek(n uint) Token {
 func (l *Lexer) Advance() {
     l.read++
 
-    if l.read + l.minSafePeek >= l.write {
+    if l.read + l.maxSafePeek >= l.write {
         l.fillTokenBuffer()
     }
 }
@@ -208,7 +214,7 @@ func CheckTokens(t *testing.T, scheme *LexerScheme, expected []Token, text strin
     messenger := messaging.NewMessenger()
     messenger.AddOutput(logrendering.NewLogRenderer(os.Stdout))
 
-    lexerDebugger := NewLexerDebugger(scheme, os.Stdout, messenger)
+    lexerDebugger := NewLexerDisplayer(scheme, os.Stdout, messenger)
 
     if len(expected) != len(actual) {
         lexerDebugger.DisplayTokensDiff(text, actual, expected)

@@ -75,7 +75,8 @@ type testGroupingParser struct {
 }
 
 func getTestGroupingParser() testGroupingParser {
-    l := lexer.NewScheme(2)
+    l := lexer.NewScheme()
+    l.RequireLookahead(2)
 
     openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
     closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "}"})
