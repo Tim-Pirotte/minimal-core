@@ -1,12 +1,5 @@
 package messenger
 
-import (
-	"reflect"
-	"testing"
-)
-
-// TODO allow stacktraces
-
 const bufferSize = 16
 
 type Messenger struct {
@@ -55,14 +48,6 @@ type Output interface {
     Receive(Message)
 }
 
-type TestOutput struct {
-    messages []Message
-}
-
-func (m *TestOutput) Receive(message Message) {
-    m.messages = append(m.messages, message)
-}
-
 func New() *Messenger {
     m := &Messenger{
         outputs: make([]Output, 0),
@@ -96,19 +81,4 @@ func (m *Messenger) Close() {
 
 func (m *Messenger) Send(message Message) {
     m.queue<-message
-}
-
-func (to *TestOutput) CheckMessages(t *testing.T, expected []Message) {
-    if to.messages == nil {
-        to.messages = []Message{}
-    }
-
-    if expected == nil {
-        expected = []Message{}
-    }
-
-    // TODO make this more sophisticated
-    if !reflect.DeepEqual(to.messages, expected) {
-        t.Error("\nExpected:\n", expected, "\nGot:\n", to.messages)
-    }
 }

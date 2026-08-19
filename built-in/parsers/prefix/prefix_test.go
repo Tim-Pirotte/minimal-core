@@ -5,6 +5,7 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
 	"minimal/minimal-core/built-in/messenger"
+	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"testing"
 )
 
@@ -13,7 +14,7 @@ func TestEmpty(t *testing.T) {
     lj := l.Lex("")
 
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     p := NewPrefixParser(m, l, []Rule{})
@@ -37,7 +38,7 @@ func TestNoMatchHandler(t *testing.T) {
     lj := l.Lex("")
 
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     ep := okParser{}
@@ -58,7 +59,7 @@ func TestAlreadyDeclared(t *testing.T) {
     lj := l.Lex("")
 
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     firstOk := &okParser{}
@@ -113,7 +114,7 @@ func TestTokens(t *testing.T) {
     l.AddMatcher(sm)
 
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     p := NewPrefixParser(
@@ -180,7 +181,7 @@ func TestSamePrefix(t *testing.T) {
     l.AddMatcher(sm)
 
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     p := NewPrefixParser(

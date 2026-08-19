@@ -2,12 +2,13 @@ package plugins
 
 import (
 	"minimal/minimal-core/built-in/messenger"
+	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"testing"
 )
 
 func TestEmpty(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -27,7 +28,7 @@ func (o *okPlugin) Init(*plugins) {
 
 func TestAdd(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -77,7 +78,7 @@ func (s *secondGetPlugin) Init(p *plugins) {
 
 func TestGet(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -123,7 +124,7 @@ func (s *selfRetrievingPlugin) Init(p *plugins) {
 
 func TestGetItself(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -155,7 +156,7 @@ func (m *missingPlugin) Init(p *plugins) {
 
 func TestMissing(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -171,7 +172,7 @@ func TestMissing(t *testing.T) {
 
 func TestDuplicate(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -214,7 +215,7 @@ func (valuePlugin) Init(*plugins) {}
 
 func TestNonReference(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -254,7 +255,7 @@ func (p  *pointerPlugin) Init(plugins *plugins) {
 
 func TestRetrieveNonReference(t *testing.T) {
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     r := NewRegistry(m)

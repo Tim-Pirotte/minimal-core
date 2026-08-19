@@ -18,7 +18,7 @@ func run() int {
     messenger := messaging.New()
     defer messenger.Close()
 
-    logRenderer := logrendering.NewLogRenderer(os.Stdout)
+    logRenderer := logrendering.New(os.Stdout)
     messenger.AddOutput(logRenderer)
 
     cli := cli.NewCli(messenger, bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))

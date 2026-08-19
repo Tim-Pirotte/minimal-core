@@ -4,6 +4,7 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
+	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"os"
 	"testing"
 )
@@ -12,7 +13,7 @@ type testLexer struct {
     l          *lexer.LexerScheme
     stringType lexer.TokenType
     messenger  *messenger.Messenger
-    output     *messenger.TestOutput
+    output     *testoutput.TestOutput
 }
 
 func getLexer() testLexer {
@@ -23,12 +24,12 @@ func getLexer() testLexer {
     )
 
     m := messenger.New()
-    logrenderer := logrendering.NewLogRenderer(os.Stdout)
+    logrenderer := logrendering.New(os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
     m.AddOutput(logrenderer)
 
-    testOutput := &messenger.TestOutput{}
+    testOutput := testoutput.New()
     m.AddOutput(testOutput)
 
     stringMatcher := NewRawStringMatcher(

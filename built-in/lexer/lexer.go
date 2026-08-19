@@ -212,7 +212,7 @@ func CheckTokens(t *testing.T, scheme *LexerScheme, expected []Token, text strin
     }
 
     messenger := messenger.New()
-    messenger.AddOutput(logrendering.NewLogRenderer(os.Stdout))
+    messenger.AddOutput(logrendering.New(os.Stdout))
 
     lexerDebugger := NewLexerDisplayer(scheme, os.Stdout, messenger)
 

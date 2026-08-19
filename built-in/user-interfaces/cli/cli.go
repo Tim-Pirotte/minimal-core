@@ -23,7 +23,7 @@ func NewCli(
     reader io.Reader,
     writer io.Writer,
 ) *CLI {
-    messenger.AddOutput(logrendering.NewLogRenderer(os.Stdout))
+    messenger.AddOutput(logrendering.New(os.Stdout))
 
     return &CLI{messenger, bufio.NewReader(reader), bufio.NewWriter(writer)}
 }

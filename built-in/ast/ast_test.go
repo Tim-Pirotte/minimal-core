@@ -5,6 +5,7 @@ import (
 	"errors"
 	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/messenger"
+	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ type testAST struct {
     a                      ASTDisplayer
     schema                 *ASTSchema
     messenger              *messenger.Messenger
-    to                     *messenger.TestOutput
+    to                     *testoutput.TestOutput
     zeroChildren           NodeType
     oneChild               NodeType
     twoChildren            NodeType
@@ -37,7 +38,7 @@ func getTestAST() testAST {
     )
 
     m := messenger.New()
-    to := &messenger.TestOutput{}
+    to := testoutput.New()
     m.AddOutput(to)
 
     a := NewASTDisplayer(m, schema)

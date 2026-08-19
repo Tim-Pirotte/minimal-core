@@ -66,7 +66,7 @@ type InfoReferenceConfig struct {
     MoreInfoColor   string
 }
 
-func NewLogRenderer(writer io.Writer) *LogRenderer {
+func New(writer io.Writer) *LogRenderer {
     return &LogRenderer{
         writer,
         Config{
