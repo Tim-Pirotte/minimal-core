@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"io"
 	"minimal/minimal-core/built-in/ansi"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"strings"
 )
 
 const spacesPerLevel = 2
 
 type ASTDisplayer struct {
-    messenger      *messaging.Messenger
+    messenger      *messenger.Messenger
     schema         *ASTSchema
     nodeDisplayers map[NodeType]NodeDisplayer
 }
@@ -21,7 +21,7 @@ type NodeDisplayer interface {
     Display(reference uint32) string
 }
 
-func NewASTDisplayer(messenger *messaging.Messenger, schema *ASTSchema) ASTDisplayer {
+func NewASTDisplayer(messenger *messenger.Messenger, schema *ASTSchema) ASTDisplayer {
     return ASTDisplayer{messenger, schema, map[NodeType]NodeDisplayer{}}
 }
 
@@ -126,9 +126,9 @@ func (a *ASTDisplayer) tryWrite(output io.Writer, format string, args ...any) bo
 
     if err != nil {
         a.messenger.Send(
-            messaging.Message{
+            messenger.Message{
                 Message: "AST debugger output write failed",
-                Severity: messaging.Error,
+                Severity: messenger.Error,
             },
         )
 
@@ -161,9 +161,9 @@ func (a *ASTDisplayer) getNodeAsString(node Node) string {
 }
 
 func (a *ASTDisplayer) logDuplicateNodeDisplayer(nodeType NodeType) {
-    a.messenger.Send(messaging.Message{
+    a.messenger.Send(messenger.Message{
         Message: "Duplicate node displayer in the AST displayer",
-        Severity: messaging.Error,
+        Severity: messenger.Error,
         Notes: []string{fmt.Sprintf("NodeType=%s", a.schema.GetNodeTypeMetadata(nodeType).DebugName)},
     })
 }

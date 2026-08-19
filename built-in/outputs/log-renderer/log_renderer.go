@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 )
 
 type LogRenderer struct {
@@ -117,7 +117,7 @@ func NewLogRenderer(writer io.Writer) *LogRenderer {
     }
 }
 
-func (l *LogRenderer) Receive(m messaging.Message) {
+func (l *LogRenderer) Receive(m messenger.Message) {
     bb := bytes.NewBuffer(make([]byte, 0))
 
 	bb.WriteString(l.Config.ResetAnsi)
@@ -249,23 +249,23 @@ func (c *Config) RemoveUnicode() {
     c.Diff.LineCountSeparator = "|"
 }
 
-func stringifySeverity(s messaging.Severity) string {
+func stringifySeverity(s messenger.Severity) string {
 	var sAsStr string
 
 	switch s {
-	case messaging.Verbose:
+	case messenger.Verbose:
 		sAsStr = "VERBOSE"
-	case messaging.Debug:
+	case messenger.Debug:
 		sAsStr = "DEBUG"
-	case messaging.Info:
+	case messenger.Info:
 		sAsStr = "INFO"
-	case messaging.Warning:
+	case messenger.Warning:
 		sAsStr = "WARNING"
-	case messaging.SevereWarning:
+	case messenger.SevereWarning:
 		sAsStr = "SEVERE WARNING"
-	case messaging.Error:
+	case messenger.Error:
 		sAsStr = "ERROR"
-	case messaging.Critical:
+	case messenger.Critical:
 		sAsStr = "CRITICAL"
 	default:
 		panic(fmt.Sprintf("missing string representation for the enum Severity: %d", s))
@@ -274,23 +274,23 @@ func stringifySeverity(s messaging.Severity) string {
 	return sAsStr
 }
 
-func (l *LogRenderer) getSeverityColor(s messaging.Severity) string {
+func (l *LogRenderer) getSeverityColor(s messenger.Severity) string {
 	var sAsStr string
 
 	switch s {
-	case messaging.Verbose:
+	case messenger.Verbose:
 		sAsStr = l.Config.Severity.VerboseColor
-	case messaging.Debug:
+	case messenger.Debug:
 		sAsStr = l.Config.Severity.DebugColor
-	case messaging.Info:
+	case messenger.Info:
 		sAsStr = l.Config.Severity.InfoColor
-	case messaging.Warning:
+	case messenger.Warning:
 		sAsStr = l.Config.Severity.WarningColor
-	case messaging.SevereWarning:
+	case messenger.SevereWarning:
 		sAsStr = l.Config.Severity.SevereWarningColor
-	case messaging.Error:
+	case messenger.Error:
 		sAsStr = l.Config.Severity.ErrorColor
-	case messaging.Critical:
+	case messenger.Critical:
 		sAsStr = l.Config.Severity.CriticalColor
 	default:
 		panic(fmt.Sprintf("missing color for the enum Severity: %d", s))

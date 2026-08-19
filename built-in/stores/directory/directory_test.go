@@ -1,7 +1,7 @@
 package directory
 
 import (
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"os"
 	"path/filepath"
 	"testing"
@@ -54,7 +54,7 @@ func TestLoadTemplateFromDirectory(t *testing.T) {
 		}
 	}()
 
-	directoryStore := NewDirectoryStore(messaging.NewMessenger())
+	directoryStore := NewDirectoryStore(messenger.New())
 
 	directoryStore.LoadTemplate(templateName, "cli-app", targetPath, nil)
 

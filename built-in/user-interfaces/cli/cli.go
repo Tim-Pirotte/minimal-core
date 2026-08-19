@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	messaging "minimal/minimal-core/built-in/messaging"
+	messaging "minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
 	"strings"

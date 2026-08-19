@@ -2,17 +2,17 @@ package strings
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 )
 
 type StringMatcher struct {
-    messenger *messaging.Messenger
+    messenger *messenger.Messenger
     lexer     *lexer.LexerScheme
     strType lexer.TokenType
 }
 
 func NewStringMatcher(
-    messenger *messaging.Messenger,
+    messenger *messenger.Messenger,
     lexer *lexer.LexerScheme,
     tt lexer.TokenType,
 ) *StringMatcher {
@@ -111,19 +111,19 @@ func (s *StringMatcher) Consume(l *lexer.Lexer, length uint) {
 }
 
 func (s *StringMatcher) sendUnclosedStrErr(l *lexer.Lexer) {
-    s.messenger.Send(messaging.Message{
+    s.messenger.Send(messenger.Message{
         Message: "String is not terminated with '",
-        Severity: messaging.Error,
-        Context: []messaging.Span{{Content: l.GetNextN(1), Note: "The string starts here"}},
+        Severity: messenger.Error,
+        Context: []messenger.Span{{Content: l.GetNextN(1), Note: "The string starts here"}},
         Notes: []string{"The remaining content will be interpreted as the string"},
     })
 }
 
 func (s *StringMatcher) sendUnclosedInterpolationErr(interpolationStart string) {
-    s.messenger.Send(messaging.Message{
+    s.messenger.Send(messenger.Message{
         Message: "String interpolation is not terminated with }",
-        Severity: messaging.Error,
-        Context: []messaging.Span{{Content: interpolationStart, Note: "Interpolation starts here"}},
+        Severity: messenger.Error,
+        Context: []messenger.Span{{Content: interpolationStart, Note: "Interpolation starts here"}},
         Notes: []string{"The string will be closed at the end of the source code"},
     })
 }

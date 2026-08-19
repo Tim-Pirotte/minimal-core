@@ -2,7 +2,7 @@ package indentation
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
 	"testing"
@@ -13,8 +13,8 @@ type testLexer struct {
     openBlock  lexer.TokenType
     closeBlock lexer.TokenType
     eolType    lexer.TokenType
-    messenger  *messaging.Messenger
-    output     *messaging.TestOutput
+    messenger  *messenger.Messenger
+    output     *messenger.TestOutput
 }
 
 func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
@@ -32,17 +32,17 @@ func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
         lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
     )
 
-    messenger := messaging.NewMessenger()
+    m := messenger.New()
     logrenderer := logrendering.NewLogRenderer(os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
-    messenger.AddOutput(logrenderer)
+    m.AddOutput(logrenderer)
 
-    testOutput := &messaging.TestOutput{}
-    messenger.AddOutput(testOutput)
+    testOutput := &messenger.TestOutput{}
+    m.AddOutput(testOutput)
 
     indentationMatcher := NewIndentationMatcher(
-        messenger,
+        m,
         ':',
         indentChar,
         openBlock,
@@ -53,7 +53,7 @@ func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
 
     l.AddMatcher(indentationMatcher)
 
-    return testLexer{l, openBlock, closeBlock, eolType, messenger, testOutput}
+    return testLexer{l, openBlock, closeBlock, eolType, m, testOutput}
 }
 
 func TestIndentation(t *testing.T) {
@@ -108,7 +108,7 @@ e
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestRedundantSpace(t *testing.T) {
@@ -128,7 +128,7 @@ func TestRedundantSpace(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestInconsistentIndentation(t *testing.T) {
@@ -149,12 +149,12 @@ func TestInconsistentIndentation(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: "Indentation is inconsistent",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[6:11]}},
-            AdditionalContext: []messaging.Span{
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[6:11]}},
+            AdditionalContext: []messenger.Span{
                 {
                     Content: source[2:4],
                     Note: "The indentation was derived here",
@@ -168,9 +168,9 @@ func TestInconsistentIndentation(t *testing.T) {
         },
         {
             Message: "Indentation is inconsistent",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[13:14]}},
-            AdditionalContext: []messaging.Span{
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[13:14]}},
+            AdditionalContext: []messenger.Span{
                 {
                     Content: source[2:4],
                     Note: "The indentation was derived here",
@@ -204,7 +204,7 @@ func TestExtraIndent(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestTooMuchIndent(t *testing.T) {
@@ -222,12 +222,12 @@ func TestTooMuchIndent(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: "Got more indentation than expected",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[6:12]}},
-            AdditionalContext: []messaging.Span{},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[6:12]}},
+            AdditionalContext: []messenger.Span{},
             Notes: []string{
                 "The indentation of the incorrect line is 6",
                 "The largest expected indentation is 4",
@@ -252,7 +252,7 @@ func TestDifferentSpaceChar(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestFixedIndentation(t *testing.T) {
@@ -268,12 +268,12 @@ func TestFixedIndentation(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: "Indentation is inconsistent",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[2:4]}},
-            AdditionalContext: []messaging.Span{},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[2:4]}},
+            AdditionalContext: []messenger.Span{},
             Notes: []string{
                 "The indentation was manually set",
                 "The indentation must be a multiple of 4",
@@ -297,7 +297,7 @@ func TestMatchNonIndentSpace(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestNoBlocks(t *testing.T) {
@@ -314,7 +314,7 @@ func TestNoBlocks(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestNoBlocksIncorrect(t *testing.T) {
@@ -326,11 +326,11 @@ func TestNoBlocksIncorrect(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: "Source code cannot start with indentation",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[:1]}},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[:1]}},
             Notes: []string{"The indentation at the start will be skipped"},
         },
     })
@@ -348,7 +348,7 @@ func TestTrailingSpace(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestTrailingEOL(t *testing.T) {
@@ -363,7 +363,7 @@ func TestTrailingEOL(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestOnlyOpenBlock(t *testing.T) {
@@ -378,7 +378,7 @@ func TestOnlyOpenBlock(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestOpenBlockSpaceSuffix(t *testing.T) {
@@ -393,7 +393,7 @@ func TestOpenBlockSpaceSuffix(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestOpenBlockEOLSuffix(t *testing.T) {
@@ -408,7 +408,7 @@ func TestOpenBlockEOLSuffix(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestEOLPrefix(t *testing.T) {
@@ -423,7 +423,7 @@ func TestEOLPrefix(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func FuzzIndent(f *testing.F) {

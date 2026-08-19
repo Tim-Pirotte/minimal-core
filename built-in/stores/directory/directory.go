@@ -4,7 +4,7 @@ import (
 	"flag"
 	"io"
 	"io/fs"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"os"
 	"path/filepath"
 )
@@ -16,10 +16,10 @@ const (
 )
 
 type DirectoryStore struct {
-    messenger *messaging.Messenger
+    messenger *messenger.Messenger
 }
 
-func NewDirectoryStore(messenger *messaging.Messenger) *DirectoryStore {
+func NewDirectoryStore(messenger *messenger.Messenger) *DirectoryStore {
     return &DirectoryStore{messenger}
 }
 
@@ -70,9 +70,9 @@ func (d *DirectoryStore) LoadTemplate(name, projectName, destinationPath string,
 
         return false
     default:
-        d.messenger.Send(messaging.Message{
+        d.messenger.Send(messenger.Message{
             Message: "An unforseen error has occurred",
-            Severity: messaging.Error,
+            Severity: messenger.Error,
         })
 
         return false
@@ -85,7 +85,7 @@ func (d *DirectoryStore) getSourcePath(name string) (string, bool) {
     executablePath, err := os.Executable()
 
     if err != nil {
-        d.messenger.Send(messaging.Message{
+        d.messenger.Send(messenger.Message{
             Message: "Cannot retrieve the executable path",
         })
 
@@ -99,9 +99,9 @@ func (d *DirectoryStore) checkPath(path string) {
     _, err := os.Stat(path)
 
     if err != nil {
-        d.messenger.Send(messaging.Message{
+        d.messenger.Send(messenger.Message{
             Message: "The path '" + path + "' does not exist",
-            Severity: messaging.Error,
+            Severity: messenger.Error,
         })
     }
 }

@@ -3,7 +3,7 @@ package prefix
 import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"strings"
 )
 
@@ -27,7 +27,7 @@ type PrefixParser struct {
     maxLength uint
 }
 
-func NewPrefixParser(m *messaging.Messenger, l *lexer.LexerScheme, prefixes []Rule) PrefixParser {
+func NewPrefixParser(m *messenger.Messenger, l *lexer.LexerScheme, prefixes []Rule) PrefixParser {
     root := &trieNode{false, nil, map[lexer.TokenType]*trieNode{}}
     maxLength := uint(0)
 
@@ -82,7 +82,7 @@ func (p *PrefixParser) Parse(l *lexer.Lexer, syntax *ast.ASTSchema) {
     }
 }
 
-func logDuplicatePrefix(m *messaging.Messenger, l *lexer.LexerScheme, prefix []lexer.TokenType) {
+func logDuplicatePrefix(m *messenger.Messenger, l *lexer.LexerScheme, prefix []lexer.TokenType) {
     sb := strings.Builder{}
     sb.WriteString("Prefix: [")
 
@@ -99,9 +99,9 @@ func logDuplicatePrefix(m *messaging.Messenger, l *lexer.LexerScheme, prefix []l
     sb.WriteByte(']')
 
     m.Send(
-        messaging.Message{
+        messenger.Message{
             Message: "Duplicate prefix in prefix parser",
-            Severity: messaging.Error,
+            Severity: messenger.Error,
             Notes: []string{sb.String()},
         },
     )

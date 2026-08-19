@@ -2,7 +2,7 @@ package plugins
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"reflect"
 )
 
@@ -11,7 +11,7 @@ type registry struct {
 }
 
 type plugins struct {
-    messenger *messaging.Messenger
+    messenger *messenger.Messenger
     mapping   map[reflect.Type]Plugin
 }
 
@@ -19,7 +19,7 @@ type Plugin interface {
     Init(*plugins)
 }
 
-func NewRegistry(messenger *messaging.Messenger) registry {
+func NewRegistry(messenger *messenger.Messenger) registry {
     return registry{plugins{messenger, map[reflect.Type]Plugin{}}}
 }
 
@@ -62,9 +62,9 @@ func Get[T any](p *plugins) (T, bool) {
 }
 
 func (p *plugins) logPluginNotAPointer(t reflect.Type) {
-    p.messenger.Send(messaging.Message{
+    p.messenger.Send(messenger.Message{
         Message: "Plugin should be a pointer",
-        Severity: messaging.Error,
+        Severity: messenger.Error,
         Notes: []string{
             fmt.Sprintf("Plugin type: %s", t),
             "The plugin wont be added to the registry",
@@ -73,9 +73,9 @@ func (p *plugins) logPluginNotAPointer(t reflect.Type) {
 }
 
 func (p *plugins) logDuplicatePlugin(t reflect.Type) {
-    p.messenger.Send(messaging.Message{
+    p.messenger.Send(messenger.Message{
         Message: "Duplicate plugin declaration",
-        Severity: messaging.Error,
+        Severity: messenger.Error,
         Notes: []string{
             fmt.Sprintf("Plugin type: %s", t),
             "The plugin in the registry will be overwritten",
@@ -84,9 +84,9 @@ func (p *plugins) logDuplicatePlugin(t reflect.Type) {
 }
 
 func (p *plugins) logNotRetrievingPointer(t reflect.Type) {
-    p.messenger.Send(messaging.Message{
+    p.messenger.Send(messenger.Message{
         Message: "Cannot retrieve a non pointer plugin since all plugins are pointers",
-        Severity: messaging.Error,
+        Severity: messenger.Error,
         Notes: []string{fmt.Sprintf("Requested type: %s", t)},
     })
 }

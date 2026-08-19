@@ -4,7 +4,7 @@ import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"testing"
 )
 
@@ -12,8 +12,8 @@ func TestEmpty(t *testing.T) {
     l := lexer.NewScheme()
     lj := l.Lex("")
 
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     p := NewPrefixParser(m, l, []Rule{})
@@ -21,7 +21,7 @@ func TestEmpty(t *testing.T) {
     p.Parse(lj, ast.NewSchema())
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 type okParser struct {
@@ -36,8 +36,8 @@ func TestNoMatchHandler(t *testing.T) {
     l := lexer.NewScheme()
     lj := l.Lex("")
 
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     ep := okParser{}
@@ -50,15 +50,15 @@ func TestNoMatchHandler(t *testing.T) {
     }
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestAlreadyDeclared(t *testing.T) {
     l := lexer.NewScheme()
     lj := l.Lex("")
 
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     firstOk := &okParser{}
@@ -86,10 +86,10 @@ func TestAlreadyDeclared(t *testing.T) {
     m.Close()
     to.CheckMessages(
         t,
-        []messaging.Message{
+        []messenger.Message{
             {
                 Message: "Duplicate prefix in prefix parser",
-                Severity: messaging.Error,
+                Severity: messenger.Error,
                 Notes: []string{"Prefix: []"},
             },
         },
@@ -112,8 +112,8 @@ func TestTokens(t *testing.T) {
 
     l.AddMatcher(sm)
 
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     p := NewPrefixParser(
@@ -160,7 +160,7 @@ func TestTokens(t *testing.T) {
     }
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestSamePrefix(t *testing.T) {
@@ -179,8 +179,8 @@ func TestSamePrefix(t *testing.T) {
 
     l.AddMatcher(sm)
 
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     p := NewPrefixParser(
@@ -210,5 +210,5 @@ func TestSamePrefix(t *testing.T) {
     }
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }

@@ -2,7 +2,7 @@ package setup
 
 import (
 	"minimal/minimal-core/built-in/commands/templates"
-	messaging "minimal/minimal-core/built-in/messaging"
+	messaging "minimal/minimal-core/built-in/messenger"
 	"minimal/minimal-core/built-in/startup"
 	"minimal/minimal-core/built-in/stores/directory"
 	"minimal/minimal-core/built-in/ui"

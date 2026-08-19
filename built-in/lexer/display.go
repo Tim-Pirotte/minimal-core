@@ -5,7 +5,7 @@ import (
 	"io"
 	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/diff"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"minimal/minimal-core/built-in/primitives"
 	"strconv"
 )
@@ -13,14 +13,14 @@ import (
 type LexerDisplayer struct {
     lexer       *LexerScheme
     output      io.Writer
-    messenger   *messaging.Messenger
+    messenger   *messenger.Messenger
     tokenColors map[TokenType] ansi.RGB
 }
 
 func NewLexerDisplayer(
     scheme *LexerScheme,
     output io.Writer,
-    messenger *messaging.Messenger,
+    messenger *messenger.Messenger,
 ) *LexerDisplayer {
     return &LexerDisplayer{scheme, output, messenger, map[TokenType]ansi.RGB{}}
 }
@@ -33,9 +33,9 @@ func (l *LexerDisplayer) DisplayTokens(source string, tokens []Token) {
     for _, token := range tokens {
         if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
             l.messenger.Send(
-                messaging.Message{
+                messenger.Message{
                     Message: "Lexer debugger output write failed",
-                    Severity: messaging.Error,
+                    Severity: messenger.Error,
                 },
             )
 
@@ -66,7 +66,7 @@ func (l *LexerDisplayer) DisplayTokensDiff(source string, before, after []Token)
         fmt.Print(prefix)
 
         if _, err := io.WriteString(l.output, l.StringifyToken(source, diffPart.Value)+"\n"); err != nil {
-            l.messenger.Send(messaging.Message{Message: "Lexer debugger output write failed"})
+            l.messenger.Send(messenger.Message{Message: "Lexer debugger output write failed"})
 
             return
         }

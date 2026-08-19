@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"minimal/minimal-core/built-in/ansi"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"testing"
 )
 
 type testAST struct {
     a                      ASTDisplayer
     schema                 *ASTSchema
-    messenger              *messaging.Messenger
-    to                     *messaging.TestOutput
+    messenger              *messenger.Messenger
+    to                     *messenger.TestOutput
     zeroChildren           NodeType
     oneChild               NodeType
     twoChildren            NodeType
@@ -36,16 +36,16 @@ func getTestAST() testAST {
         NodeTypeMetadata{DebugName: "Variable2", ChildCount: VariableChildCount},
     )
 
-    messenger := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
-    messenger.AddOutput(to)
+    m := messenger.New()
+    to := &messenger.TestOutput{}
+    m.AddOutput(to)
 
-    a := NewASTDisplayer(messenger, schema)
+    a := NewASTDisplayer(m, schema)
 
     return testAST{
         a,
         schema,
-        messenger,
+        m,
         to,
         zeroChildren,
         oneChild,
@@ -95,7 +95,7 @@ func TestCorrect(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestIncorrectFixedChildren(t *testing.T) {
@@ -120,7 +120,7 @@ func TestIncorrectFixedChildren(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMissingEndNode(t *testing.T) {
@@ -144,7 +144,7 @@ func TestMissingEndNode(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMissingEndNodeNested(t *testing.T) {
@@ -175,7 +175,7 @@ func TestMissingEndNodeNested(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestEndNodeInFixedChildrenNode(t *testing.T) {
@@ -198,7 +198,7 @@ func TestEndNodeInFixedChildrenNode(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestUnknownEndNodeReference(t *testing.T) {
@@ -222,7 +222,7 @@ func TestUnknownEndNodeReference(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 type failingWriter struct{}
@@ -240,9 +240,9 @@ func TestFailingWriter(t *testing.T) {
     ta.a.Display(ast, writer)
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{{
+    ta.to.CheckMessages(t, []messenger.Message{{
         Message: "AST debugger output write failed",
-        Severity: messaging.Error,
+        Severity: messenger.Error,
     }})
 }
 
@@ -278,7 +278,7 @@ func TestCustomDisplay(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestDuplicateDisplay(t *testing.T) {
@@ -304,10 +304,10 @@ func TestDuplicateDisplay(t *testing.T) {
     ta.messenger.Close()
     ta.to.CheckMessages(
         t,
-        []messaging.Message{
+        []messenger.Message{
             {
                 Message: "Duplicate node displayer in the AST displayer",
-                Severity: messaging.Error,
+                Severity: messenger.Error,
                 Notes: []string{"NodeType=Zero"},
             },
         },
@@ -336,5 +336,5 @@ func TestColoredNodes(t *testing.T) {
     }
 
     ta.messenger.Close()
-    ta.to.CheckMessages(t, []messaging.Message{})
+    ta.to.CheckMessages(t, []messenger.Message{})
 }

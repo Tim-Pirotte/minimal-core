@@ -3,16 +3,16 @@ package rawstring
 import (
 	"fmt"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"strings"
 )
 
 type RawStringMatcher struct {
-    messenger *messaging.Messenger
+    messenger *messenger.Messenger
 	tokenType lexer.TokenType
 }
 
-func NewRawStringMatcher(messenger *messaging.Messenger, tt lexer.TokenType) *RawStringMatcher {
+func NewRawStringMatcher(messenger *messenger.Messenger, tt lexer.TokenType) *RawStringMatcher {
     return &RawStringMatcher{messenger, tt}
 }
 
@@ -68,11 +68,11 @@ func (r *RawStringMatcher) Consume(l *lexer.Lexer, length uint) {
 }
 
 func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint) {
-    r.messenger.Send(messaging.Message{
+    r.messenger.Send(messenger.Message{
         Message: `Raw string is not terminated with '` + strings.Repeat("-", int(dashes)),
 
-        Severity: messaging.Error,
-        Context: []messaging.Span{{Content: l.GetNextN(dashes + 1), Note: "The raw string starts here"}},
+        Severity: messenger.Error,
+        Context: []messenger.Span{{Content: l.GetNextN(dashes + 1), Note: "The raw string starts here"}},
         Notes: []string{
             "The amount of dashes in the string prefix must match with the suffix",
             "The remaining content will be interpreted as the raw string",
@@ -81,7 +81,7 @@ func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint) {
     })
 }
 
-func findPossibleStringEnd(l *lexer.Lexer, expectedDashes uint) []messaging.Suggestion {
+func findPossibleStringEnd(l *lexer.Lexer, expectedDashes uint) []messenger.Suggestion {
     pos := uint(expectedDashes + 1)
     longestEndSequence := uint(0)
     startOfLongestEndSequence := uint(0)
@@ -123,16 +123,16 @@ func findPossibleStringEnd(l *lexer.Lexer, expectedDashes uint) []messaging.Sugg
             plural = "es"
         }
 
-        return []messaging.Suggestion{
+        return []messenger.Suggestion{
             {
                 Suggestion: "This looks like an ending sequence",
-                Replacements: []messaging.Replacement{
+                Replacements: []messenger.Replacement{
                     {
-                        From: messaging.Span{
+                        From: messenger.Span{
                             Content: l.GetNextN(pos)[startOfLongestEndSequence:startOfLongestEndSequence + longestEndSequence],
                             Note: fmt.Sprintf("Missing %d dash%s", missing, plural),
                         },
-                        To: messaging.Span{
+                        To: messenger.Span{
                             Content: "'" + strings.Repeat("-", int(expectedDashes)),
                         },
                     },

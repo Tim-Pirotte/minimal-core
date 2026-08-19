@@ -5,7 +5,7 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/matchers/indentation"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"minimal/minimal-core/built-in/parsers/pratt"
 	"reflect"
 	"testing"
@@ -92,7 +92,7 @@ func getTestGroupingParser() testGroupingParser {
     mulT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "*"})
     minT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "-"})
 
-    messenger := messaging.NewMessenger()
+    messenger := messenger.New()
     im := indentation.NewIndentationMatcher(messenger, ':', ' ', openBlockT, closeBlockT, eolT, 0)
     l.AddMatcher(im)
 

@@ -2,7 +2,7 @@ package rawstring
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
 	"testing"
@@ -11,8 +11,8 @@ import (
 type testLexer struct {
     l          *lexer.LexerScheme
     stringType lexer.TokenType
-    messenger  *messaging.Messenger
-    output     *messaging.TestOutput
+    messenger  *messenger.Messenger
+    output     *messenger.TestOutput
 }
 
 func getLexer() testLexer {
@@ -22,23 +22,23 @@ func getLexer() testLexer {
         lexer.TokenTypeMetadata{DisplayName: "a raw string literal", DebugName: "RawString"},
     )
 
-    messenger := messaging.NewMessenger()
+    m := messenger.New()
     logrenderer := logrendering.NewLogRenderer(os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
-    messenger.AddOutput(logrenderer)
+    m.AddOutput(logrenderer)
 
-    testOutput := &messaging.TestOutput{}
-    messenger.AddOutput(testOutput)
+    testOutput := &messenger.TestOutput{}
+    m.AddOutput(testOutput)
 
     stringMatcher := NewRawStringMatcher(
-        messenger,
+        m,
         rawStringType,
     )
 
     l.AddMatcher(stringMatcher)
 
-    return testLexer{l, rawStringType, messenger, testOutput}
+    return testLexer{l, rawStringType, m, testOutput}
 }
 
 func TestRawString(t *testing.T) {
@@ -50,7 +50,7 @@ func TestRawString(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestNoEscape(t *testing.T) {
@@ -62,7 +62,7 @@ func TestNoEscape(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMissingDash(t *testing.T) {
@@ -75,25 +75,25 @@ func TestMissingDash(t *testing.T) {
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
 
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: `Raw string is not terminated with '---`,
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[:4], Note: "The raw string starts here"}},
             Notes: []string{
                 "The amount of dashes in the string prefix must match with the suffix",
                 "The remaining content will be interpreted as the raw string",
             },
-            Suggestions: []messaging.Suggestion{
+            Suggestions: []messenger.Suggestion{
                 {
                     Suggestion: "This looks like an ending sequence",
-                    Replacements: []messaging.Replacement{
+                    Replacements: []messenger.Replacement{
                         {
-                            From: messaging.Span{
+                            From: messenger.Span{
                                 Content: source[19:22],
                                 Note: "Missing 1 dash",
                             },
-                            To: messaging.Span{
+                            To: messenger.Span{
                                 Content: "'---",
                             },
                         },
@@ -114,25 +114,25 @@ func TestMissingDashes(t *testing.T) {
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
 
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: `Raw string is not terminated with '---`,
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[:4], Note: "The raw string starts here"}},
             Notes: []string{
                 "The amount of dashes in the string prefix must match with the suffix",
                 "The remaining content will be interpreted as the raw string",
             },
-            Suggestions: []messaging.Suggestion{
+            Suggestions: []messenger.Suggestion{
                 {
                     Suggestion: "This looks like an ending sequence",
-                    Replacements: []messaging.Replacement{
+                    Replacements: []messenger.Replacement{
                         {
-                            From: messaging.Span{
+                            From: messenger.Span{
                                 Content: source[17:19],
                                 Note: "Missing 2 dashes",
                             },
-                            To: messaging.Span{
+                            To: messenger.Span{
                                 Content: "'---",
                             },
                         },
@@ -152,11 +152,11 @@ func TestUnclosed(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: `Raw string is not terminated with '---`,
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[:4], Note: "The raw string starts here"}},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[:4], Note: "The raw string starts here"}},
             Notes: []string{
                 "The amount of dashes in the string prefix must match with the suffix",
                 "The remaining content will be interpreted as the raw string",

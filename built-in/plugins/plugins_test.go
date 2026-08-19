@@ -1,20 +1,20 @@
 package plugins
 
 import (
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"testing"
 )
 
 func TestEmpty(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
     r.Setup()
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 type okPlugin struct {
@@ -26,8 +26,8 @@ func (o *okPlugin) Init(*plugins) {
 }
 
 func TestAdd(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -42,7 +42,7 @@ func TestAdd(t *testing.T) {
     }
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 type firstGetPlugin struct {
@@ -76,8 +76,8 @@ func (s *secondGetPlugin) Init(p *plugins) {
 }
 
 func TestGet(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -99,7 +99,7 @@ func TestGet(t *testing.T) {
     }
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 type selfRetrievingPlugin struct {
@@ -122,8 +122,8 @@ func (s *selfRetrievingPlugin) Init(p *plugins) {
 }
 
 func TestGetItself(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -138,7 +138,7 @@ func TestGetItself(t *testing.T) {
     }
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 type missingPlugin struct {
@@ -154,8 +154,8 @@ func (m *missingPlugin) Init(p *plugins) {
 }
 
 func TestMissing(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -166,12 +166,12 @@ func TestMissing(t *testing.T) {
     r.Setup()
 
     m.Close()
-    to.CheckMessages(t, []messaging.Message{})
+    to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestDuplicate(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -195,10 +195,10 @@ func TestDuplicate(t *testing.T) {
     m.Close()
     to.CheckMessages(
         t,
-        []messaging.Message{
+        []messenger.Message{
             {
                 Message: "Duplicate plugin declaration",
-                Severity: messaging.Error,
+                Severity: messenger.Error,
                 Notes: []string{
                     "Plugin type: *plugins.okPlugin",
                     "The plugin in the registry will be overwritten",
@@ -213,8 +213,8 @@ type valuePlugin struct {}
 func (valuePlugin) Init(*plugins) {}
 
 func TestNonReference(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -227,10 +227,10 @@ func TestNonReference(t *testing.T) {
     m.Close()
     to.CheckMessages(
         t,
-        []messaging.Message{
+        []messenger.Message{
             {
                 Message: "Plugin should be a pointer",
-                Severity: messaging.Error,
+                Severity: messenger.Error,
                 Notes: []string{
                     "Plugin type: plugins.valuePlugin",
                     "The plugin wont be added to the registry",
@@ -253,8 +253,8 @@ func (p  *pointerPlugin) Init(plugins *plugins) {
 }
 
 func TestRetrieveNonReference(t *testing.T) {
-    m := messaging.NewMessenger()
-    to := &messaging.TestOutput{}
+    m := messenger.New()
+    to := &messenger.TestOutput{}
     m.AddOutput(to)
 
     r := NewRegistry(m)
@@ -267,10 +267,10 @@ func TestRetrieveNonReference(t *testing.T) {
     m.Close()
     to.CheckMessages(
         t,
-        []messaging.Message{
+        []messenger.Message{
             {
                 Message: "Cannot retrieve a non pointer plugin since all plugins are pointers",
-                Severity: messaging.Error,
+                Severity: messenger.Error,
                 Notes: []string{"Requested type: plugins.pointerPlugin"},
             },
         },

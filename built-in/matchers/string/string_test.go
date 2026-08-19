@@ -2,7 +2,7 @@ package strings
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
 	"testing"
@@ -11,8 +11,8 @@ import (
 type testLexer struct {
     l          *lexer.LexerScheme
     stringType lexer.TokenType
-    messenger  *messaging.Messenger
-    output     *messaging.TestOutput
+    messenger  *messenger.Messenger
+    output     *messenger.TestOutput
 }
 
 func getLexer() testLexer {
@@ -22,24 +22,24 @@ func getLexer() testLexer {
         lexer.TokenTypeMetadata{DisplayName: "a string literal", DebugName: "String"},
     )
 
-    messenger := messaging.NewMessenger()
+    m := messenger.New()
     logrenderer := logrendering.NewLogRenderer(os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
-    messenger.AddOutput(logrenderer)
+    m.AddOutput(logrenderer)
 
-    testOutput := &messaging.TestOutput{}
-    messenger.AddOutput(testOutput)
+    testOutput := &messenger.TestOutput{}
+    m.AddOutput(testOutput)
 
     stringMatcher := NewStringMatcher(
-        messenger,
+        m,
         l,
         stringType,
     )
 
     l.AddMatcher(stringMatcher)
 
-    return testLexer{l, stringType, messenger, testOutput}
+    return testLexer{l, stringType, m, testOutput}
 }
 
 func TestString(t *testing.T) {
@@ -51,7 +51,7 @@ func TestString(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestEscape(t *testing.T) {
@@ -63,7 +63,7 @@ func TestEscape(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMultiLine(t *testing.T) {
@@ -81,7 +81,7 @@ func TestMultiLine(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestInterpolated(t *testing.T) {
@@ -99,7 +99,7 @@ func TestInterpolated(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestUnclosedString(t *testing.T) {
@@ -111,11 +111,11 @@ func TestUnclosedString(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{
+    l.output.CheckMessages(t, []messenger.Message{
         {
             Message: "String is not terminated with '",
-            Severity: messaging.Error,
-            Context: []messaging.Span{{Content: source[:1], Note: "The string starts here"}},
+            Severity: messenger.Error,
+            Context: []messenger.Span{{Content: source[:1], Note: "The string starts here"}},
             Notes: []string{"The remaining content will be interpreted as the string"},
         },
     })
@@ -133,7 +133,7 @@ func TestMultipleStrings(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMissingClosingBrace(t *testing.T) {
@@ -151,11 +151,11 @@ func TestMissingClosingBrace(t *testing.T) {
     l.messenger.Close()
     l.output.CheckMessages(
         t,
-        []messaging.Message{
+        []messenger.Message{
             {
                 Message: "String interpolation is not terminated with }",
-                Severity: messaging.Error,
-                Context: []messaging.Span{{Content: source[1:2], Note: "Interpolation starts here"}},
+                Severity: messenger.Error,
+                Context: []messenger.Span{{Content: source[1:2], Note: "Interpolation starts here"}},
                 Notes: []string{"The string will be closed at the end of the source code"},
             },
         },
@@ -171,7 +171,7 @@ func TestExtraClosingBrace(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 type braceSymbolMatcher struct { }
@@ -203,7 +203,7 @@ func TestDifferentEnclosing(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMultipleInterpolations(t *testing.T) {
@@ -221,5 +221,5 @@ func TestMultipleInterpolations(t *testing.T) {
 
     lexer.CheckTokens(t, l.l, expected, source)
     l.messenger.Close()
-    l.output.CheckMessages(t, []messaging.Message{})
+    l.output.CheckMessages(t, []messenger.Message{})
 }

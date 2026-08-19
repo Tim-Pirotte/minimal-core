@@ -1,4 +1,4 @@
-package messaging
+package messenger
 
 import (
 	"reflect"
@@ -6,7 +6,6 @@ import (
 )
 
 // TODO allow stacktraces
-// TODO change package name to messager and change constructor to New
 
 const bufferSize = 16
 
@@ -64,7 +63,7 @@ func (m *TestOutput) Receive(message Message) {
     m.messages = append(m.messages, message)
 }
 
-func NewMessenger() *Messenger {
+func New() *Messenger {
     m := &Messenger{
         outputs: make([]Output, 0),
         queue:   make(chan Message, bufferSize),

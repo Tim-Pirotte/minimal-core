@@ -2,14 +2,14 @@ package indentation
 
 import (
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	"minimal/minimal-core/built-in/primitives"
 	"strconv"
 	"strings"
 )
 
 type IndentationMatcher struct {
-    messenger               *messaging.Messenger
+    messenger               *messenger.Messenger
     openBlockSymbol         byte
     indentChar              byte
     openBlock               lexer.TokenType
@@ -22,7 +22,7 @@ type IndentationMatcher struct {
 }
 
 func NewIndentationMatcher(
-    messenger *messaging.Messenger,
+    messenger *messenger.Messenger,
     openBlockSymbol, indentChar byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
     spacesPerLevel uint,
@@ -180,10 +180,10 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.Lexer, isOpenBlock bool, le
 }
 
 func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.Lexer, startIndent uint) {
-    i.messenger.Send(messaging.Message{
+    i.messenger.Send(messenger.Message{
         Message: "Source code cannot start with indentation",
-        Severity: messaging.Error,
-        Context: []messaging.Span{{Content: l.GetNextN(startIndent)}},
+        Severity: messenger.Error,
+        Context: []messenger.Span{{Content: l.GetNextN(startIndent)}},
         Notes: []string{"The indentation at the start will be skipped"},
     })
 }
@@ -191,11 +191,11 @@ func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.Lexer, startIndent uin
 func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length uint) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
-    message := messaging.Message{
+    message := messenger.Message{
         Message: "Indentation is inconsistent",
-        Severity: messaging.Error,
-        Context: []messaging.Span{{Content: context}},
-        AdditionalContext: []messaging.Span{},
+        Severity: messenger.Error,
+        Context: []messenger.Span{{Content: context}},
+        AdditionalContext: []messenger.Span{},
         Notes: []string{
             "The indentation must be a multiple of " + strconv.Itoa(len(i.spacesPerLevel)),
             "The indentation of the incorrect line is " + strconv.Itoa(int(i.spaceCount)),
@@ -204,7 +204,7 @@ func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length ui
     }
 
     if primitives.IsSubString(l.Data, i.spacesPerLevel) {
-        message.AdditionalContext = append(message.AdditionalContext, messaging.Span{
+        message.AdditionalContext = append(message.AdditionalContext, messenger.Span{
             Content: i.spacesPerLevel,
             Note: "The indentation was derived here",
         })
@@ -218,11 +218,11 @@ func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length ui
 func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.Lexer, length uint) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
-    i.messenger.Send(messaging.Message{
+    i.messenger.Send(messenger.Message{
         Message: "Got more indentation than expected",
-        Severity: messaging.Error,
-        Context: []messaging.Span{{Content: context}},
-        AdditionalContext: []messaging.Span{},
+        Severity: messenger.Error,
+        Context: []messenger.Span{{Content: context}},
+        AdditionalContext: []messenger.Span{},
         Notes: []string{
             "The indentation of the incorrect line is " + strconv.Itoa(int(i.spaceCount)),
             "The largest expected indentation is " + strconv.Itoa(int(i.level) * len(i.spacesPerLevel)),

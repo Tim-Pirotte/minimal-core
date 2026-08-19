@@ -3,7 +3,7 @@ package startup
 import (
 	"errors"
 	"io/fs"
-	messaging "minimal/minimal-core/built-in/messaging"
+	messaging "minimal/minimal-core/built-in/messenger"
 	"os"
 	"path"
 	"strconv"

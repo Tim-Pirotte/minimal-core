@@ -1,4 +1,4 @@
-package messaging
+package messenger
 
 // TODO Add proper tests
 // func TestMessenger(t *testing.T) {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	messaging "minimal/minimal-core/built-in/messaging"
+	messaging "minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"minimal/minimal-core/built-in/startup"
 	"minimal/minimal-core/built-in/user-interfaces/cli"
@@ -15,7 +15,7 @@ func main() {
 }
 
 func run() int {
-    messenger := messaging.NewMessenger()
+    messenger := messaging.New()
     defer messenger.Close()
 
     logRenderer := logrendering.NewLogRenderer(os.Stdout)

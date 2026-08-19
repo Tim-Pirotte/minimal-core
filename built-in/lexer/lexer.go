@@ -2,7 +2,7 @@ package lexer
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/messaging"
+	"minimal/minimal-core/built-in/messenger"
 	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
 	"os"
 	"testing"
@@ -211,7 +211,7 @@ func CheckTokens(t *testing.T, scheme *LexerScheme, expected []Token, text strin
         lexer.Advance()
     }
 
-    messenger := messaging.NewMessenger()
+    messenger := messenger.New()
     messenger.AddOutput(logrendering.NewLogRenderer(os.Stdout))
 
     lexerDebugger := NewLexerDisplayer(scheme, os.Stdout, messenger)
