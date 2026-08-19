@@ -1,88 +1,49 @@
 package messenger
 
-// TODO Add proper tests
-// func TestMessenger(t *testing.T) {
-// 	sourceGen := logging.GetTestLogSource(io.Discard)
-// 	m := NewMessenger(sourceGen)
-// 	mock := &TestOutput{}
-// 	m.AddOutput(mock)
+import (
+    "strings"
+    "testing"
+)
 
-// 	m.Send([]MessagePart{
-// 		&Message{Critical, "Hello, World!"},
-// 	})
+func TestEmpty(t *testing.T) {
+    m := New()
+    m.Send(Message{})
+    m.Close()
+}
 
-// 	m.Close()
+type orderOutput struct {
+    t *testing.T
+    current int
+}
 
-// 	expectedLength := 1
+func (o *orderOutput) Receive(message Message) {
+    if o.current != len(message.Message) {
+        o.t.Fatalf("Expected message length %d but got length %d", o.current, len(message.Message))
+    }
 
-// 	if len(mock.messages) != expectedLength {
-// 		t.Fatal("Expected length of messages to be", expectedLength, "but got", len(mock.messages))
-// 	}
+    o.current++
+}
 
-// 	expectedInnerLength := 1
+func TestOrder(t *testing.T) {
+    m := New()
+    m.AddOutput(&orderOutput{t, 0})
 
-// 	if len(mock.messages[0]) != expectedInnerLength {
-// 		t.Fatal(
-// 			"Expected length of the message to be",
-// 			expectedInnerLength,
-// 			"but got",
-// 			len(mock.messages[0]),
-// 		)
-// 	}
+    for i := range 100 {
+        m.Send(Message{Message: strings.Repeat("a", i)})
+    }
 
-// 	message, ok := mock.messages[0][0].(*Message)
+    m.Close()
+}
 
-// 	if !ok {
-// 		t.Fatal(
-// 			"Expected the first message to be of type *Message but got",
-// 			fmt.Sprintf("%T\n", mock.messages[0][0]),
-// 		)
-// 	}
+func TestSendAfterClose(t *testing.T) {
+    defer func() {
+        if recover() == nil {
+            t.Fail()
+        }
+    }()
 
-// 	expectedMessage := "Hello, World!"
-
-// 	if message.Message != expectedMessage {
-// 		t.Fatal("Expected message to be", expectedMessage, "but got", message.Message)
-// 	}
-// }
-
-// func TestMessengerRaceConditions(t *testing.T) {
-// 	sourceGen := logging.GetTestLogSource(io.Discard)
-// 	m := NewMessenger(sourceGen)
-// 	mock := &TestOutput{}
-// 	m.AddOutput(mock)
-
-// 	const goroutines = 10
-// 	const messagesPerRoutine = 100
-// 	var wg sync.WaitGroup
-
-// 	for i := range goroutines {
-// 		wg.Add(1)
-
-// 		go func(id int) {
-// 			defer wg.Done()
-// 			messages := make([]MessagePart, messagesPerRoutine)
-
-// 			for i := range messagesPerRoutine {
-// 				messages[i] = &Message{Critical, "Hello, World!"}
-// 			}
-
-// 			m.Send(messages)
-// 		}(i)
-// 	}
-
-// 	wg.Wait()
-// 	m.Close()
-
-// 	expectedTotal := goroutines * messagesPerRoutine
-
-// 	actualLength := 0
-
-// 	for _, messageParts := range mock.messages {
-// 		actualLength += len(messageParts)
-// 	}
-
-// 	if actualLength != expectedTotal {
-// 		t.Errorf("Data loss detected: expected %d messages, got %d", expectedTotal, len(mock.messages))
-// 	}
-// }
+    m := New()
+    m.Close()
+    m.Send(Message{})
+    t.Fail()
+}

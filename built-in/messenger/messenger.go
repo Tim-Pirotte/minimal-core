@@ -35,7 +35,7 @@ type Span struct {
 }
 
 type Suggestion struct {
-    Suggestion string
+    Suggestion   string
     Replacements []Replacement
 }
 
@@ -80,5 +80,5 @@ func (m *Messenger) Close() {
 }
 
 func (m *Messenger) Send(message Message) {
-    m.queue<-message
+    m.queue <- message
 }
