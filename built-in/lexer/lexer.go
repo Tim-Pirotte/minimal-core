@@ -9,13 +9,13 @@ import (
 	"unsafe"
 )
 
-type TokenType uint
-
 const (
     UNKNOWN TokenType = iota
     // Always keep END at the end
     END
 )
+
+type TokenType uint
 
 type Token struct {
     Type  TokenType

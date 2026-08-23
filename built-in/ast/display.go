@@ -16,6 +16,7 @@ type ASTDisplayer struct {
     nodeDisplayers map[NodeType]NodeDisplayer
 }
 
+// TODO Shouldn't we use this instead of the metadata?
 type NodeDisplayer interface {
     GetNodeType() NodeType
     Display(reference uint32) string

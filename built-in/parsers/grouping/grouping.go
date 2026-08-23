@@ -8,8 +8,7 @@ import (
 	"minimal/minimal-core/built-in/parsers/pratt"
 )
 
-// TODO should the eol ignore be controllable from outside (for different enclosings)?
-// Yes
+// TODO split () and eol into different parsers
 
 type GroupingParser struct {
     prattParser  pratt.PrattParser
@@ -60,6 +59,20 @@ func NewGroupingParser(
     return g
 }
 
+// Lets the eolParser know that it is in a block in which an eol
+// does not mean the end of the current prattparser.Parse
+func (n *nestingParser) EnterBlock() {
+    *n.nestingCount++
+}
+
+func (n *nestingParser) ExitBlock() {
+    if *n.nestingCount != 0 {
+        *n.nestingCount--
+    } else {
+        logExitWithoutEnter()
+    }
+}
+
 func (e *eolParser) GetTokenType() lexer.TokenType {
     return e.eol
 }
@@ -107,9 +120,9 @@ func (n *nestingParser) GetTokenType() lexer.TokenType {
 func (n *nestingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint) []ast.Node {
     l.Advance()
 
-    *n.nestingCount++
+    n.EnterBlock()
     result := pp.Parse(l, 0)
-    *n.nestingCount--
+    n.ExitBlock()
 
     if l.Peek(0).Type == n.close {
         l.Advance()
@@ -142,4 +155,8 @@ func logEOLInfixAlreadyDeclared() {
 func logOpenPrefixAlreadyDeclared() {
     // TODO use proper message
     fmt.Println("The Open block token has already been used for a prefix in this Pratt parser")
+}
+
+func logExitWithoutEnter() {
+    // TODO
 }
