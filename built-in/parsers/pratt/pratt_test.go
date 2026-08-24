@@ -32,7 +32,7 @@ func (e *endParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower 
 func TestPrefix(t *testing.T) {
     l := lexer.NewScheme()
     syntax := ast.NewSchema()
-    end := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "END"})
+    end := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "END"})
 
     p := NewPrattParser(l,
         []Prefix{&endParser{lexer.END, end}},
@@ -90,9 +90,9 @@ func TestBinary(t *testing.T) {
     l.AddMatcher(sm)
 
     syntax := ast.NewSchema()
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "B"})
+    a := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "A"})
+    plus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "B"})
 
     p := NewPrattParser(
         l,
@@ -202,11 +202,11 @@ func TestParseCompleteExpression(t *testing.T) {
     l.AddMatcher(sm)
 
     syntax := ast.NewSchema()
-    minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-", ChildCount: 1})
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "B"})
-    exclamation := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "!", ChildCount: 1})
+    minus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "-", ChildCount: 1})
+    a := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "A"})
+    plus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "B"})
+    exclamation := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "!", ChildCount: 1})
 
     p := NewPrattParser(
         l,

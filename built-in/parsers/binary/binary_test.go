@@ -51,16 +51,16 @@ func getTestBinaryParser() testBinaryParser {
     l.AddMatcher(sm)
 
     syntax := ast.NewSchema()
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
-    minus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "-", ChildCount: 1})
-    mul := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "*", ChildCount: 2})
+    plus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    minus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "-", ChildCount: 1})
+    mul := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "*", ChildCount: 2})
 
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "a"})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "b"})
-    c := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "c"})
-    d := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "d"})
-    e := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "e"})
-    f := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "f"})
+    a := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "a"})
+    b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "b"})
+    c := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "c"})
+    d := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "d"})
+    e := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "e"})
+    f := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "f"})
 
     p := pratt.NewPrattParser(
         l,

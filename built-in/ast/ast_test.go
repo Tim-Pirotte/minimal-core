@@ -3,7 +3,6 @@ package ast
 import (
 	"bytes"
 	"errors"
-	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/messenger"
 	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"testing"
@@ -25,16 +24,16 @@ type testAST struct {
 func getTestAST() testAST {
     schema := NewSchema()
 
-    zeroChildren := schema.NewNodeType(NodeTypeMetadata{DebugName: "Zero"})
-    oneChild := schema.NewNodeType(NodeTypeMetadata{DebugName: "One", ChildCount: 1})
-    twoChildren := schema.NewNodeType(NodeTypeMetadata{DebugName: "Two", ChildCount: 2})
+    zeroChildren := schema.NewNodeType(&StructNodeTypeMetadata{DebugName: "Zero"})
+    oneChild := schema.NewNodeType(&StructNodeTypeMetadata{DebugName: "One", ChildCount: 1})
+    twoChildren := schema.NewNodeType(&StructNodeTypeMetadata{DebugName: "Two", ChildCount: 2})
 
     firstVariableChildren := schema.NewNodeType(
-        NodeTypeMetadata{DebugName: "Variable1", ChildCount: VariableChildCount},
+        &StructNodeTypeMetadata{DebugName: "Variable1", ChildCount: VariableChildCount},
     )
 
     secondVariableChildren := schema.NewNodeType(
-        NodeTypeMetadata{DebugName: "Variable2", ChildCount: VariableChildCount},
+        &StructNodeTypeMetadata{DebugName: "Variable2", ChildCount: VariableChildCount},
     )
 
     m := messenger.New()
@@ -245,97 +244,4 @@ func TestFailingWriter(t *testing.T) {
         Message: "AST debugger output write failed",
         Severity: messenger.Error,
     }})
-}
-
-type customDisplay struct {
-    nodeType NodeType
-    message  string
-}
-
-func (c *customDisplay) GetNodeType() NodeType {
-    return c.nodeType
-}
-
-func (c *customDisplay) Display(uint32) string {
-    return c.message
-}
-
-func TestCustomDisplay(t *testing.T) {
-    ta := getTestAST()
-
-    ast := []Node{{ta.oneChild, 0}, {ta.zeroChildren, 0}}
-
-    var buf bytes.Buffer
-
-    cd := customDisplay{ta.zeroChildren, "TestCustomDisplay"}
-    ta.a.AddNodeDisplayer(&cd)
-    ta.a.Display(ast, &buf)
-
-    expected := "One\n" +
-                "  TestCustomDisplay\n"
-
-    if buf.String() != expected {
-        t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
-    }
-
-    ta.messenger.Close()
-    ta.to.CheckMessages(t, []messenger.Message{})
-}
-
-func TestDuplicateDisplay(t *testing.T) {
-    ta := getTestAST()
-    ast := []Node{{ta.zeroChildren, 0}}
-
-    var buf bytes.Buffer
-
-    cd1 := customDisplay{ta.zeroChildren, "FirstCustomDisplay"}
-    cd2 := customDisplay{ta.zeroChildren, "SecondCustomDisplay"}
-
-    ta.a.AddNodeDisplayer(&cd1)
-    ta.a.AddNodeDisplayer(&cd2)
-
-    ta.a.Display(ast, &buf)
-
-    expected := "SecondCustomDisplay\n"
-
-    if buf.String() != expected {
-        t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
-    }
-
-    ta.messenger.Close()
-    ta.to.CheckMessages(
-        t,
-        []messenger.Message{
-            {
-                Message: "Duplicate node displayer in the AST displayer",
-                Severity: messenger.Error,
-                Notes: []string{"NodeType=Zero"},
-            },
-        },
-    )
-}
-
-func TestColoredNodes(t *testing.T) {
-    ta := getTestAST()
-
-    ast := []Node{
-        {ta.oneChild, 0},
-        {ta.zeroChildren, 1},
-    }
-
-    var buf bytes.Buffer
-
-    ta.a.AddNodeDisplayer(NewNodeColorer(ta.schema, ta.oneChild, ansi.GetRGBColor(0, 255, 242)))
-    ta.a.AddNodeDisplayer(NewNodeColorer(ta.schema, ta.zeroChildren, ansi.GetRGBColor(255, 0, 162)))
-    ta.a.Display(ast, &buf)
-
-    expected := "\x1b[38;2;0;255;242mOne\x1b[0m\n" +
-                "  \x1b[38;2;255;0;162mZero\x1b[0m Reference=1\n"
-
-    if buf.String() != expected {
-        t.Errorf("\nExpected:\n%sGot:\n%s", expected, buf.String())
-    }
-
-    ta.messenger.Close()
-    ta.to.CheckMessages(t, []messenger.Message{})
 }

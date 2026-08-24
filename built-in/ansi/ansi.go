@@ -14,5 +14,5 @@ type RGB string
 func GetRGBColor(r, g, b uint8) RGB {
     format := csi + foreground + ";" + trueColor + ";%d;%d;%d" + sgr
 
-	return RGB(fmt.Sprintf(format, r, g, b))
+    return RGB(fmt.Sprintf(format, r, g, b))
 }

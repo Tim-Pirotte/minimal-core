@@ -108,13 +108,13 @@ func getTestGroupingParser() testGroupingParser {
     l.AddMatcher(sm)
 
     syntax := ast.NewSchema()
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
-    mul := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "*", ChildCount: 2})
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "A"})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "B"})
-    c := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "C"})
-    min := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "- (unary)", ChildCount: 1})
-    minBin := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "- (binary)", ChildCount: 2})
+    plus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    mul := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "*", ChildCount: 2})
+    a := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "A"})
+    b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "B"})
+    c := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "C"})
+    min := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "- (unary)", ChildCount: 1})
+    minBin := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "- (binary)", ChildCount: 2})
 
     p := pratt.NewPrattParser(
         l,

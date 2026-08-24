@@ -31,12 +31,12 @@ func TestBindingPower(t *testing.T) {
     l.AddMatcher(sm)
 
     syntax := ast.NewSchema()
-    plus := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "+", ChildCount: 2})
-    exclamation := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "!", ChildCount: 1})
-    quote := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "'", ChildCount: 1})
+    plus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "+", ChildCount: 2})
+    exclamation := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "!", ChildCount: 1})
+    quote := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "'", ChildCount: 1})
 
-    a := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "a"})
-    b := syntax.NewNodeType(ast.NodeTypeMetadata{DebugName: "b"})
+    a := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "a"})
+    b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "b"})
 
     p := pratt.NewPrattParser(
         l,

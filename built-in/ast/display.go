@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"io"
-	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/messenger"
 	"strings"
 )
@@ -13,27 +12,10 @@ const spacesPerLevel = 2
 type ASTDisplayer struct {
     messenger      *messenger.Messenger
     schema         *ASTSchema
-    nodeDisplayers map[NodeType]NodeDisplayer
-}
-
-// TODO Shouldn't we use this instead of the metadata?
-type NodeDisplayer interface {
-    GetNodeType() NodeType
-    Display(reference uint32) string
 }
 
 func NewASTDisplayer(messenger *messenger.Messenger, schema *ASTSchema) ASTDisplayer {
-    return ASTDisplayer{messenger, schema, map[NodeType]NodeDisplayer{}}
-}
-
-func (a *ASTDisplayer) AddNodeDisplayer(n NodeDisplayer) {
-    nodeType := n.GetNodeType()
-
-    if _, ok := a.nodeDisplayers[nodeType]; ok {
-        a.logDuplicateNodeDisplayer(nodeType)
-    }
-
-    a.nodeDisplayers[nodeType] = n
+    return ASTDisplayer{messenger, schema}
 }
 
 func (a *ASTDisplayer) Display(ast []Node, o io.Writer) {
@@ -54,16 +36,18 @@ func (a *ASTDisplayer) Display(ast []Node, o io.Writer) {
 }
 
 func (a *ASTDisplayer) displayNode(o io.Writer, ast []Node, node Node, position *int, depth int) (writeSuccess bool) {
+    metadata := a.schema.GetNodeTypeMetadata(node.Type)
+
     if !a.tryWrite(
         o,
         "%s%s\n",
         strings.Repeat(" ", spacesPerLevel * depth),
-        a.getNodeAsString(node),
+        metadata.GetDebugName(node.Reference),
     ) {
         return false
     }
 
-    childCount := a.schema.GetNodeTypeMetadata(node.Type).ChildCount
+    childCount := a.schema.GetNodeTypeMetadata(node.Type).GetChildCount()
 
     if childCount == VariableChildCount {
         for *position != len(ast) {
@@ -141,55 +125,8 @@ func (a *ASTDisplayer) tryWrite(output io.Writer, format string, args ...any) bo
 
 func (a *ASTDisplayer) getEndNodeName(endNode Node) string {
     if int(endNode.Reference) < len(a.schema.metadata) {
-        return a.schema.GetNodeTypeMetadata(NodeType(endNode.Reference)).DebugName
+        return a.schema.GetNodeTypeMetadata(NodeType(endNode.Reference)).GetDebugName(0)
     }
 
     return fmt.Sprintf("UNKNOWN Reference=%d", endNode.Reference)
-}
-
-func (a *ASTDisplayer) getNodeAsString(node Node) string {
-    if displayer, ok := a.nodeDisplayers[node.Type]; ok {
-        return displayer.Display(node.Reference)
-    }
-
-    metadata := a.schema.GetNodeTypeMetadata(node.Type)
-
-    if node.Reference == 0 {
-        return metadata.DebugName
-    }
-
-    return fmt.Sprintf("%s Reference=%d", metadata.DebugName, node.Reference)
-}
-
-func (a *ASTDisplayer) logDuplicateNodeDisplayer(nodeType NodeType) {
-    a.messenger.Send(messenger.Message{
-        Message: "Duplicate node displayer in the AST displayer",
-        Severity: messenger.Error,
-        Notes: []string{fmt.Sprintf("NodeType=%s", a.schema.GetNodeTypeMetadata(nodeType).DebugName)},
-    })
-}
-
-type NodeColorer struct {
-    schema   *ASTSchema
-    nodeType NodeType
-    color    ansi.RGB
-}
-
-func NewNodeColorer(schema *ASTSchema, nodeType NodeType, color ansi.RGB) *NodeColorer {
-    return &NodeColorer{schema, nodeType, color}
-}
-
-func (n *NodeColorer) GetNodeType() NodeType {
-    return n.nodeType
-}
-
-func (n *NodeColorer) Display(reference uint32) string {
-    metadata := n.schema.GetNodeTypeMetadata(n.nodeType)
-    colored := string(n.color) + metadata.DebugName + ansi.Reset
-
-    if reference == 0 {
-        return colored
-    }
-
-    return fmt.Sprintf("%s Reference=%d", colored, reference)
 }
