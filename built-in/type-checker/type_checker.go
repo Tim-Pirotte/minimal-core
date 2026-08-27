@@ -2,43 +2,36 @@ package typechecker
 
 import "minimal/minimal-core/built-in/ast"
 
-const (
-    // Always keep NOTHING at the end
-    NOTHING TypeKind = iota
-)
+// Always keep NOTHING at the end
+const NOTHING TypeKind = iota
 
-type TypeKind uint32
-
-type Type struct {
-    Kind      TypeKind
-    Reference uint32
+type TypeCheckerSchema struct {
+    metadata     []TypeKindMetadata
+    lastTypeKind TypeKind
 }
 
 type TypeKindMetadata interface {
     GetDisplayName(reference uint32) string
 }
 
-type TypeCheckerSchema struct {
-    astSchema    *ast.ASTSchema
-    checkers     map[ast.NodeType]NodeChecker
-    lastTypeKind TypeKind
-    metadata     []TypeKindMetadata
-}
-
-type NodeChecker interface {
-    GetNodeType() ast.NodeType
-    Check(*TypeChecker) Type
-}
-
 type TypeChecker struct {
-    astSchema *ast.ASTSchema
-    checkers  map[ast.NodeType]NodeChecker
-    ast       []ast.Node
-    position  uint32
+    typeStack    []TypeFrame
 }
+
+type TypeFrame struct {
+    incoming Type
+    result   Type
+}
+
+type Type struct {
+    Kind      TypeKind
+    Reference uint32
+}
+
+type TypeKind uint32
 
 func NewSchema(astSchema *ast.ASTSchema) *TypeCheckerSchema {
-    return &TypeCheckerSchema{astSchema, map[ast.NodeType]NodeChecker{}, NOTHING, []TypeKindMetadata{}}
+    return &TypeCheckerSchema{[]TypeKindMetadata{}, NOTHING}
 }
 
 func (t *TypeCheckerSchema) NewTypeKind(metadata TypeKindMetadata) TypeKind {
@@ -48,61 +41,40 @@ func (t *TypeCheckerSchema) NewTypeKind(metadata TypeKindMetadata) TypeKind {
     return t.lastTypeKind
 }
 
-func (t *TypeCheckerSchema) AddNodeChecker(nodeChecker NodeChecker) {
-    nodeType := nodeChecker.GetNodeType()
-
-    if _, ok := t.checkers[nodeType]; ok {
-        logDuplicateNodeChecker()
-    }
-
-    t.checkers[nodeType] = nodeChecker
-}
-
 func (t *TypeCheckerSchema) Stringify(dataType Type) string {
     return t.metadata[dataType.Kind].GetDisplayName(dataType.Reference)
 }
 
 func (t *TypeCheckerSchema) NewChecker(ast []ast.Node) TypeChecker {
-    return TypeChecker{t.astSchema, t.checkers, ast, 0}
+    return TypeChecker{[]TypeFrame{{}}}
 }
 
-// TODO what if we want to pass more data around during the semantic pass
-func (t *TypeChecker) GetNextType() Type {
-    if t.position >= uint32(len(t.ast)) {
-        // TODO critical error
+func (t *TypeChecker) GetIncoming() Type {
+    if len(t.typeStack) < 2 {
+        return Type{Kind: NOTHING}
     }
 
-    node := t.ast[t.position]
-    t.position++
-
-    if checker, ok := t.checkers[node.Type]; ok {
-        return checker.Check(t)
-    }
-
-    metadata := t.astSchema.GetNodeTypeMetadata(node.Type)
-
-    if metadata.GetChildCount() == ast.VariableChildCount {
-        for ; t.ast[t.position].Type != ast.EndNode; t.position++ {
-            if t.position + 1 == uint32(len(t.ast)) {
-                // TODO error
-            }
-        }
-    } else {
-        t.position += uint32(metadata.GetChildCount())
-
-        if t.position >= uint32(len(t.ast)) {
-            // TODO error
-            // TODO we should stop here since the state is invalid
-        }
-    }
-
-    return Type{Kind: NOTHING}
+    return t.typeStack[len(t.typeStack) - 2].incoming
 }
 
-func (t *TypeChecker) HasReachedEnd() bool {
-    return t.position == uint32(len(t.ast))
+func (t *TypeChecker) SetIncoming(incomingType Type) {
+    t.typeStack[len(t.typeStack) - 1].incoming = incomingType
 }
 
-func logDuplicateNodeChecker() {
-    // TODO
+func (t *TypeChecker) SetResult(resultType Type) {
+    if len(t.typeStack) > 1 {
+        t.typeStack[len(t.typeStack) - 2].result = resultType
+    }
+}
+
+func (t *TypeChecker) GetResult() Type {
+    return t.typeStack[len(t.typeStack) - 1].result
+}
+
+func (t *TypeChecker) Enter() {
+    t.typeStack = append(t.typeStack, TypeFrame{Type{Kind: NOTHING}, Type{Kind: NOTHING}})
+}
+
+func (t *TypeChecker) Exit() {
+    t.typeStack = t.typeStack[:len(t.typeStack) - 1]
 }

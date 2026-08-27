@@ -9,6 +9,8 @@ import (
 	"minimal/minimal-core/built-in/parsers/pratt"
 )
 
+// TODO this could be ambiguous with units (e.g. 0 x with x defined as a type)
+
 type NumberParser struct {
     baseParsers    map[byte]baseParser
     integerType    lexer.TokenType
