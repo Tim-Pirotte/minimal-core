@@ -30,11 +30,8 @@ func BenchmarkCreation(b *testing.B) {
 
                 for j := range symbols {
                     s.AddSymbol(
-                        Symbol{
-                            Identifier: unique.Make(identifiers[j * scopeDepth + i]),
-                            Type: 0,
-                            Reference: 0,
-                        },
+                        unique.Make(identifiers[j * scopeDepth + i]),
+                        SymbolData{Type: 0, Reference: 0},
                     )
                 }
             }
