@@ -2,7 +2,16 @@ package symboltable
 
 import "unique"
 
+const (
+    maxExpectedSymbols = 64
+    expectedScopeDepth = 8
+)
+
 type SymbolType uint32
+
+type SymbolTableScheme struct {
+    lastSymbolType SymbolType
+}
 
 type SymbolTable struct {
     identifiers []unique.Handle[string]
@@ -15,8 +24,22 @@ type SymbolData struct {
     Reference  uint32
 }
 
+func NewScheme() *SymbolTableScheme {
+    return &SymbolTableScheme{0}
+}
+
+func (s *SymbolTableScheme) NewSymbolType() SymbolType {
+    s.lastSymbolType++
+
+    return s.lastSymbolType
+}
+
 func New() *SymbolTable {
-    return &SymbolTable{[]unique.Handle[string]{}, []SymbolData{}, []uint32{0}}
+    return &SymbolTable{
+        make([]unique.Handle[string], 0, maxExpectedSymbols),
+        make([]SymbolData, 0, maxExpectedSymbols),
+        make([]uint32, 1, expectedScopeDepth),
+    }
 }
 
 func (s *SymbolTable) AddScope() {
@@ -33,7 +56,7 @@ func (s *SymbolTable) RemoveScope() {
         return
     }
 
-    // TODO error
+    panic("attempt to remove the global scope")
 }
 
 // Returns a reference to the new symbol if ok or returns the already declared symbol of the current scope
