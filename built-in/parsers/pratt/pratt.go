@@ -8,13 +8,13 @@ import (
 
 type Prefix interface {
     GetTokenType() lexer.TokenType
-    ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node
+    ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint32) []ast.Node
 }
 
 type Infix interface {
     GetTokenType() lexer.TokenType
-    GetBindingPower() uint
-    ParseInfix(p *PrattParser, lj *lexer.Lexer, left []ast.Node, minBindingPower uint) []ast.Node
+    GetBindingPower() uint32
+    ParseInfix(p *PrattParser, lj *lexer.Lexer, left []ast.Node, minBindingPower uint32) []ast.Node
 }
 
 type PrattParser struct {
@@ -22,6 +22,7 @@ type PrattParser struct {
     Infixes    map[lexer.TokenType]Infix
 }
 
+// TODO don't specify all prefixes and infixes in advance
 func NewPrattParser(l *lexer.LexerScheme, prefixes []Prefix, infixes []Infix) *PrattParser {
     prefixMap := map[lexer.TokenType]Prefix{}
 
@@ -51,7 +52,7 @@ func NewPrattParser(l *lexer.LexerScheme, prefixes []Prefix, infixes []Infix) *P
     return &PrattParser{prefixMap, infixMap}
 }
 
-func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint) []ast.Node {
+func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint32) []ast.Node {
     prefix, ok := p.Prefixes[l.Peek(0).Type]
 
     if !ok {
@@ -99,7 +100,7 @@ func (a *AtomicParser) GetTokenType() lexer.TokenType {
     return a.tokenType
 }
 
-func (a *AtomicParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
+func (a *AtomicParser) ParsePrefix(p *PrattParser, l *lexer.Lexer, minBindingPower uint32) []ast.Node {
     l.Advance()
 
     return []ast.Node{{Type: a.nodeType}}

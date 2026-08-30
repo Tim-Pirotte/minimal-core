@@ -9,11 +9,11 @@ import (
 type PrefixUnaryParser struct {
     tokenType    lexer.TokenType
     nodeType     ast.NodeType
-    bindingPower uint
+    bindingPower uint32
 }
 
 func NewPrefixUnaryParser(
-    tokenType lexer.TokenType, nodeType  ast.NodeType, bindingPower uint,
+    tokenType lexer.TokenType, nodeType  ast.NodeType, bindingPower uint32,
 ) *PrefixUnaryParser {
     return &PrefixUnaryParser{tokenType, nodeType, bindingPower}
 }
@@ -23,7 +23,7 @@ func (p *PrefixUnaryParser) GetTokenType() lexer.TokenType {
 }
 
 func (p *PrefixUnaryParser) ParsePrefix(
-    pp *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint,
+    pp *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint32,
 ) []ast.Node {
     l.Advance()
 

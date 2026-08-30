@@ -9,12 +9,10 @@ import (
 type PostfixUnaryParser struct {
 	tokenType    lexer.TokenType
 	nodeType     ast.NodeType
-	bindingPower uint
+	bindingPower uint32
 }
 
-func NewPostfixUnaryParser(
-    tokenType lexer.TokenType, nodeType ast.NodeType, bindingPower uint,
-) *PostfixUnaryParser {
+func NewPostfixUnaryParser(tokenType lexer.TokenType, nodeType ast.NodeType, bindingPower uint32) *PostfixUnaryParser {
 	return &PostfixUnaryParser{tokenType, nodeType, bindingPower}
 }
 
@@ -22,13 +20,11 @@ func (p *PostfixUnaryParser) GetTokenType() lexer.TokenType {
 	return p.tokenType
 }
 
-func (p *PostfixUnaryParser) GetBindingPower() uint {
+func (p *PostfixUnaryParser) GetBindingPower() uint32 {
 	return p.bindingPower
 }
 
-func (p *PostfixUnaryParser) ParseInfix(
-	_ *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint,
-) []ast.Node {
+func (p *PostfixUnaryParser) ParseInfix(_ *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
 	l.Advance()
 
 	result := []ast.Node{{Type: p.nodeType}}

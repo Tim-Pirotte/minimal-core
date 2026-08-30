@@ -1,86 +1,34 @@
-package grouping
+package groupingparser
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/matchers/indentation"
-	symbols "minimal/minimal-core/built-in/matchers/symbol"
-	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/parsers/pratt"
-	"reflect"
-	"testing"
+    "minimal/minimal-core/built-in/ast"
+    "minimal/minimal-core/built-in/lexer"
+    symbols "minimal/minimal-core/built-in/matchers/symbol"
+    "minimal/minimal-core/built-in/messenger"
+    "minimal/minimal-core/built-in/parsers/binary"
+    eolparser "minimal/minimal-core/built-in/parsers/eol"
+    "minimal/minimal-core/built-in/parsers/pratt"
+    prefixunary "minimal/minimal-core/built-in/parsers/prefix-unary"
+    "reflect"
+    "testing"
 )
 
-type binaryParser struct {
-    tokenType    lexer.TokenType
-    nodeType     ast.NodeType
-    bindingPower uint
-}
-
-func (b *binaryParser) GetTokenType() lexer.TokenType {
-    return b.tokenType
-}
-
-func (b *binaryParser) GetBindingPower() uint {
-    return b.bindingPower
-}
-
-func (b *binaryParser) ParseInfix(
-    p *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint,
-) []ast.Node {
-    l.Advance()
-
-    right := p.Parse(l, b.bindingPower)
-
-    result := []ast.Node{{Type: b.nodeType}}
-    result = append(result, left...)
-    result = append(result, right...)
-
-    return result
-}
-
-type unaryParser struct {
-    tokenType    lexer.TokenType
-    nodeType     ast.NodeType
-    bindingPower uint
-}
-
-func (u *unaryParser) GetTokenType() lexer.TokenType {
-    return u.tokenType
-}
-
-func (u *unaryParser) ParsePrefix(
-    p *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint,
-) []ast.Node {
-    l.Advance()
-
-    right := p.Parse(l, u.bindingPower)
-
-    result := []ast.Node{{Type: u.nodeType}}
-    result = append(result, right...)
-
-    return result
-}
-
 type testGroupingParser struct {
-    g *GroupingParser
-    l *lexer.LexerScheme
-    plus ast.NodeType
-    mul ast.NodeType
-    min ast.NodeType
+    g      *GroupingParser
+    p      *pratt.PrattParser
+    l      *lexer.LexerScheme
+    plus   ast.NodeType
+    mul    ast.NodeType
+    min    ast.NodeType
     minBin ast.NodeType
-    a ast.NodeType
-    b ast.NodeType
-    c ast.NodeType
+    a      ast.NodeType
+    b      ast.NodeType
+    c      ast.NodeType
 }
 
 func getTestGroupingParser() testGroupingParser {
     l := lexer.NewScheme()
-    l.RequireLookahead(2)
 
-    openBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
-    closeBlockT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "}"})
-    eolT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "{"})
     openParenT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "("})
     closeParenT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: ")"})
 
@@ -92,9 +40,9 @@ func getTestGroupingParser() testGroupingParser {
     mulT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "*"})
     minT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "-"})
 
-    messenger := messenger.New()
-    im := indentation.NewIndentationMatcher(messenger, ':', ' ', openBlockT, closeBlockT, eolT, 0)
-    l.AddMatcher(im)
+    eolT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "eol"})
+
+    m := messenger.New()
 
     sm := symbols.NewSymbolMatcher()
     sm.AddSymbol(l, "a", aT)
@@ -105,6 +53,7 @@ func getTestGroupingParser() testGroupingParser {
     sm.AddSymbol(l, "-", minT)
     sm.AddSymbol(l, "(", openParenT)
     sm.AddSymbol(l, ")", closeParenT)
+    sm.AddSymbol(l, "\n", eolT)
     l.AddMatcher(sm)
 
     syntax := ast.NewSchema()
@@ -122,29 +71,30 @@ func getTestGroupingParser() testGroupingParser {
             pratt.NewAtomicParser(aT, a),
             pratt.NewAtomicParser(bT, b),
             pratt.NewAtomicParser(cT, c),
-            &unaryParser{minT, min, 2},
+            prefixunary.NewPrefixUnaryParser(minT, min, 2),
         },
         []pratt.Infix{
-            &binaryParser{plusT, plus, 2},
-            &binaryParser{minT, minBin, 2},
-            &binaryParser{mulT, mul, 3},
+            binary.NewBinaryParser(plusT, plus, 2),
+            binary.NewBinaryParser(minT, minBin, 2),
+            binary.NewBinaryParser(mulT, mul, 3),
         },
     )
 
-    g := NewGroupingParser(p, eolT, openParenT, closeParenT)
+    eol := eolparser.New(m, p, l, eolT)
+    g := New(m, eol, openParenT, closeParenT)
 
-    return testGroupingParser{g, l, plus, mul, min, minBin, a, b, c}
+    return testGroupingParser{g, p, l, plus, mul, min, minBin, a, b, c}
 }
 
-func TestPrefix(t *testing.T) {
+func TestMultiline(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("a*\nb+c")
-    result := gp.g.Parse(lj)
+    lj := gp.l.Lex("((a+\nb)\n*c)")
+    result := gp.p.Parse(lj, 0)
 
     expected := []ast.Node{
-        {Type: gp.plus},
         {Type: gp.mul},
+        {Type: gp.plus},
         {Type: gp.a},
         {Type: gp.b},
         {Type: gp.c},
@@ -154,9 +104,8 @@ func TestPrefix(t *testing.T) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
 
-    lj = gp.l.Lex("a+\nb*c")
-
-    result = gp.g.Parse(lj)
+    lj = gp.l.Lex("(a+(\nb*\nc))")
+    result = gp.p.Parse(lj, 0)
 
     expected = []ast.Node{
         {Type: gp.plus},
@@ -171,101 +120,10 @@ func TestPrefix(t *testing.T) {
     }
 }
 
-func TestInfix(t *testing.T) {
-    gp := getTestGroupingParser()
-
-    lj := gp.l.Lex("a\n*b\n+c")
-    result := gp.g.Parse(lj)
-
-    expected := []ast.Node{
-        {Type: gp.plus},
-        {Type: gp.mul},
-        {Type: gp.a},
-        {Type: gp.b},
-        {Type: gp.c},
-    }
-
-    if !reflect.DeepEqual(expected, result) {
-        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
-    }
-
-    lj = gp.l.Lex("a\n+b\n*c")
-
-    result = gp.g.Parse(lj)
-
-    expected = []ast.Node{
-        {Type: gp.plus},
-        {Type: gp.a},
-        {Type: gp.mul},
-        {Type: gp.b},
-        {Type: gp.c},
-    }
-
-    if !reflect.DeepEqual(expected, result) {
-        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
-    }
-}
-
-func TestAmbiguousInfix(t *testing.T) {
-    gp := getTestGroupingParser()
-
-    lj := gp.l.Lex("a\n-b")
-    result := gp.g.Parse(lj)
-    result = append(result, gp.g.Parse(lj)...)
-
-    expected := []ast.Node{
-        {Type: gp.a},
-        {Type: gp.min},
-        {Type: gp.b},
-    }
-
-    if !reflect.DeepEqual(expected, result) {
-        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
-    }
-}
-
-func TestPrefixWithParentheses(t *testing.T) {
-    gp := getTestGroupingParser()
-
-    lj := gp.l.Lex("(((a)+\n(b)))")
-    result := gp.g.Parse(lj)
-
-    expected := []ast.Node{
-        {Type: gp.plus},
-        {Type: gp.a},
-        {Type: gp.b},
-    }
-
-    if !reflect.DeepEqual(expected, result) {
-        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
-    }
-}
-
-func TestInfixWithParentheses(t *testing.T) {
-    gp := getTestGroupingParser()
-
-    lj := gp.l.Lex("(a\n-b)")
-    result := gp.g.Parse(lj)
-
-    expected := []ast.Node{
-        {Type: gp.minBin},
-        {Type: gp.a},
-        {Type: gp.b},
-    }
-
-    if !reflect.DeepEqual(expected, result) {
-        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
-    }
-}
-
-func TestDuplicateEOLPrefix(t *testing.T) {
+func TestMissingClose(t *testing.T) {
 
 }
 
-func TestDuplicateEOLInfix(t *testing.T) {
-
-}
-
-func TestDuplicateOpenPrefix(t *testing.T) {
+func TestExtraClose(t *testing.T) {
 
 }

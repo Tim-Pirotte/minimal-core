@@ -9,24 +9,22 @@ import (
 type BinaryParser struct {
     tokenType    lexer.TokenType
     nodeType     ast.NodeType
-    bindingPower uint
+    bindingPower uint32
 }
 
-func NewBinaryParser(tokenType lexer.TokenType, nodeType ast.NodeType, bindingPower uint) *BinaryParser {
-    return &BinaryParser{tokenType, nodeType, bindingPower}
+func NewBinaryParser(tokenType lexer.TokenType, nodeType ast.NodeType, bp uint32) *BinaryParser {
+    return &BinaryParser{tokenType, nodeType, bp}
 }
 
 func (b *BinaryParser) GetTokenType() lexer.TokenType {
     return b.tokenType
 }
 
-func (b *BinaryParser) GetBindingPower() uint {
+func (b *BinaryParser) GetBindingPower() uint32 {
     return b.bindingPower
 }
 
-func (b *BinaryParser) ParseInfix(
-    p *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, minBindingPower uint,
-) []ast.Node {
+func (b *BinaryParser) ParseInfix(p *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
     l.Advance()
 
     right := p.Parse(l, b.bindingPower)

@@ -9,6 +9,8 @@ import (
 	"unsafe"
 )
 
+// TODO use 32-bit integers
+
 const (
     UNKNOWN TokenType = iota
     // Always keep END at the end
