@@ -81,7 +81,7 @@ func getTestGroupingParser() testGroupingParser {
     )
 
     eol := eolparser.New(m, p, l, eolT)
-    g := New(m, eol, openParenT, closeParenT)
+    g := New(m, eol, openParenT, closeParenT, "'(' does not have a matching ')'")
     p.Prefixes[openParenT] = g
 
     return testGroupingParser{g, p, l, plus, mul, min, minBin, a, b, c}

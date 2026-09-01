@@ -9,14 +9,20 @@ import (
 )
 
 type GroupingParser struct {
-    m     *messenger.Messenger
-    eol   *eolparser.EOLParser
-	open  lexer.TokenType
-	close lexer.TokenType
+    m                    *messenger.Messenger
+    e                    *eolparser.EOLParser
+	open                 lexer.TokenType
+	close                lexer.TokenType
+    unmatchedOpenMessage string
 }
 
-func New(m *messenger.Messenger, eol *eolparser.EOLParser, open, close lexer.TokenType) *GroupingParser {
-    return &GroupingParser{m, eol, open, close}
+func New(
+    m *messenger.Messenger,
+    e *eolparser.EOLParser,
+    open, close lexer.TokenType,
+    unmatchedOpenMessage string,
+) *GroupingParser {
+    return &GroupingParser{m, e, open, close, unmatchedOpenMessage}
 }
 
 func (g *GroupingParser) GetTokenType() lexer.TokenType {
@@ -27,19 +33,18 @@ func (g *GroupingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp u
     opening := l.Peek(0)
     l.Advance()
 
-    g.eol.EnterBlock()
+    g.e.EnterBlock()
     result := pp.Parse(l, 0)
-    g.eol.ExitBlock()
+    g.e.ExitBlock()
 
     if l.Peek(0).Type == g.close {
         l.Advance()
     } else {
-        // TODO where do we best get the strings from
         g.m.Send(
             messenger.Message{
-                Message: "Opening %s does not have a matching closing %s",
+                Message: g.unmatchedOpenMessage,
                 Severity: messenger.Error,
-                Context: []messenger.Span{{Content: opening.Value, Note: "The opening %s"}},
+                Context: []messenger.Span{{Content: opening.Value}},
             },
         )
     }
