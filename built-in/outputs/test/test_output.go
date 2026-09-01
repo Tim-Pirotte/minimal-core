@@ -30,6 +30,7 @@ func (to *TestOutput) CheckMessages(t *testing.T, expected []messenger.Message) 
     m := messenger.New()
     m.AddOutput(to.Output)
 
+    // TODO check if the context has the correct addresses
     if !reflect.DeepEqual(to.messages, expected) {
         m.Send(
             messenger.Message{

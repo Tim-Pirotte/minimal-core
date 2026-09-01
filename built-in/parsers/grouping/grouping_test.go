@@ -1,22 +1,25 @@
 package groupingparser
 
 import (
-    "minimal/minimal-core/built-in/ast"
-    "minimal/minimal-core/built-in/lexer"
-    symbols "minimal/minimal-core/built-in/matchers/symbol"
-    "minimal/minimal-core/built-in/messenger"
-    "minimal/minimal-core/built-in/parsers/binary"
-    eolparser "minimal/minimal-core/built-in/parsers/eol"
-    "minimal/minimal-core/built-in/parsers/pratt"
-    prefixunary "minimal/minimal-core/built-in/parsers/prefix-unary"
-    "reflect"
-    "testing"
+	"minimal/minimal-core/built-in/ast"
+	"minimal/minimal-core/built-in/lexer"
+	symbols "minimal/minimal-core/built-in/matchers/symbol"
+	"minimal/minimal-core/built-in/messenger"
+	testoutput "minimal/minimal-core/built-in/outputs/test"
+	"minimal/minimal-core/built-in/parsers/binary"
+	eolparser "minimal/minimal-core/built-in/parsers/eol"
+	"minimal/minimal-core/built-in/parsers/pratt"
+	prefixunary "minimal/minimal-core/built-in/parsers/prefix-unary"
+	"reflect"
+	"testing"
 )
 
 type testGroupingParser struct {
     g      *GroupingParser
     p      *pratt.PrattParser
     l      *lexer.LexerScheme
+    m      *messenger.Messenger
+    to     *testoutput.TestOutput
     plus   ast.NodeType
     mul    ast.NodeType
     min    ast.NodeType
@@ -43,6 +46,8 @@ func getTestGroupingParser() testGroupingParser {
     eolT := l.NewTokenType(lexer.TokenTypeMetadata{DebugName: "eol"})
 
     m := messenger.New()
+    to := testoutput.New()
+    m.AddOutput(to)
 
     sm := symbols.NewSymbolMatcher()
     sm.AddSymbol(l, "a", aT)
@@ -84,7 +89,7 @@ func getTestGroupingParser() testGroupingParser {
     g := New(m, eol, openParenT, closeParenT, "'(' does not have a matching ')'")
     p.Prefixes[openParenT] = g
 
-    return testGroupingParser{g, p, l, plus, mul, min, minBin, a, b, c}
+    return testGroupingParser{g, p, l, m, to, plus, mul, min, minBin, a, b, c}
 }
 
 func TestMultiline(t *testing.T) {
@@ -119,12 +124,16 @@ func TestMultiline(t *testing.T) {
     if !reflect.DeepEqual(expected, result) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
+
+    gp.m.Close()
+    gp.to.CheckMessages(t, []messenger.Message{})
 }
 
 func TestMissingClose(t *testing.T) {
     gp := getTestGroupingParser()
 
-    lj := gp.l.Lex("((a+b*c)")
+    source := "((a+b*c)"
+    lj := gp.l.Lex(source)
     result := gp.p.Parse(lj, 0)
 
     expected := []ast.Node{
@@ -138,6 +147,18 @@ func TestMissingClose(t *testing.T) {
     if !reflect.DeepEqual(expected, result) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
+
+    gp.m.Close()
+    gp.to.CheckMessages(
+        t,
+        []messenger.Message{
+            {
+                Message: "'(' does not have a matching ')'",
+                Severity: messenger.Error,
+                Context: []messenger.Span{{Content: source[0:1]}},
+            },
+        },
+    )
 }
 
 func TestExtraClose(t *testing.T) {
@@ -155,4 +176,7 @@ func TestExtraClose(t *testing.T) {
     if !reflect.DeepEqual(expected, result) {
         t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
     }
+
+    gp.m.Close()
+    gp.to.CheckMessages(t, []messenger.Message{})
 }
