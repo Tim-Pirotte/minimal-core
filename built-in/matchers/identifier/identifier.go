@@ -16,14 +16,14 @@ func (i *IdentifierMatcher) New(_ *lexer.Lexer) lexer.Matcher {
 	return i
 }
 
-func (i *IdentifierMatcher) Match(l *lexer.Lexer) uint {
+func (i *IdentifierMatcher) Match(l *lexer.Lexer) uint32 {
 	firstChar, _ := l.Get(0)
 
 	if !isAlphaOrUnicode(firstChar) {
 		return 0
 	}
 
-	pos := uint(1)
+	pos := uint32(1)
 
 	for c, ok := l.Get(pos); ok && (isAlphaOrUnicode(c) || isDigit(c)); c, ok = l.Get(pos) {
 		pos++
@@ -32,7 +32,7 @@ func (i *IdentifierMatcher) Match(l *lexer.Lexer) uint {
 	return pos
 }
 
-func (i *IdentifierMatcher) Consume(l *lexer.Lexer, length uint) {
+func (i *IdentifierMatcher) Consume(l *lexer.Lexer, length uint32) {
 	l.Emit(lexer.Token{Type: i.tokenType, Value: l.GetNextN(length)})
 }
 

@@ -79,9 +79,9 @@ func (p *plusParser) ParseInfix(pp *PrattParser, l *lexer.Lexer, left []ast.Node
 
 func TestBinary(t *testing.T) {
     l := lexer.NewScheme()
-    aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
-    plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
-    bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
+    aT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "a", DebugName: "A"})
+    plusT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "'+'", DebugName: "+"})
+    bT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "b", DebugName: "B"})
 
     sm := symbols.NewSymbolMatcher()
     sm.AddSymbol(l, "a", aT)
@@ -183,13 +183,13 @@ func (e *exclamationParser) ParseInfix(
 
 func TestParseCompleteExpression(t *testing.T) {
     l := lexer.NewScheme()
-    minusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'-'", DebugName: "-"})
-    aT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "a", DebugName: "A"})
-    plusT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'+'", DebugName: "+"})
-    openParenT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'('", DebugName: "("})
-    bT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "b", DebugName: "B"})
-    exclamationT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "'!'", DebugName: "!"})
-    closeParenT := l.NewTokenType(lexer.TokenTypeMetadata{DisplayName: "')'", DebugName: ")"})
+    minusT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "'-'", DebugName: "-"})
+    aT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "a", DebugName: "A"})
+    plusT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "'+'", DebugName: "+"})
+    openParenT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "'('", DebugName: "("})
+    bT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "b", DebugName: "B"})
+    exclamationT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "'!'", DebugName: "!"})
+    closeParenT := l.NewTokenType(lexer.TokenTypeMetadata{NounPhrase: "')'", DebugName: ")"})
 
     sm := symbols.NewSymbolMatcher()
     sm.AddSymbol(l, "-", minusT)

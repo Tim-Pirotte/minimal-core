@@ -49,9 +49,9 @@ func (s *SymbolMatcher) AddSymbol(l *lexer.LexerScheme, symbol string, tokenType
 	node.tokenType = tokenType
 }
 
-func (s *SymbolMatcher) Match(l *lexer.Lexer) uint {
-	pos := uint(0)
-	length := uint(0)
+func (s *SymbolMatcher) Match(l *lexer.Lexer) uint32 {
+	pos := uint32(0)
+	length := uint32(0)
 
 	char, ok := l.Get(pos)
 	node := s.symbols.children[char]
@@ -72,6 +72,6 @@ func (s *SymbolMatcher) Match(l *lexer.Lexer) uint {
 	return length
 }
 
-func (s *SymbolMatcher) Consume(l *lexer.Lexer, length uint) {
+func (s *SymbolMatcher) Consume(l *lexer.Lexer, length uint32) {
 	l.Emit(lexer.Token{Type: s.cachedTokenType, Value: l.GetNextN(length)})
 }

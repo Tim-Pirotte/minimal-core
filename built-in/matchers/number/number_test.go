@@ -8,7 +8,7 @@ import (
 func getLexer() (*lexer.LexerScheme, lexer.TokenType) {
 	l := lexer.NewScheme()
 	numberType := l.NewTokenType(
-		lexer.TokenTypeMetadata{DisplayName: "a number", DebugName: "Number"},
+		lexer.TokenTypeMetadata{NounPhrase: "a number", DebugName: "Number"},
 	)
 
 	identifierMatcher := NewNumberMatcher(numberType)

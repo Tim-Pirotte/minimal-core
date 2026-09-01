@@ -20,8 +20,8 @@ func (r *RawStringMatcher) New(_ *lexer.Lexer) lexer.Matcher {
     return r
 }
 
-func (r *RawStringMatcher) Match(l *lexer.Lexer) uint {
-    pos := uint(0)
+func (r *RawStringMatcher) Match(l *lexer.Lexer) uint32 {
+    pos := uint32(0)
     c, ok := l.Get(pos)
 
     for ; ok && c == '-'; c, ok = l.Get(pos) {
@@ -36,7 +36,7 @@ func (r *RawStringMatcher) Match(l *lexer.Lexer) uint {
 
     pos++
 
-    consecutiveDashes := uint(0)
+    consecutiveDashes := uint32(0)
     quote := false
 
     for ; ok; c, ok = l.Get(pos) {
@@ -63,11 +63,11 @@ func (r *RawStringMatcher) Match(l *lexer.Lexer) uint {
     return pos
 }
 
-func (r *RawStringMatcher) Consume(l *lexer.Lexer, length uint) {
+func (r *RawStringMatcher) Consume(l *lexer.Lexer, length uint32) {
     l.Emit(lexer.Token{Type: r.tokenType, Value: l.GetNextN(length)})
 }
 
-func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint) {
+func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint32) {
     r.messenger.Send(messenger.Message{
         Message: `Raw string is not terminated with '` + strings.Repeat("-", int(dashes)),
 
@@ -81,12 +81,12 @@ func (r *RawStringMatcher) sendUnclosedErr(l *lexer.Lexer, dashes uint) {
     })
 }
 
-func findPossibleStringEnd(l *lexer.Lexer, expectedDashes uint) []messenger.Suggestion {
-    pos := uint(expectedDashes + 1)
-    longestEndSequence := uint(0)
-    startOfLongestEndSequence := uint(0)
-    consecutiveDashes := uint(0)
-    startOfLastQuote := uint(0)
+func findPossibleStringEnd(l *lexer.Lexer, expectedDashes uint32) []messenger.Suggestion {
+    pos := uint32(expectedDashes + 1)
+    longestEndSequence := uint32(0)
+    startOfLongestEndSequence := uint32(0)
+    consecutiveDashes := uint32(0)
+    startOfLastQuote := uint32(0)
     quote := false
 
     for c, ok := l.Get(pos); ok; c, ok = l.Get(pos) {

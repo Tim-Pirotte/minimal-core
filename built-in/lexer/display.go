@@ -29,7 +29,7 @@ func (l *LexerDisplayer) SetTokenTypeColor(tokenType TokenType, color ansi.RGB) 
     l.tokenColors[tokenType] = color
 }
 
-func (l *LexerDisplayer) DisplayTokens(source string, tokens []Token) {
+func (l *LexerDisplayer) Display(source string, tokens []Token) {
     for _, token := range tokens {
         if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
             l.messenger.Send(

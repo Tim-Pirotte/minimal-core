@@ -24,15 +24,15 @@ type trieNode struct {
 
 type PrefixParser struct {
     prefixes  *trieNode
-    maxLength uint
+    maxLength uint32
 }
 
 func NewPrefixParser(m *messenger.Messenger, l *lexer.LexerScheme, prefixes []Rule) PrefixParser {
     root := &trieNode{false, nil, map[lexer.TokenType]*trieNode{}}
-    maxLength := uint(0)
+    maxLength := uint32(0)
 
     for _, prefix := range prefixes {
-        length := uint(len(prefix.TokenTypes))
+        length := uint32(len(prefix.TokenTypes))
 
         if length > maxLength {
             maxLength = length
@@ -56,7 +56,7 @@ func NewPrefixParser(m *messenger.Messenger, l *lexer.LexerScheme, prefixes []Ru
         node.parser = prefix.Parser
     }
 
-    return PrefixParser{root, uint(maxLength)}
+    return PrefixParser{root, uint32(maxLength)}
 }
 
 func (p *PrefixParser) Parse(l *lexer.Lexer, syntax *ast.ASTSchema) {
@@ -68,7 +68,7 @@ func (p *PrefixParser) Parse(l *lexer.Lexer, syntax *ast.ASTSchema) {
         largestMatchParser = node.parser
     }
 
-    for pos := uint(0); ok && pos < p.maxLength; pos++ {
+    for pos := uint32(0); ok && pos < p.maxLength; pos++ {
         tokenType := l.Peek(pos).Type
         node, ok = node.children[tokenType]
 

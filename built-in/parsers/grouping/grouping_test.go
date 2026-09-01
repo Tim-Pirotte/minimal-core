@@ -82,6 +82,7 @@ func getTestGroupingParser() testGroupingParser {
 
     eol := eolparser.New(m, p, l, eolT)
     g := New(m, eol, openParenT, closeParenT)
+    p.Prefixes[openParenT] = g
 
     return testGroupingParser{g, p, l, plus, mul, min, minBin, a, b, c}
 }
@@ -121,9 +122,37 @@ func TestMultiline(t *testing.T) {
 }
 
 func TestMissingClose(t *testing.T) {
+    gp := getTestGroupingParser()
 
+    lj := gp.l.Lex("((a+b*c)")
+    result := gp.p.Parse(lj, 0)
+
+    expected := []ast.Node{
+        {Type: gp.plus},
+        {Type: gp.a},
+        {Type: gp.mul},
+        {Type: gp.b},
+        {Type: gp.c},
+    }
+
+    if !reflect.DeepEqual(expected, result) {
+        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
+    }
 }
 
 func TestExtraClose(t *testing.T) {
+    gp := getTestGroupingParser()
 
+    lj := gp.l.Lex("(a+b))")
+    result := gp.p.Parse(lj, 0)
+
+    expected := []ast.Node{
+        {Type: gp.plus},
+        {Type: gp.a},
+        {Type: gp.b},
+    }
+
+    if !reflect.DeepEqual(expected, result) {
+        t.Errorf("\nExpected:\n%v\nActual:\n%v", expected, result)
+    }
 }

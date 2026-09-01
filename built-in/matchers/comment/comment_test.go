@@ -8,7 +8,7 @@ import (
 func getLexer() (*lexer.LexerScheme, lexer.TokenType) {
 	l := lexer.NewScheme()
 	commentType := l.NewTokenType(
-		lexer.TokenTypeMetadata{DisplayName: "a comment", DebugName: "Comment"},
+		lexer.TokenTypeMetadata{NounPhrase: "a comment", DebugName: "Comment"},
 	)
 
 	identifierMatcher := NewCommentMatcher(commentType)

@@ -14,8 +14,8 @@ func (s *SpaceMatcher) New(_ *lexer.Lexer) lexer.Matcher {
 	return s
 }
 
-func (*SpaceMatcher) Match(l *lexer.Lexer) uint {
-	pos := uint(0)
+func (*SpaceMatcher) Match(l *lexer.Lexer) uint32 {
+	pos := uint32(0)
 
 	for c, ok := l.Get(pos); ok && c == ' '; c, ok = l.Get(pos) {
 		pos++
@@ -24,4 +24,4 @@ func (*SpaceMatcher) Match(l *lexer.Lexer) uint {
 	return pos
 }
 
-func (*SpaceMatcher) Consume(_ *lexer.Lexer, _ uint) {}
+func (*SpaceMatcher) Consume(_ *lexer.Lexer, _ uint32) {}

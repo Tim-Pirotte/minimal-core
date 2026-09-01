@@ -17,7 +17,7 @@ const (
     END
 )
 
-type TokenType uint
+type TokenType uint32
 
 type Token struct {
     Type  TokenType
@@ -25,12 +25,12 @@ type Token struct {
 }
 
 type TokenTypeMetadata struct {
-    DisplayName string
+    NounPhrase  string
     DebugName   string
 }
 
 type LexerScheme struct {
-    maxSafePeek   uint
+    maxSafePeek   uint32
     matchers      []Matcher
     lastTokenType TokenType
     metadata      []TokenTypeMetadata
@@ -39,19 +39,19 @@ type LexerScheme struct {
 type Lexer struct {
     Matchers    []Matcher
     Data        string
-    Position    uint
+    Position    uint32
     buffer      []Token
-    read        uint
-    write       uint
+    read        uint32
+    write       uint32
     spillage    []Token
-    maxSafePeek uint
+    maxSafePeek uint32
     endReached  bool
 }
 
 type Matcher interface {
     New(t *Lexer) Matcher
-    Match(t *Lexer) (length uint)
-    Consume(t *Lexer, length uint)
+    Match(t *Lexer) (length uint32)
+    Consume(t *Lexer, length uint32)
 }
 
 func NewScheme() *LexerScheme {
@@ -66,7 +66,7 @@ func NewScheme() *LexerScheme {
     }
 }
 
-func (l *LexerScheme) RequireLookahead(n uint) {
+func (l *LexerScheme) RequireLookahead(n uint32) {
     if n > l.maxSafePeek {
         l.maxSafePeek = n
     }
@@ -111,32 +111,32 @@ func (l *LexerScheme) Lex(source string) *Lexer {
     return job
 }
 
-func (l *Lexer) Get(i uint) (byte, bool) {
+func (l *Lexer) Get(i uint32) (byte, bool) {
     offset := l.Position + i
 
-    if offset >= uint(len(l.Data)) {
+    if offset >= uint32(len(l.Data)) {
         return 0, false
     }
 
     return l.Data[offset], true
 }
 
-func (l *Lexer) GetNextN(length uint) string {
+func (l *Lexer) GetNextN(length uint32) string {
     return l.Data[l.Position:l.Position + length]
 }
 
 func (l *Lexer) Emit(token Token) {
-    if l.write - l.read == uint(len(l.buffer)) {
+    if l.write - l.read == uint32(len(l.buffer)) {
         l.spillage = append(l.spillage, token)
 
         return
     }
 
-    l.buffer[l.write % uint(len(l.buffer))] = token
+    l.buffer[l.write % uint32(len(l.buffer))] = token
     l.write++
 }
 
-func (l *Lexer) Peek(n uint) Token {
+func (l *Lexer) Peek(n uint32) Token {
     if n >= l.maxSafePeek {
         panic("attempt to peek more tokens in advance than expected")
     }
@@ -147,7 +147,7 @@ func (l *Lexer) Peek(n uint) Token {
         return Token{END, l.Data[len(l.Data):]}
     }
 
-    return l.buffer[read % uint(len(l.buffer))]
+    return l.buffer[read % uint32(len(l.buffer))]
 }
 
 func (l *Lexer) Advance() {
@@ -160,27 +160,27 @@ func (l *Lexer) Advance() {
 
 func (l *Lexer) fillTokenBuffer() {
     if len(l.spillage) > 0 {
-        nEmpty := uint(len(l.buffer)) - (l.write - l.read)
-        nSpillage := uint(len(l.spillage))
+        nEmpty := uint32(len(l.buffer)) - (l.write - l.read)
+        nSpillage := uint32(len(l.spillage))
 
         nFill := min(nEmpty, nSpillage)
 
         for i := range nFill {
-            l.buffer[l.write % uint(len(l.buffer))] = l.spillage[i]
+            l.buffer[l.write % uint32(len(l.buffer))] = l.spillage[i]
             l.write++
         }
 
         l.spillage = l.spillage[nFill:]
     }
 
-    for !l.endReached && l.write - l.read != uint(len(l.buffer)) {
-        if l.Position >= uint(len(l.Data)) {
+    for !l.endReached && l.write - l.read != uint32(len(l.buffer)) {
+        if l.Position >= uint32(len(l.Data)) {
             l.endReached = true
 
             return
         }
 
-        largestLength := uint(0)
+        largestLength := uint32(0)
         var matcherWithLargestLength Matcher = nil
 
         for _, matcher := range l.Matchers {

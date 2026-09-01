@@ -23,7 +23,7 @@ func (g *GroupingParser) GetTokenType() lexer.TokenType {
     return g.open
 }
 
-func (g *GroupingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint) []ast.Node {
+func (g *GroupingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint32) []ast.Node {
     opening := l.Peek(0)
     l.Advance()
 

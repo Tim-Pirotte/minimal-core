@@ -17,15 +17,15 @@ type IndentationMatcher struct {
     endOfLine               lexer.TokenType
     // Is a string so we can show where the number was derived from in error messages
     spacesPerLevel          string
-    level                   uint
-    spaceCount              uint
+    level                   uint32
+    spaceCount              uint32
 }
 
 func NewIndentationMatcher(
     messenger *messenger.Messenger,
     openBlockSymbol, indentChar byte,
     openBlock, closeBlock, endOfLine lexer.TokenType,
-    spacesPerLevel uint,
+    spacesPerLevel uint32,
 ) *IndentationMatcher {
     return &IndentationMatcher{
         messenger,
@@ -53,7 +53,7 @@ func (i *IndentationMatcher) New(l *lexer.Lexer) lexer.Matcher {
         0,
     }
 
-    startIndent := uint(0)
+    startIndent := uint32(0)
 
     for c, ok := l.Get(startIndent); ok && c == i.indentChar; c, ok = l.Get(startIndent) {
         startIndent++
@@ -68,8 +68,8 @@ func (i *IndentationMatcher) New(l *lexer.Lexer) lexer.Matcher {
     return m
 }
 
-func (i *IndentationMatcher) Match(l *lexer.Lexer) uint {
-    pos := uint(0)
+func (i *IndentationMatcher) Match(l *lexer.Lexer) uint32 {
+    pos := uint32(0)
     c, ok := l.Get(pos)
 
     if c == i.openBlockSymbol {
@@ -109,7 +109,7 @@ func (i *IndentationMatcher) Match(l *lexer.Lexer) uint {
     return pos
 }
 
-func (i *IndentationMatcher) Consume(l *lexer.Lexer, length uint) {
+func (i *IndentationMatcher) Consume(l *lexer.Lexer, length uint32) {
     isOpenBlock := false
 
     if c, _ := l.Get(0); c == i.openBlockSymbol {
@@ -149,7 +149,7 @@ func IsEOL(c byte) bool {
 	return c == '\n' || c == '\r'
 }
 
-func (i *IndentationMatcher) getIndentLevel(l *lexer.Lexer, isOpenBlock bool, length uint) uint {
+func (i *IndentationMatcher) getIndentLevel(l *lexer.Lexer, isOpenBlock bool, length uint32) uint32 {
     if i.spaceCount == 0 {
         return 0
     }
@@ -158,17 +158,17 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.Lexer, isOpenBlock bool, le
         i.spacesPerLevel = l.Data[l.Position + length - i.spaceCount:l.Position + length]
     }
 
-    if !isOpenBlock && i.spaceCount > uint(len(i.spacesPerLevel)) * i.level {
+    if !isOpenBlock && i.spaceCount > uint32(len(i.spacesPerLevel)) * i.level {
         return i.level
     }
 
-    if i.spaceCount % uint(len(i.spacesPerLevel)) != 0 {
+    if i.spaceCount % uint32(len(i.spacesPerLevel)) != 0 {
         i.sendInconsistentIndentErr(l, length)
 
         return i.level
     }
 
-    level := i.spaceCount / uint(len(i.spacesPerLevel))
+    level := i.spaceCount / uint32(len(i.spacesPerLevel))
 
     if level > i.level {
         i.sendMoreIndentErr(l, length)
@@ -179,7 +179,7 @@ func (i *IndentationMatcher) getIndentLevel(l *lexer.Lexer, isOpenBlock bool, le
     return level
 }
 
-func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.Lexer, startIndent uint) {
+func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.Lexer, startIndent uint32) {
     i.messenger.Send(messenger.Message{
         Message: "Source code cannot start with indentation",
         Severity: messenger.Error,
@@ -188,7 +188,7 @@ func (i *IndentationMatcher) sendPrefixIndentErr(l *lexer.Lexer, startIndent uin
     })
 }
 
-func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length uint) {
+func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length uint32) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
     message := messenger.Message{
@@ -215,7 +215,7 @@ func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length ui
     i.messenger.Send(message)
 }
 
-func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.Lexer, length uint) {
+func (i *IndentationMatcher) sendMoreIndentErr(l *lexer.Lexer, length uint32) {
     context := l.Data[l.Position + length - i.spaceCount:l.Position + length]
 
     i.messenger.Send(messenger.Message{

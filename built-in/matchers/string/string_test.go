@@ -20,7 +20,7 @@ func getLexer() testLexer {
     l := lexer.NewScheme()
 
     stringType := l.NewTokenType(
-        lexer.TokenTypeMetadata{DisplayName: "a string literal", DebugName: "String"},
+        lexer.TokenTypeMetadata{NounPhrase: "a string literal", DebugName: "String"},
     )
 
     m := messenger.New()
@@ -179,15 +179,15 @@ type braceSymbolMatcher struct { }
 
 func (b *braceSymbolMatcher) New(_ *lexer.Lexer) lexer.Matcher { return b }
 
-func (*braceSymbolMatcher) Match(l *lexer.Lexer) uint {
-    if len(l.Data) - int(l.Position) >= 2 && l.GetNextN(2) == `"}` {
+func (*braceSymbolMatcher) Match(l *lexer.Lexer) uint32 {
+    if uint32(len(l.Data)) - l.Position >= 2 && l.GetNextN(2) == `"}` {
         return 2
     }
 
     return 0
 }
 
-func (*braceSymbolMatcher) Consume(_ *lexer.Lexer, _ uint) {}
+func (*braceSymbolMatcher) Consume(_ *lexer.Lexer, _ uint32) {}
 
 func TestDifferentEnclosing(t *testing.T) {
     source := `'{ "} }'`

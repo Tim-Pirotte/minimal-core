@@ -20,7 +20,7 @@ func getLexer() testLexer {
     l := lexer.NewScheme()
 
     rawStringType := l.NewTokenType(
-        lexer.TokenTypeMetadata{DisplayName: "a raw string literal", DebugName: "RawString"},
+        lexer.TokenTypeMetadata{NounPhrase: "a raw string literal", DebugName: "RawString"},
     )
 
     m := messenger.New()

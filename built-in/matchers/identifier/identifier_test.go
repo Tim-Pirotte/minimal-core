@@ -9,7 +9,7 @@ import (
 func getLexer() (*lexer.LexerScheme, lexer.TokenType) {
 	l := lexer.NewScheme()
 	identifierType := l.NewTokenType(
-		lexer.TokenTypeMetadata{DisplayName: "an identifier", DebugName: "Identifier"},
+		lexer.TokenTypeMetadata{NounPhrase: "an identifier", DebugName: "Identifier"},
 	)
 
 	identifierMatcher := NewIdentifierMatcher(identifierType)

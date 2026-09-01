@@ -13,14 +13,14 @@ func TestLexSymbols(t *testing.T) {
 	l.AddMatcher(symbolMatcher)
 
 	plus := l.NewTokenType(lexer.TokenTypeMetadata{
-		DisplayName: "'+'",
+		NounPhrase: "'+'",
 		DebugName: "Plus",
 	})
 
 	symbolMatcher.AddSymbol(l, "+", plus)
 
 	minus := l.NewTokenType(lexer.TokenTypeMetadata{
-		DisplayName: "'-'",
+		NounPhrase: "'-'",
 		DebugName: "Minus",
 	})
 
@@ -45,14 +45,14 @@ func TestLexMultiCharSymbols(t *testing.T) {
 	l.AddMatcher(symbolMatcher)
 
 	minus := l.NewTokenType(lexer.TokenTypeMetadata{
-		DisplayName: "'-'",
+		NounPhrase: "'-'",
 		DebugName: "Minus",
 	})
 
 	symbolMatcher.AddSymbol(l, "-", minus)
 
 	minusMinus := l.NewTokenType(lexer.TokenTypeMetadata{
-		DisplayName: "'--'",
+		NounPhrase: "'--'",
 		DebugName: "MinusMinus",
 	})
 
@@ -77,14 +77,14 @@ func TestLexUnicodeSymbols(t *testing.T) {
 	l.AddMatcher(symbolMatcher)
 
 	club := l.NewTokenType(lexer.TokenTypeMetadata{
-		DisplayName: "'☘'",
+		NounPhrase: "'☘'",
 		DebugName: "Club",
 	})
 
 	symbolMatcher.AddSymbol(l, "☘", club)
 
 	heart := l.NewTokenType(lexer.TokenTypeMetadata{
-		DisplayName: "'❤'",
+		NounPhrase: "'❤'",
 		DebugName: "Heart",
 	})
 

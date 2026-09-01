@@ -16,8 +16,8 @@ func (n *NumberMatcher) New(_ *lexer.Lexer) lexer.Matcher {
 	return n
 }
 
-func (n *NumberMatcher) Match(l *lexer.Lexer) uint {
-	pos := uint(0)
+func (n *NumberMatcher) Match(l *lexer.Lexer) uint32 {
+	pos := uint32(0)
 
 	for c, ok := l.Get(pos); ok && '0' <= c && c <= '9'; c, ok = l.Get(pos) {
 		pos++
@@ -26,6 +26,6 @@ func (n *NumberMatcher) Match(l *lexer.Lexer) uint {
 	return pos
 }
 
-func (i *NumberMatcher) Consume(l *lexer.Lexer, length uint) {
+func (i *NumberMatcher) Consume(l *lexer.Lexer, length uint32) {
 	l.Emit(lexer.Token{Type: i.tokenType, Value: l.GetNextN(length)})
 }

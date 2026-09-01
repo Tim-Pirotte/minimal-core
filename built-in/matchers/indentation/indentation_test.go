@@ -18,19 +18,19 @@ type testLexer struct {
     output     *testoutput.TestOutput
 }
 
-func getLexer(indentChar byte, spacesPerLevel uint) testLexer {
+func getLexer(indentChar byte, spacesPerLevel uint32) testLexer {
     l := lexer.NewScheme()
 
     openBlock := l.NewTokenType(
-        lexer.TokenTypeMetadata{DisplayName: "a new block", DebugName: "OpenBlock"},
+        lexer.TokenTypeMetadata{NounPhrase: "a new block", DebugName: "OpenBlock"},
     )
 
     closeBlock := l.NewTokenType(
-        lexer.TokenTypeMetadata{DisplayName: "the end of a block", DebugName: "CloseBlock"},
+        lexer.TokenTypeMetadata{NounPhrase: "the end of a block", DebugName: "CloseBlock"},
     )
 
     eolType := l.NewTokenType(
-        lexer.TokenTypeMetadata{DisplayName: "the end of the line", DebugName: "EOL"},
+        lexer.TokenTypeMetadata{NounPhrase: "the end of the line", DebugName: "EOL"},
     )
 
     m := messenger.New()

@@ -33,11 +33,11 @@ func (s *spillageTestMatcher) New(_ *Lexer) Matcher {
     return s
 }
 
-func (s *spillageTestMatcher) Match(t *Lexer) uint {
+func (s *spillageTestMatcher) Match(t *Lexer) uint32 {
     return 1
 }
 
-func (s *spillageTestMatcher) Consume(t *Lexer, length uint) {
+func (s *spillageTestMatcher) Consume(t *Lexer, length uint32) {
     for range 5 {
         t.Emit(Token{s.tokenType, t.Data[:0]})
     }

@@ -23,7 +23,7 @@ func (s *StringMatcher) New(_ *lexer.Lexer) lexer.Matcher {
     return s
 }
 
-func (s *StringMatcher) Match(l *lexer.Lexer) uint {
+func (s *StringMatcher) Match(l *lexer.Lexer) uint32 {
     // This matcher could violate max munch
     if c, _ := l.Get(0); c == '\'' {
         return 1
@@ -32,8 +32,8 @@ func (s *StringMatcher) Match(l *lexer.Lexer) uint {
     }
 }
 
-func (s *StringMatcher) Consume(l *lexer.Lexer, length uint) {
-    pos := uint(1)
+func (s *StringMatcher) Consume(l *lexer.Lexer, length uint32) {
+    pos := uint32(1)
     c, ok := l.Get(pos)
 
     for ; ok && c != '\''; c, ok = l.Get(pos) {
@@ -45,7 +45,7 @@ func (s *StringMatcher) Consume(l *lexer.Lexer, length uint) {
 
             level := 1
 
-            for l.Position < uint(len(l.Data)) {
+            for l.Position < uint32(len(l.Data)) {
                 switch c, _ := l.Get(0); c {
                 // This requires every use of '{' as start of a token in an expression
                 // to be properly closed by '}'
@@ -59,7 +59,7 @@ func (s *StringMatcher) Consume(l *lexer.Lexer, length uint) {
                     break
                 }
 
-                largestLength := uint(0)
+                largestLength := uint32(0)
                 var matcherWithLargestLength lexer.Matcher = nil
 
                 for _, matcher := range l.Matchers {
