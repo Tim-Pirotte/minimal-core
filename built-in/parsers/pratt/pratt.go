@@ -29,7 +29,6 @@ func NewPrattParser(l *lexer.LexerScheme, prefixes []Prefix, infixes []Infix) *P
     for _, prefix := range prefixes {
         tokenType := prefix.GetTokenType()
 
-        // TODO make the entire codebase recover from duplication issues in the same way
         if _, ok := prefixMap[tokenType]; ok {
             logDuplicatePrefix(l, tokenType)
         } else {

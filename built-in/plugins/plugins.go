@@ -23,20 +23,20 @@ func NewRegistry(messenger *messenger.Messenger) registry {
     return registry{plugins{messenger, map[reflect.Type]Plugin{}}}
 }
 
-func (r *registry) Add(plugin Plugin) {
+func (r *registry) Add(plugin Plugin) bool {
     t := reflect.TypeOf(plugin)
 
     if t.Kind() != reflect.Pointer {
-        r.plugins.logPluginNotAPointer(t)
-
-        return
+        panic("plugin is not a pointer")
     }
 
     if _, ok := r.plugins.mapping[t]; ok {
-        r.plugins.logDuplicatePlugin(t)
+        return false
     }
 
     r.plugins.mapping[t] = plugin
+
+    return true
 }
 
 func (r *registry) Setup() {
@@ -68,17 +68,6 @@ func (p *plugins) logPluginNotAPointer(t reflect.Type) {
         Notes: []string{
             fmt.Sprintf("Plugin type: %s", t),
             "The plugin wont be added to the registry",
-        },
-    })
-}
-
-func (p *plugins) logDuplicatePlugin(t reflect.Type) {
-    p.messenger.Send(messenger.Message{
-        Message: "Duplicate plugin declaration",
-        Severity: messenger.Error,
-        Notes: []string{
-            fmt.Sprintf("Plugin type: %s", t),
-            "The plugin in the registry will be overwritten",
         },
     })
 }

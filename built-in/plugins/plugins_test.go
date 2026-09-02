@@ -178,35 +178,27 @@ func TestDuplicate(t *testing.T) {
     r := NewRegistry(m)
 
     o1 := &okPlugin{}
-    r.Add(o1)
+    if !r.Add(o1) {
+        t.Error("Expected adding o1 to succeed")
+    }
 
     o2 := &okPlugin{}
-    r.Add(o2)
+    if r.Add(o2) {
+        t.Error("Expected adding o2 to fail")
+    }
 
     r.Setup()
 
-    if o1.ok {
-        t.Error("Expected o1.ok to be false")
+    if !o1.ok {
+        t.Error("Expected o1.ok to be true")
     }
 
-    if !o2.ok {
-        t.Error("Expected o2.ok to be true")
+    if o2.ok {
+        t.Error("Expected o2.ok to be false")
     }
 
     m.Close()
-    to.CheckMessages(
-        t,
-        []messenger.Message{
-            {
-                Message: "Duplicate plugin declaration",
-                Severity: messenger.Error,
-                Notes: []string{
-                    "Plugin type: *plugins.okPlugin",
-                    "The plugin in the registry will be overwritten",
-                },
-            },
-        },
-    )
+    to.CheckMessages(t, nil)
 }
 
 type valuePlugin struct {}

@@ -26,14 +26,16 @@ func NewWalkerSchema(schema *ASTSchema) *WalkerSchema {
     return &WalkerSchema{schema, map[NodeType]NodeChecker{}, []ScopeTracker{}}
 }
 
-func (w *WalkerSchema) AddNodeChecker(nodeChecker NodeChecker) {
+func (w *WalkerSchema) AddNodeChecker(nodeChecker NodeChecker) bool {
     nodeType := nodeChecker.GetNodeType()
 
     if _, ok := w.checkers[nodeType]; ok {
-        logDuplicateNodeChecker()
+        return false
     }
 
     w.checkers[nodeType] = nodeChecker
+
+    return true
 }
 
 func (w *WalkerSchema) NewWalker(ast []Node) *Walker {
@@ -79,8 +81,4 @@ func (w *Walker) Next() {
     }
 
     // TODO error
-}
-
-func logDuplicateNodeChecker() {
-    // TODO
 }

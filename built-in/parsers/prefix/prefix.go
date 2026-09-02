@@ -27,6 +27,7 @@ type PrefixParser struct {
     maxLength uint32
 }
 
+// TODO allow adding the prefixes later
 func NewPrefixParser(m *messenger.Messenger, l *lexer.LexerScheme, prefixes []Rule) PrefixParser {
     root := &trieNode{false, nil, map[lexer.TokenType]*trieNode{}}
     maxLength := uint32(0)
