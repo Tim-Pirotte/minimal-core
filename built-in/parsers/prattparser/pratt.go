@@ -17,8 +17,8 @@ type Infix interface {
 }
 
 type PrattParser struct {
-    Prefixes   map[lexer.TokenType]Prefix
-    Infixes    map[lexer.TokenType]Infix
+    prefixes   map[lexer.TokenType]Prefix
+    infixes    map[lexer.TokenType]Infix
 }
 
 func New(l *lexer.LexerScheme) *PrattParser {
@@ -28,11 +28,11 @@ func New(l *lexer.LexerScheme) *PrattParser {
 func (p *PrattParser) AddPrefix(prefix Prefix) bool {
     tokenType := prefix.GetTokenType()
 
-    if _, ok := p.Prefixes[tokenType]; ok {
+    if _, ok := p.prefixes[tokenType]; ok {
         return false
     }
 
-    p.Prefixes[tokenType] = prefix
+    p.prefixes[tokenType] = prefix
 
     return true
 }
@@ -40,17 +40,29 @@ func (p *PrattParser) AddPrefix(prefix Prefix) bool {
 func (p *PrattParser) AddInfix(infix Infix) bool {
     tokenType := infix.GetTokenType()
 
-    if _, ok := p.Infixes[tokenType]; ok {
+    if _, ok := p.infixes[tokenType]; ok {
         return false
     }
 
-    p.Infixes[tokenType] = infix
+    p.infixes[tokenType] = infix
 
     return true
 }
 
+func (p *PrattParser) IsPrefix(t lexer.TokenType) bool {
+    _, ok := p.prefixes[t]
+
+    return ok
+}
+
+func (p *PrattParser) IsInfix(t lexer.TokenType) bool {
+    _, ok := p.infixes[t]
+
+    return ok
+}
+
 func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint32) []ast.Node {
-    prefix, ok := p.Prefixes[l.Peek(0).Type]
+    prefix, ok := p.prefixes[l.Peek(0).Type]
 
     if !ok {
         // TODO proper error message
@@ -58,11 +70,11 @@ func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint32) []ast.Node {
     }
 
     left := prefix.ParsePrefix(p, l, minBindingPower)
-    infix, ok := p.Infixes[l.Peek(0).Type]
+    infix, ok := p.infixes[l.Peek(0).Type]
 
     for ok && infix.GetBindingPower() > minBindingPower {
         left = infix.ParseInfix(p, l, left, minBindingPower)
-        infix, ok = p.Infixes[l.Peek(0).Type]
+        infix, ok = p.infixes[l.Peek(0).Type]
     }
 
     return left

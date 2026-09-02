@@ -24,17 +24,13 @@ func New(
     lexerScheme.RequireLookahead(2)
     eolParser := EOLParser{prattParser, eol, 0, math.MaxUint32}
 
-    if _, ok := prattParser.Prefixes[eol]; ok {
+    if ok := prattParser.AddPrefix(&eolParser); !ok {
         logEOLPrefixAlreadyDeclared(messenger)
     }
 
-    prattParser.Prefixes[eol] = &eolParser
-
-    if _, ok := prattParser.Infixes[eol]; ok {
+    if ok := prattParser.AddInfix(&eolParser); !ok {
         logEOLInfixAlreadyDeclared(messenger)
     }
-
-    prattParser.Infixes[eol] = &eolParser
 
     return &eolParser
 }
@@ -83,10 +79,7 @@ func (e *EOLParser) ParseInfix(pp *prattparser.PrattParser, l *lexer.Lexer, left
 
     next := l.Peek(1).Type
 
-    _, isPrefix := pp.Prefixes[next]
-    _, isInfix := pp.Infixes[next]
-
-    if isInfix && !isPrefix {
+    if pp.IsInfix(next) && !pp.IsPrefix(next) {
         l.Advance()
     } else {
         e.bindingPower = 0
