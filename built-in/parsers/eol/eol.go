@@ -5,11 +5,11 @@ import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 )
 
 type EOLParser struct {
-    prattParser  *pratt.PrattParser
+    prattParser  *prattparser.PrattParser
 	eol          lexer.TokenType
 	nestingCount uint32
 	bindingPower uint32
@@ -17,7 +17,7 @@ type EOLParser struct {
 
 func New(
     messenger *messenger.Messenger,
-    prattParser *pratt.PrattParser,
+    prattParser *prattparser.PrattParser,
     lexerScheme *lexer.LexerScheme,
     eol lexer.TokenType,
 ) *EOLParser {
@@ -68,13 +68,13 @@ func (e *EOLParser) GetBindingPower() uint32 {
     return e.bindingPower
 }
 
-func (e *EOLParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint32) []ast.Node {
+func (e *EOLParser) ParsePrefix(pp *prattparser.PrattParser, l *lexer.Lexer, bp uint32) []ast.Node {
     l.Advance()
 
     return pp.Parse(l, bp)
 }
 
-func (e *EOLParser) ParseInfix(pp *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
+func (e *EOLParser) ParseInfix(pp *prattparser.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
     if e.nestingCount > 0 {
         l.Advance()
 

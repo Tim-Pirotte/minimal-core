@@ -5,7 +5,7 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
 	"minimal/minimal-core/built-in/parsers/binary"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 	"reflect"
 	"testing"
 )
@@ -38,18 +38,14 @@ func TestBindingPower(t *testing.T) {
     a := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "a"})
     b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "b"})
 
-    p := pratt.NewPrattParser(
-        l,
-        []pratt.Prefix{
-            pratt.NewAtomicParser(aT, a),
-            pratt.NewAtomicParser(bT, b),
-        },
-        []pratt.Infix{
-            binary.NewBinaryParser(plusT, plus, 2),
-            NewPostfixUnaryParser(exclamationT, exclamation, 2),
-            NewPostfixUnaryParser(quoteT, quote, 1),
-        },
-    )
+    p := prattparser.New(l)
+
+    p.AddPrefix(prattparser.NewAtomicParser(aT, a))
+    p.AddPrefix(prattparser.NewAtomicParser(bT, b))
+
+    p.AddInfix(binary.NewBinaryParser(plusT, plus, 2))
+    p.AddInfix(NewPostfixUnaryParser(exclamationT, exclamation, 2))
+    p.AddInfix(NewPostfixUnaryParser(quoteT, quote, 1))
 
     lj := l.Lex("a!+b'")
     result := p.Parse(lj, 0)

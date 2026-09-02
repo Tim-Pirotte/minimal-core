@@ -1,4 +1,4 @@
-package pratt
+package prattparser
 
 import (
 	"minimal/minimal-core/built-in/ast"
@@ -10,7 +10,7 @@ import (
 
 func TestEmpty(t *testing.T) {
     l := lexer.NewScheme()
-    p := NewPrattParser(l, []Prefix{}, []Infix{})
+    p := New(l)
     lj := l.Lex("")
 
     p.Parse(lj, 0)
@@ -34,10 +34,8 @@ func TestPrefix(t *testing.T) {
     syntax := ast.NewSchema()
     end := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "END"})
 
-    p := NewPrattParser(l,
-        []Prefix{&endParser{lexer.END, end}},
-        []Infix{},
-    )
+    p := New(l)
+    p.AddPrefix(&endParser{lexer.END, end})
 
     lj := l.Lex("")
 
@@ -94,11 +92,10 @@ func TestBinary(t *testing.T) {
     plus := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "+", ChildCount: 2})
     b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "B"})
 
-    p := NewPrattParser(
-        l,
-        []Prefix{NewAtomicParser(aT, a), NewAtomicParser(bT, b)},
-        []Infix{&plusParser{plusT, plus}},
-    )
+    p := New(l)
+    p.AddPrefix(NewAtomicParser(aT, a))
+    p.AddPrefix(NewAtomicParser(bT, b))
+    p.AddInfix(&plusParser{plusT, plus})
 
     lj := l.Lex("a+b")
 
@@ -208,19 +205,15 @@ func TestParseCompleteExpression(t *testing.T) {
     b := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "B"})
     exclamation := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "!", ChildCount: 1})
 
-    p := NewPrattParser(
-        l,
-        []Prefix{
-            &minusParser{minusT, minus},
-            NewAtomicParser(aT, a),
-            &groupingParser{openParenT, closeParenT, t},
-            NewAtomicParser(bT, b),
-        },
-        []Infix{
-            &plusParser{plusT, plus},
-            &exclamationParser{exclamationT, exclamation},
-        },
-    )
+    p := New(l)
+
+    p.AddPrefix(&minusParser{minusT, minus})
+    p.AddPrefix(NewAtomicParser(aT, a))
+    p.AddPrefix(&groupingParser{openParenT, closeParenT, t})
+    p.AddPrefix(NewAtomicParser(bT, b))
+
+    p.AddInfix(&plusParser{plusT, plus})
+    p.AddInfix(&exclamationParser{exclamationT, exclamation})
 
     lj := l.Lex("-a+(b!)")
 

@@ -3,7 +3,7 @@ package prefixunary
 import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 )
 
 type PrefixUnaryParser struct {
@@ -23,7 +23,7 @@ func (p *PrefixUnaryParser) GetTokenType() lexer.TokenType {
 }
 
 func (p *PrefixUnaryParser) ParsePrefix(
-    pp *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint32,
+    pp *prattparser.PrattParser, l *lexer.Lexer, minBindingPower uint32,
 ) []ast.Node {
     l.Advance()
 

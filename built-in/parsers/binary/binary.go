@@ -3,7 +3,7 @@ package binary
 import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 )
 
 type BinaryParser struct {
@@ -24,7 +24,7 @@ func (b *BinaryParser) GetBindingPower() uint32 {
     return b.bindingPower
 }
 
-func (b *BinaryParser) ParseInfix(p *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
+func (b *BinaryParser) ParseInfix(p *prattparser.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
     l.Advance()
 
     right := p.Parse(l, b.bindingPower)

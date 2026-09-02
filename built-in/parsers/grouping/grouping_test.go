@@ -8,7 +8,7 @@ import (
 	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"minimal/minimal-core/built-in/parsers/binary"
 	eolparser "minimal/minimal-core/built-in/parsers/eol"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 	prefixunary "minimal/minimal-core/built-in/parsers/prefix-unary"
 	"reflect"
 	"testing"
@@ -16,7 +16,7 @@ import (
 
 type testGroupingParser struct {
     g      *GroupingParser
-    p      *pratt.PrattParser
+    p      *prattparser.PrattParser
     l      *lexer.LexerScheme
     m      *messenger.Messenger
     to     *testoutput.TestOutput
@@ -70,20 +70,16 @@ func getTestGroupingParser() testGroupingParser {
     min := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "- (unary)", ChildCount: 1})
     minBin := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "- (binary)", ChildCount: 2})
 
-    p := pratt.NewPrattParser(
-        l,
-        []pratt.Prefix{
-            pratt.NewAtomicParser(aT, a),
-            pratt.NewAtomicParser(bT, b),
-            pratt.NewAtomicParser(cT, c),
-            prefixunary.NewPrefixUnaryParser(minT, min, 2),
-        },
-        []pratt.Infix{
-            binary.NewBinaryParser(plusT, plus, 2),
-            binary.NewBinaryParser(minT, minBin, 2),
-            binary.NewBinaryParser(mulT, mul, 3),
-        },
-    )
+    p := prattparser.New(l)
+
+    p.AddPrefix(prattparser.NewAtomicParser(aT, a))
+    p.AddPrefix(prattparser.NewAtomicParser(bT, b))
+    p.AddPrefix(prattparser.NewAtomicParser(cT, c))
+    p.AddPrefix(prefixunary.NewPrefixUnaryParser(minT, min, 2))
+
+    p.AddInfix(binary.NewBinaryParser(plusT, plus, 2))
+    p.AddInfix(binary.NewBinaryParser(minT, minBin, 2))
+    p.AddInfix(binary.NewBinaryParser(mulT, mul, 3))
 
     eol := eolparser.New(m, p, l, eolT)
     g := New(m, eol, openParenT, closeParenT, "'(' does not have a matching ')'")

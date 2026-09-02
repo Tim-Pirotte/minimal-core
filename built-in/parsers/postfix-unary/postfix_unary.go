@@ -3,7 +3,7 @@ package postfixunary
 import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 )
 
 type PostfixUnaryParser struct {
@@ -24,7 +24,7 @@ func (p *PostfixUnaryParser) GetBindingPower() uint32 {
 	return p.bindingPower
 }
 
-func (p *PostfixUnaryParser) ParseInfix(_ *pratt.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
+func (p *PostfixUnaryParser) ParseInfix(_ *prattparser.PrattParser, l *lexer.Lexer, left []ast.Node, bp uint32) []ast.Node {
 	l.Advance()
 
 	result := []ast.Node{{Type: p.nodeType}}

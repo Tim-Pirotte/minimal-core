@@ -5,7 +5,7 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messenger"
 	eolparser "minimal/minimal-core/built-in/parsers/eol"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 )
 
 type GroupingParser struct {
@@ -29,7 +29,7 @@ func (g *GroupingParser) GetTokenType() lexer.TokenType {
     return g.open
 }
 
-func (g *GroupingParser) ParsePrefix(pp *pratt.PrattParser, l *lexer.Lexer, bp uint32) []ast.Node {
+func (g *GroupingParser) ParsePrefix(pp *prattparser.PrattParser, l *lexer.Lexer, bp uint32) []ast.Node {
     opening := l.Peek(0)
     l.Advance()
 

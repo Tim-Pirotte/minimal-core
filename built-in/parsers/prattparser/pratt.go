@@ -1,7 +1,6 @@
-package pratt
+package prattparser
 
 import (
-	"fmt"
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
 )
@@ -22,33 +21,32 @@ type PrattParser struct {
     Infixes    map[lexer.TokenType]Infix
 }
 
-// TODO don't specify all prefixes and infixes in advance
-func NewPrattParser(l *lexer.LexerScheme, prefixes []Prefix, infixes []Infix) *PrattParser {
-    prefixMap := map[lexer.TokenType]Prefix{}
+func New(l *lexer.LexerScheme) *PrattParser {
+    return &PrattParser{map[lexer.TokenType]Prefix{}, map[lexer.TokenType]Infix{}}
+}
 
-    for _, prefix := range prefixes {
-        tokenType := prefix.GetTokenType()
+func (p *PrattParser) AddPrefix(prefix Prefix) bool {
+    tokenType := prefix.GetTokenType()
 
-        if _, ok := prefixMap[tokenType]; ok {
-            logDuplicatePrefix(l, tokenType)
-        } else {
-            prefixMap[tokenType] = prefix
-        }
+    if _, ok := p.Prefixes[tokenType]; ok {
+        return false
     }
 
-    infixMap := map[lexer.TokenType]Infix{}
+    p.Prefixes[tokenType] = prefix
 
-    for _, infix := range infixes {
-        tokenType := infix.GetTokenType()
+    return true
+}
 
-        if _, ok := infixMap[tokenType]; ok {
-            logDuplicateInfix(l, tokenType)
-        } else {
-            infixMap[tokenType] = infix
-        }
+func (p *PrattParser) AddInfix(infix Infix) bool {
+    tokenType := infix.GetTokenType()
+
+    if _, ok := p.Infixes[tokenType]; ok {
+        return false
     }
 
-    return &PrattParser{prefixMap, infixMap}
+    p.Infixes[tokenType] = infix
+
+    return true
 }
 
 func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint32) []ast.Node {
@@ -68,22 +66,6 @@ func (p *PrattParser) Parse(l *lexer.Lexer, minBindingPower uint32) []ast.Node {
     }
 
     return left
-}
-
-func logDuplicatePrefix(l *lexer.LexerScheme, tokenType lexer.TokenType) {
-    // TODO proper message
-    fmt.Printf(
-        "Multiple prefixes have been declared for the token type %s\n",
-        l.GetTokenTypeMetadata(tokenType),
-    )
-}
-
-func logDuplicateInfix(l *lexer.LexerScheme, tokenType lexer.TokenType) {
-    // TODO proper message
-    fmt.Printf(
-        "Multiple infixes have been declared for the token type %s\n",
-        l.GetTokenTypeMetadata(tokenType),
-    )
 }
 
 type AtomicParser struct {

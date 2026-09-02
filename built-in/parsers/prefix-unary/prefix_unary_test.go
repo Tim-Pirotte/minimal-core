@@ -5,7 +5,7 @@ import (
 	"minimal/minimal-core/built-in/lexer"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
 	"minimal/minimal-core/built-in/parsers/binary"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 	"reflect"
 	"testing"
 )
@@ -44,20 +44,16 @@ func TestBindingPower(t *testing.T) {
     c := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "c"})
     d := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "d"})
 
-    p := pratt.NewPrattParser(
-        l,
-        []pratt.Prefix{
-            pratt.NewAtomicParser(aT, a),
-            pratt.NewAtomicParser(bT, b),
-            pratt.NewAtomicParser(cT, c),
-            pratt.NewAtomicParser(dT, d),
-            NewPrefixUnaryParser(minusT, minus, 2),
-            NewPrefixUnaryParser(minusMinusT, minusMinus, 1),
-        },
-        []pratt.Infix{
-            binary.NewBinaryParser(plusT, plus, 2),
-        },
-    )
+    p := prattparser.New(l)
+
+    p.AddPrefix(prattparser.NewAtomicParser(aT, a))
+    p.AddPrefix(prattparser.NewAtomicParser(bT, b))
+    p.AddPrefix(prattparser.NewAtomicParser(cT, c))
+    p.AddPrefix(prattparser.NewAtomicParser(dT, d))
+    p.AddPrefix(NewPrefixUnaryParser(minusT, minus, 2))
+    p.AddPrefix(NewPrefixUnaryParser(minusMinusT, minusMinus, 1))
+
+    p.AddInfix(binary.NewBinaryParser(plusT, plus, 2))
 
     lj := l.Lex("-a+--b+c")
     result := p.Parse(lj, 0)

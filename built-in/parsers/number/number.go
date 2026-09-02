@@ -6,7 +6,7 @@ import (
 	"math/bits"
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 )
 
 // TODO this could be ambiguous with units (e.g. 0 x with x defined as a type)
@@ -103,7 +103,7 @@ func (n *NumberParser) GetTokenType() lexer.TokenType {
     return n.integerType
 }
 
-func (n *NumberParser) ParsePrefix(_ *pratt.PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
+func (n *NumberParser) ParsePrefix(_ *prattparser.PrattParser, l *lexer.Lexer, minBindingPower uint) []ast.Node {
     prefix := l.Peek(0).Value
 
     l.Advance()

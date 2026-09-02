@@ -4,13 +4,13 @@ import (
 	"minimal/minimal-core/built-in/ast"
 	"minimal/minimal-core/built-in/lexer"
 	symbols "minimal/minimal-core/built-in/matchers/symbol"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 	"reflect"
 	"testing"
 )
 
 type testBinaryParser struct {
-    p *pratt.PrattParser
+    p *prattparser.PrattParser
     l *lexer.LexerScheme
     a ast.NodeType
     b ast.NodeType
@@ -62,22 +62,18 @@ func getTestBinaryParser() testBinaryParser {
     e := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "e"})
     f := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "f"})
 
-    p := pratt.NewPrattParser(
-        l,
-        []pratt.Prefix{
-            pratt.NewAtomicParser(aT, a),
-            pratt.NewAtomicParser(bT, b),
-            pratt.NewAtomicParser(cT, c),
-            pratt.NewAtomicParser(dT, d),
-            pratt.NewAtomicParser(eT, e),
-            pratt.NewAtomicParser(fT, f),
-        },
-        []pratt.Infix{
-            NewBinaryParser(plusT, plus, 2),
-            NewBinaryParser(minusT, minus, 2),
-            NewBinaryParser(mulT, mul, 3),
-        },
-    )
+    p := prattparser.New(l)
+
+    p.AddPrefix(prattparser.NewAtomicParser(aT, a))
+    p.AddPrefix(prattparser.NewAtomicParser(bT, b))
+    p.AddPrefix(prattparser.NewAtomicParser(cT, c))
+    p.AddPrefix(prattparser.NewAtomicParser(dT, d))
+    p.AddPrefix(prattparser.NewAtomicParser(eT, e))
+    p.AddPrefix(prattparser.NewAtomicParser(fT, f))
+
+    p.AddInfix(NewBinaryParser(plusT, plus, 2))
+    p.AddInfix(NewBinaryParser(minusT, minus, 2))
+    p.AddInfix(NewBinaryParser(mulT, mul, 3))
 
     return testBinaryParser{p, l, a, b, c, d, e, f, plus, minus, mul}
 }

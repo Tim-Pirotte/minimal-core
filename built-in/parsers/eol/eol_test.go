@@ -7,7 +7,7 @@ import (
 	"minimal/minimal-core/built-in/messenger"
 	testoutput "minimal/minimal-core/built-in/outputs/test"
 	"minimal/minimal-core/built-in/parsers/binary"
-	"minimal/minimal-core/built-in/parsers/pratt"
+	"minimal/minimal-core/built-in/parsers/prattparser"
 	prefixunary "minimal/minimal-core/built-in/parsers/prefix-unary"
 	"reflect"
 	"testing"
@@ -58,20 +58,16 @@ func getTestEOLParser() testEOLParser {
     min := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "- (unary)", ChildCount: 1})
     minBin := syntax.NewNodeType(&ast.StructNodeTypeMetadata{DebugName: "- (binary)", ChildCount: 2})
 
-    p := pratt.NewPrattParser(
-        l,
-        []pratt.Prefix{
-            pratt.NewAtomicParser(aT, a),
-            pratt.NewAtomicParser(bT, b),
-            pratt.NewAtomicParser(cT, c),
-            prefixunary.NewPrefixUnaryParser(minT, min, 2),
-        },
-        []pratt.Infix{
-            binary.NewBinaryParser(plusT, plus, 2),
-            binary.NewBinaryParser(minT, minBin, 2),
-            binary.NewBinaryParser(mulT, mul, 3),
-        },
-    )
+    p := prattparser.New(l)
+
+    p.AddPrefix(prattparser.NewAtomicParser(aT, a))
+    p.AddPrefix(prattparser.NewAtomicParser(bT, b))
+    p.AddPrefix(prattparser.NewAtomicParser(cT, c))
+    p.AddPrefix(prefixunary.NewPrefixUnaryParser(minT, min, 2))
+
+    p.AddInfix(binary.NewBinaryParser(plusT, plus, 2))
+    p.AddInfix(binary.NewBinaryParser(minT, minBin, 2))
+    p.AddInfix(binary.NewBinaryParser(mulT, mul, 3))
 
     m := messenger.New()
     to := testoutput.New()
@@ -240,11 +236,10 @@ func TestDuplicateEOLPrefixAndInfix(t *testing.T) {
     eolT := l.NewTokenType(lexer.TokenTypeMetadata{})
     eol := syntax.NewNodeType(&ast.StructNodeTypeMetadata{})
 
-    p := pratt.NewPrattParser(
-        l,
-        []pratt.Prefix{pratt.NewAtomicParser(eolT, eol)},
-        []pratt.Infix{binary.NewBinaryParser(eolT, eol, 1)},
-    )
+    p := prattparser.New(l)
+
+    p.AddPrefix(prattparser.NewAtomicParser(eolT, eol))
+    p.AddInfix(binary.NewBinaryParser(eolT, eol, 1))
 
     m := messenger.New()
     to := testoutput.New()
