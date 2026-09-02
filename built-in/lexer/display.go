@@ -66,7 +66,12 @@ func (l *LexerDisplayer) DisplayTokensDiff(source string, before, after []Token)
         fmt.Print(prefix)
 
         if _, err := io.WriteString(l.output, l.StringifyToken(source, diffPart.Value)+"\n"); err != nil {
-            l.messenger.Send(messenger.Message{Message: "Lexer debugger output write failed"})
+            l.messenger.Send(
+                messenger.Message{
+                    Message: "Lexer debugger output write failed",
+                    Severity: messenger.Error,
+                },
+            )
 
             return
         }

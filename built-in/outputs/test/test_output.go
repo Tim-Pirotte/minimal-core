@@ -10,7 +10,6 @@ import (
 	"testing"
 )
 
-// TODO merge with the messenger
 type TestOutput struct {
 	messages []messenger.Message
 	Output   messenger.Output
