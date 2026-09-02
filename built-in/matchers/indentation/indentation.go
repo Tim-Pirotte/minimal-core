@@ -3,7 +3,7 @@ package indentation
 import (
 	"minimal/minimal-core/built-in/lexer"
 	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/primitives"
+	"minimal/minimal-core/built-in/substring"
 	"strconv"
 	"strings"
 )
@@ -203,7 +203,7 @@ func (i *IndentationMatcher) sendInconsistentIndentErr(l *lexer.Lexer, length ui
         },
     }
 
-    if primitives.IsSubString(l.Data, i.spacesPerLevel) {
+    if substring.IsSubString(l.Data, i.spacesPerLevel) {
         message.AdditionalContext = append(message.AdditionalContext, messenger.Span{
             Content: i.spacesPerLevel,
             Note: "The indentation was derived here",

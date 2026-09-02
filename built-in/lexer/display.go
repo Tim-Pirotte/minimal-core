@@ -6,7 +6,7 @@ import (
 	"minimal/minimal-core/built-in/ansi"
 	"minimal/minimal-core/built-in/diff"
 	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/primitives"
+	"minimal/minimal-core/built-in/substring"
 	"strconv"
 )
 
@@ -80,7 +80,7 @@ func (l *LexerDisplayer) StringifyToken(source string, token Token) string {
         name = string(color) + name + ansi.Reset
     }
 
-    if !primitives.IsSubString(source, token.Value) {
+    if !substring.IsSubString(source, token.Value) {
         return fmt.Sprintf(
             "%-20s %-20s     not from source",
             name,
@@ -88,7 +88,7 @@ func (l *LexerDisplayer) StringifyToken(source string, token Token) string {
         )
     }
 
-    start := uint(primitives.GetStringPtr(token.Value) - primitives.GetStringPtr(source))
+    start := uint(substring.GetStringPtr(token.Value) - substring.GetStringPtr(source))
     length := uint(len(token.Value))
 
     return fmt.Sprintf(
