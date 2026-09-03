@@ -3,7 +3,7 @@ package ast
 import (
 	"fmt"
 	"io"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/messenger"
 	"strings"
 )
 

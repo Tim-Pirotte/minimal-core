@@ -1,11 +1,11 @@
 package postfixunary
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	symbols "minimal/minimal-core/built-in/matchers/symbol"
-	"minimal/minimal-core/built-in/parsers/binary"
-	"minimal/minimal-core/built-in/parsers/prattparser"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	symbols "minimal/minimal-lang/built-in/matchers/symbol"
+	"minimal/minimal-lang/built-in/parsers/binary"
+	"minimal/minimal-lang/built-in/parsers/prattparser"
 	"reflect"
 	"testing"
 )

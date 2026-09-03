@@ -1,9 +1,9 @@
 package prefix
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
 	"strings"
 )
 

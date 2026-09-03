@@ -3,10 +3,10 @@ package lexer
 import (
 	"fmt"
 	"io"
-	"minimal/minimal-core/built-in/ansi"
-	"minimal/minimal-core/built-in/diff"
-	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/substring"
+	"minimal/minimal-lang/built-in/ansi"
+	"minimal/minimal-lang/built-in/diff"
+	"minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/substring"
 	"strconv"
 )
 
@@ -50,7 +50,7 @@ func compareTokens(a, b Token) bool {
 
 // Prints a diff of tokens to a writer. Tokens are considered the same if there types and values are equal.
 // The range is deliberately ignored since a small change can change all the following ranges.
-func (l *LexerDisplayer) DisplayTokensDiff(source string, before, after []Token) {
+func (l *LexerDisplayer) DisplayDiff(source string, before, after []Token) {
     tokenDiff := diff.GetDiff(before, after, compareTokens)
 
     for _, diffPart := range tokenDiff {

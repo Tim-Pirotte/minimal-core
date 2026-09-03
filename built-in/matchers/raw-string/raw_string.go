@@ -2,8 +2,8 @@ package rawstring
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
 	"strings"
 )
 

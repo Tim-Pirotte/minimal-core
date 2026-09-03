@@ -1,8 +1,8 @@
 package plugins
 
 import (
-	"minimal/minimal-core/built-in/messenger"
-	testoutput "minimal/minimal-core/built-in/outputs/test"
+	"minimal/minimal-lang/built-in/messenger"
+	testoutput "minimal/minimal-lang/built-in/outputs/test"
 	"testing"
 )
 

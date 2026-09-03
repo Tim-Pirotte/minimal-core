@@ -1,9 +1,9 @@
 package postfixunary
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/parsers/prattparser"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/parsers/prattparser"
 )
 
 type PostfixUnaryParser struct {

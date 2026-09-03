@@ -1,7 +1,7 @@
 package whitespace
 
 import (
-	"minimal/minimal-core/built-in/lexer"
+	"minimal/minimal-lang/built-in/lexer"
 )
 
 type SpaceMatcher struct{}

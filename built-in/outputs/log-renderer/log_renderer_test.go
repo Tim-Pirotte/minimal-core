@@ -1,4 +1,4 @@
-package logrendering
+package logrenderer
 
 // TODO add
 // func TestDisplayRenderLogAtomic(t *testing.T) {

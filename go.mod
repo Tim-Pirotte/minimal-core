@@ -1,4 +1,4 @@
-module minimal/minimal-core
+module minimal/minimal-lang
 
 go 1.26.0
 

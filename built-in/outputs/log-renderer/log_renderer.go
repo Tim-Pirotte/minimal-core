@@ -1,10 +1,10 @@
-package logrendering
+package logrenderer
 
 import (
 	"bytes"
 	"fmt"
 	"io"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/messenger"
 )
 
 type LogRenderer struct {

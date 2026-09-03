@@ -1,8 +1,8 @@
 package prattparser
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
 )
 
 type Prefix interface {

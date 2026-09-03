@@ -1,7 +1,7 @@
 package comments
 
 import (
-	"minimal/minimal-core/built-in/lexer"
+	"minimal/minimal-lang/built-in/lexer"
 	"testing"
 )
 

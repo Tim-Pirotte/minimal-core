@@ -1,6 +1,6 @@
 package typechecker
 
-import "minimal/minimal-core/built-in/ast"
+import "minimal/minimal-lang/built-in/ast"
 
 // Always keep NOTHING at the end
 const NOTHING TypeKind = iota

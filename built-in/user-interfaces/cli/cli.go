@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	messaging "minimal/minimal-core/built-in/messenger"
-	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
+	messaging "minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/outputs/log-renderer"
 	"os"
 	"strings"
 )
@@ -23,7 +23,7 @@ func NewCli(
     reader io.Reader,
     writer io.Writer,
 ) *CLI {
-    messenger.AddOutput(logrendering.New(os.Stdout))
+    messenger.AddOutput(logrenderer.New(os.Stdout))
 
     return &CLI{messenger, bufio.NewReader(reader), bufio.NewWriter(writer)}
 }

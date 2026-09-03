@@ -1,8 +1,8 @@
 package strings
 
 import (
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
 )
 
 type StringMatcher struct {

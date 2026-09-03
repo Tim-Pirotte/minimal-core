@@ -2,7 +2,7 @@ package plugins
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/messenger"
 	"reflect"
 )
 

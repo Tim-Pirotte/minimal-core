@@ -1,10 +1,10 @@
 package rawstring
 
 import (
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
-	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
-	testoutput "minimal/minimal-core/built-in/outputs/test"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/outputs/log-renderer"
+	testoutput "minimal/minimal-lang/built-in/outputs/test"
 	"os"
 	"testing"
 )
@@ -24,7 +24,7 @@ func getLexer() testLexer {
     )
 
     m := messenger.New()
-    logrenderer := logrendering.New(os.Stdout)
+    logrenderer := logrenderer.New(os.Stdout)
     logrenderer.Config.RemoveANSI()
     logrenderer.Config.RemoveUnicode()
     m.AddOutput(logrenderer)

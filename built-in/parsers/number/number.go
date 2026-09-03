@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 	"math/bits"
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/parsers/prattparser"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/parsers/prattparser"
 )
 
 // TODO this could be ambiguous with units (e.g. 0 x with x defined as a type)

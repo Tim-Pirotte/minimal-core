@@ -2,8 +2,8 @@ package templates
 
 import (
 	"errors"
-	messaging "minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/ui"
+	messaging "minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/ui"
 	"strconv"
 	"strings"
 )

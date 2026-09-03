@@ -1,12 +1,12 @@
 package setup
 
 import (
-	"minimal/minimal-core/built-in/commands/templates"
-	messaging "minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/startup"
-	"minimal/minimal-core/built-in/stores/directory"
-	"minimal/minimal-core/built-in/ui"
-	"minimal/minimal-core/built-in/user-interfaces/tui"
+	"minimal/minimal-lang/built-in/commands/templates"
+	messaging "minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/startup"
+	"minimal/minimal-lang/built-in/stores/directory"
+	"minimal/minimal-lang/built-in/ui"
+	"minimal/minimal-lang/built-in/user-interfaces/tui"
 	"os"
 )
 

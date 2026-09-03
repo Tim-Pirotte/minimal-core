@@ -1,7 +1,7 @@
 package directory
 
 import (
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/messenger"
 	"os"
 	"path/filepath"
 	"testing"

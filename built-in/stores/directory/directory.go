@@ -4,7 +4,7 @@ import (
 	"flag"
 	"io"
 	"io/fs"
-	"minimal/minimal-core/built-in/messenger"
+	"minimal/minimal-lang/built-in/messenger"
 	"os"
 	"path/filepath"
 )

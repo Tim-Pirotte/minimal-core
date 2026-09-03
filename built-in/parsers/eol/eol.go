@@ -2,10 +2,10 @@ package eolparser
 
 import (
 	"math"
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/parsers/prattparser"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/parsers/prattparser"
 )
 
 type EOLParser struct {

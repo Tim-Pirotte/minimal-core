@@ -1,14 +1,14 @@
 package eolparser
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	symbols "minimal/minimal-core/built-in/matchers/symbol"
-	"minimal/minimal-core/built-in/messenger"
-	testoutput "minimal/minimal-core/built-in/outputs/test"
-	"minimal/minimal-core/built-in/parsers/binary"
-	"minimal/minimal-core/built-in/parsers/prattparser"
-	prefixunary "minimal/minimal-core/built-in/parsers/prefix-unary"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	symbols "minimal/minimal-lang/built-in/matchers/symbol"
+	"minimal/minimal-lang/built-in/messenger"
+	testoutput "minimal/minimal-lang/built-in/outputs/test"
+	"minimal/minimal-lang/built-in/parsers/binary"
+	"minimal/minimal-lang/built-in/parsers/prattparser"
+	prefixunary "minimal/minimal-lang/built-in/parsers/prefix-unary"
 	"reflect"
 	"testing"
 )

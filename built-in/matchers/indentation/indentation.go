@@ -1,9 +1,9 @@
 package indentation
 
 import (
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
-	"minimal/minimal-core/built-in/substring"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/substring"
 	"strconv"
 	"strings"
 )

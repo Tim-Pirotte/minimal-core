@@ -2,9 +2,9 @@ package testoutput
 
 import (
 	"fmt"
-	"minimal/minimal-core/built-in/messenger"
-	logrendering "minimal/minimal-core/built-in/outputs/log-renderer"
-	"minimal/minimal-core/built-in/substring"
+	"minimal/minimal-lang/built-in/messenger"
+	"minimal/minimal-lang/built-in/outputs/log-renderer"
+	"minimal/minimal-lang/built-in/substring"
 	"os"
 	"reflect"
 	"testing"
@@ -16,7 +16,7 @@ type TestOutput struct {
 }
 
 func New() *TestOutput {
-    return &TestOutput{[]messenger.Message{}, logrendering.New(os.Stdout)}
+    return &TestOutput{[]messenger.Message{}, logrenderer.New(os.Stdout)}
 }
 
 func (to *TestOutput) CheckMessages(t *testing.T, expected []messenger.Message) {

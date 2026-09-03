@@ -1,11 +1,11 @@
 package groupingparser
 
 import (
-	"minimal/minimal-core/built-in/ast"
-	"minimal/minimal-core/built-in/lexer"
-	"minimal/minimal-core/built-in/messenger"
-	eolparser "minimal/minimal-core/built-in/parsers/eol"
-	"minimal/minimal-core/built-in/parsers/prattparser"
+	"minimal/minimal-lang/built-in/ast"
+	"minimal/minimal-lang/built-in/lexer"
+	"minimal/minimal-lang/built-in/messenger"
+	eolparser "minimal/minimal-lang/built-in/parsers/eol"
+	"minimal/minimal-lang/built-in/parsers/prattparser"
 )
 
 type GroupingParser struct {
