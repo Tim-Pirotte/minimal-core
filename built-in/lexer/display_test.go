@@ -124,6 +124,52 @@ func TestDiff(t *testing.T) {
     to.CheckMessages(t, nil)
 }
 
+func TestMultiSourceDiff(t *testing.T) {
+    source1 := "aa"
+    source2 := "ba"
+
+    s := NewScheme()
+
+    l1 := s.Lex(source1)
+    l2 := s.Lex(source2)
+
+    to := testoutput.TestOutput{}
+    m := messenger.New()
+    m.AddOutput(&to)
+
+    var buf bytes.Buffer
+    d := NewDisplayer(s, &buf, m)
+
+    tokens1 := []Token{}
+
+    for l1.Peek(0).Type != END {
+        tokens1 = append(tokens1, l1.Peek(0))
+        l1.Advance()
+    }
+
+    tokens2 := []Token{}
+
+    for l2.Peek(0).Type != END {
+        tokens2 = append(tokens2, l2.Peek(0))
+        l2.Advance()
+    }
+
+    d.DisplayMultiSourceDiff(source1, source2, tokens1, tokens2)
+
+    expected := " - UNKNOWN              \"a\"                       0..1      (1)\n" +
+                " + UNKNOWN              \"b\"                       0..1      (1)\n" +
+                "   UNKNOWN              \"a\"                       1..2      (1)\n"
+
+    actual := buf.String()
+
+    if actual != expected {
+        t.Errorf("\nExpected:\n%s\nGot:\n%s", expected, actual)
+    }
+
+    m.Close()
+    to.CheckMessages(t, nil)
+}
+
 type failingWriter struct{}
 
 func (failingWriter) Write(p []byte) (int, error) {
