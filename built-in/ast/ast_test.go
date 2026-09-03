@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"minimal/minimal-lang/built-in/messenger"
-	testoutput "minimal/minimal-lang/built-in/outputs/test"
+	"minimal/minimal-lang/built-in/outputs/test-output"
 	"testing"
 )
 
 type testAST struct {
-    a                      ASTDisplayer
+    a                      Displayer
     schema                 *ASTSchema
     messenger              *messenger.Messenger
     to                     *testoutput.TestOutput
@@ -40,7 +40,7 @@ func getTestAST() testAST {
     to := testoutput.New()
     m.AddOutput(to)
 
-    a := NewASTDisplayer(m, schema)
+    a := NewDisplayer(m, schema)
 
     return testAST{
         a,

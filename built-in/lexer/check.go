@@ -22,7 +22,7 @@ func CheckTokens(t *testing.T, scheme *LexerScheme, expected []Token, text strin
     messenger := messenger.New()
     messenger.AddOutput(logrenderer.New(os.Stdout))
 
-    lexerDebugger := NewLexerDisplayer(scheme, os.Stdout, messenger)
+    lexerDebugger := NewDisplayer(scheme, os.Stdout, messenger)
 
     if len(expected) != len(actual) {
         lexerDebugger.DisplayDiff(text, actual, expected)

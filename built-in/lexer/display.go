@@ -10,31 +10,31 @@ import (
 	"strconv"
 )
 
-type LexerDisplayer struct {
-    lexer       *LexerScheme
+type Displayer struct {
+    scheme      *LexerScheme
     output      io.Writer
     messenger   *messenger.Messenger
-    tokenColors map[TokenType] ansi.RGB
+    tokenColors map[TokenType]ansi.RGB
 }
 
-func NewLexerDisplayer(
+func NewDisplayer(
     scheme *LexerScheme,
     output io.Writer,
     messenger *messenger.Messenger,
-) *LexerDisplayer {
-    return &LexerDisplayer{scheme, output, messenger, map[TokenType]ansi.RGB{}}
+) *Displayer {
+    return &Displayer{scheme, output, messenger, map[TokenType]ansi.RGB{}}
 }
 
-func (l *LexerDisplayer) SetTokenTypeColor(tokenType TokenType, color ansi.RGB) {
+func (l *Displayer) SetTokenTypeColor(tokenType TokenType, color ansi.RGB) {
     l.tokenColors[tokenType] = color
 }
 
-func (l *LexerDisplayer) Display(source string, tokens []Token) {
+func (l *Displayer) Display(source string, tokens []Token) {
     for _, token := range tokens {
         if _, err := io.WriteString(l.output, l.StringifyToken(source, token)+"\n"); err != nil {
             l.messenger.Send(
                 messenger.Message{
-                    Message: "Lexer debugger output write failed",
+                    Message: "Lexer display output write failed",
                     Severity: messenger.Error,
                 },
             )
@@ -50,7 +50,8 @@ func compareTokens(a, b Token) bool {
 
 // Prints a diff of tokens to a writer. Tokens are considered the same if there types and values are equal.
 // The range is deliberately ignored since a small change can change all the following ranges.
-func (l *LexerDisplayer) DisplayDiff(source string, before, after []Token) {
+// TODO what if we have a different source for before and after?
+func (l *Displayer) DisplayDiff(source string, before, after []Token) {
     tokenDiff := diff.GetDiff(before, after, compareTokens)
 
     for _, diffPart := range tokenDiff {
@@ -63,9 +64,10 @@ func (l *LexerDisplayer) DisplayDiff(source string, before, after []Token) {
             prefix = " - "
         }
 
-        fmt.Print(prefix)
-
-        if _, err := io.WriteString(l.output, l.StringifyToken(source, diffPart.Value)+"\n"); err != nil {
+        if _, err := io.WriteString(
+            l.output,
+            fmt.Sprintf("%s%s\n", prefix, l.StringifyToken(source, diffPart.Value)),
+        ); err != nil {
             l.messenger.Send(
                 messenger.Message{
                     Message: "Lexer debugger output write failed",
@@ -78,17 +80,18 @@ func (l *LexerDisplayer) DisplayDiff(source string, before, after []Token) {
     }
 }
 
-func (l *LexerDisplayer) StringifyToken(source string, token Token) string {
-    name := l.lexer.GetTokenTypeMetadata(token.Type).DebugName
+func (l *Displayer) StringifyToken(source string, token Token) string {
+    name := l.scheme.GetTokenTypeMetadata(token.Type).DebugName
+    paddedName := fmt.Sprintf("%-20s", name)
 
     if color, ok := l.tokenColors[token.Type]; ok {
-        name = string(color) + name + ansi.Reset
+        paddedName = string(color) + paddedName + ansi.Reset
     }
 
     if !substring.IsSubString(source, token.Value) {
         return fmt.Sprintf(
-            "%-20s %-20s     not from source",
-            name,
+            "%s %-20s     not from source",
+            paddedName,
             strconv.Quote(token.Value),
         )
     }
@@ -97,8 +100,8 @@ func (l *LexerDisplayer) StringifyToken(source string, token Token) string {
     length := uint(len(token.Value))
 
     return fmt.Sprintf(
-        "%-20s %-20s %6d..%-6d (%d)",
-        name,
+        "%s %-20s %6d..%-6d (%d)",
+        paddedName,
         strconv.Quote(token.Value),
         start,
         start+length,

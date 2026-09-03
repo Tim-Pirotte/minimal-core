@@ -4,7 +4,7 @@ import (
 	"minimal/minimal-lang/built-in/lexer"
 	"minimal/minimal-lang/built-in/messenger"
 	"minimal/minimal-lang/built-in/outputs/log-renderer"
-	testoutput "minimal/minimal-lang/built-in/outputs/test"
+	"minimal/minimal-lang/built-in/outputs/test-output"
 	"os"
 	"testing"
 )

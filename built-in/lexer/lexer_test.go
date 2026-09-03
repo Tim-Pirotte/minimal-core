@@ -105,38 +105,6 @@ func TestOverAdvance(t *testing.T) {
 	}
 }
 
-// TODO what should the actual API be? Doesn't it make more sense to read of a lexer itself?
-// func TestDisplay(t *testing.T) {
-//     source := "abc"
-
-//     s := NewScheme()
-//     l := s.Lex(source)
-
-//     to := messaging.TestOutput{}
-//     m := messaging.NewMessenger()
-//     m.AddOutput(&to)
-
-//     var buf bytes.Buffer
-//     d := NewLexerDisplayer(s, &buf, m)
-
-//     d.DisplayTokens(source, )
-
-//     m.Close()
-//     to.CheckMessages(t, []messaging.Message{})
-// }
-
-func TestColor(t *testing.T) {
-
-}
-
-func TestDiff(t *testing.T) {
-
-}
-
-func TestWriteFail(t *testing.T) {
-
-}
-
 func Benchmark(b *testing.B) {
     source := string(make([]byte, 1_000_000))
     l := NewScheme()

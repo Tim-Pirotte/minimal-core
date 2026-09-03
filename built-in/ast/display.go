@@ -9,16 +9,16 @@ import (
 
 const spacesPerLevel = 2
 
-type ASTDisplayer struct {
+type Displayer struct {
     messenger      *messenger.Messenger
     schema         *ASTSchema
 }
 
-func NewASTDisplayer(messenger *messenger.Messenger, schema *ASTSchema) ASTDisplayer {
-    return ASTDisplayer{messenger, schema}
+func NewDisplayer(messenger *messenger.Messenger, schema *ASTSchema) Displayer {
+    return Displayer{messenger, schema}
 }
 
-func (a *ASTDisplayer) Display(ast []Node, o io.Writer) {
+func (a *Displayer) Display(ast []Node, o io.Writer) {
     position := 0
 
     for position != len(ast) {
@@ -35,7 +35,7 @@ func (a *ASTDisplayer) Display(ast []Node, o io.Writer) {
     }
 }
 
-func (a *ASTDisplayer) displayNode(o io.Writer, ast []Node, node Node, position *int, depth int) (writeSuccess bool) {
+func (a *Displayer) displayNode(o io.Writer, ast []Node, node Node, position *int, depth int) (writeSuccess bool) {
     metadata := a.schema.GetNodeTypeMetadata(node.Type)
 
     if !a.tryWrite(
@@ -106,7 +106,7 @@ func (a *ASTDisplayer) displayNode(o io.Writer, ast []Node, node Node, position 
     return true
 }
 
-func (a *ASTDisplayer) tryWrite(output io.Writer, format string, args ...any) bool {
+func (a *Displayer) tryWrite(output io.Writer, format string, args ...any) bool {
     _, err := fmt.Fprintf(output, format, args...)
 
     if err != nil {
@@ -123,7 +123,7 @@ func (a *ASTDisplayer) tryWrite(output io.Writer, format string, args ...any) bo
     return true
 }
 
-func (a *ASTDisplayer) getEndNodeName(endNode Node) string {
+func (a *Displayer) getEndNodeName(endNode Node) string {
     if int(endNode.Reference) < len(a.schema.metadata) {
         return a.schema.GetNodeTypeMetadata(NodeType(endNode.Reference)).GetDebugName(0)
     }
