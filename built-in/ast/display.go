@@ -35,6 +35,10 @@ func (a *Displayer) Display(ast []Node, o io.Writer) {
     }
 }
 
+func (a *Displayer) DisplayDiff() {
+
+}
+
 func (a *Displayer) displayNode(o io.Writer, ast []Node, node Node, position *int, depth int) (writeSuccess bool) {
     metadata := a.schema.GetNodeTypeMetadata(node.Type)
 
